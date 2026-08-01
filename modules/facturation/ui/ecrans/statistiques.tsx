@@ -3,30 +3,42 @@
 /**
  * Écran « الإحصائيات ».
  *
- * Le fichier de référence n'y calcule rien : quatre cartes annoncent des
- * rubriques marquées « مرحلة لاحقة », suivies d'une note expliquant que la page
- * est réservée sans toucher à la facturation.
+ * R-91 — Le fichier de référence n'y calcule rien. Il affiche un titre, une
+ * phrase expliquant que la page est réservée sans toucher à la facturation, une
+ * étiquette « مرحلة لاحقة » posée en tête de page, puis quatre cartes en
+ * pointillés annonçant les rubriques à venir.
  *
- * R-91 — Cet état provisoire est reproduit tel quel. Aucun indicateur n'est
- * inventé ici : d'éventuelles statistiques réelles feront l'objet du lot L6 et
- * seront présentées séparément, comme une extension proposée.
+ * Cet état est reproduit tel quel : aucun indicateur n'est inventé, et aucune
+ * carte n'est ajoutée ni retirée. Arabe, de droite à gauche, comme le reste des
+ * écrans arabes du fichier.
  */
 
 import { T } from '../textes'
+import './statistiques.css'
 
 export function EcranStatistiques() {
+  const S = T.statistiques
+
   return (
-    <div className="omra-page">
-      <div className="omra-stats-grille">
-        {T.statistiques.cartes.map((carte) => (
-          <div className="omra-stat-carte" key={carte.titre}>
-            <div className="omra-stat-carte-titre">{carte.titre}</div>
-            <div className="omra-stat-carte-soustitre">{carte.sousTitre}</div>
-            <span className="omra-stat-carte-etiquette">{T.statistiques.etiquette}</span>
+    <main className="stats-principal">
+      <div className="stats-entete">
+        <div>
+          <h1>{S.titre}</h1>
+          <p>{S.note}</p>
+        </div>
+        <span className="stats-etiquette">{S.etiquette}</span>
+      </div>
+
+      <div className="stats-grille">
+        {S.cartes.map((carte) => (
+          <div className="stats-carte" key={carte.titre}>
+            <div>
+              <b>{carte.titre}</b>
+              <span>{carte.sousTitre}</span>
+            </div>
           </div>
         ))}
       </div>
-      <p className="omra-stats-note">{T.statistiques.note}</p>
-    </div>
+    </main>
   )
 }

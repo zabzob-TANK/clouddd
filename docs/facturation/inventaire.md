@@ -27,7 +27,7 @@ séparées par `|`).
 | L3 | Reçu imprimable A4 sur `fond-facture.png` | livré |
 | L4 | Journal financier, impression, anomalies | livré |
 | L5 | Suivi journalier, registre chèques et virements, images | livré |
-| L6 | Statistiques | prévu |
+| L6 | Statistiques | livré |
 | L7 | Finitions visuelles, comparaison écran par écran | prévu |
 
 ---
@@ -214,7 +214,7 @@ séparées par `|`).
 | R-88 | Notification transitoire de 2 800 ms | L2 | livré |
 | R-89 | Touche d'échappement fermant toute fenêtre | L2 | livré |
 | R-90 | Passeport : onze champs et remplissage manuel — la capture d'image du passeport reste à faire, le stockage de fichiers étant désormais en place (lot L7) | L2 | livré |
-| R-91 | Statistiques : quatre cartes de phase ultérieure | L6 | prévu |
+| R-91 | Statistiques : page réservée — titre, phrase d'explication, étiquette « مرحلة لاحقة » et quatre cartes de phase ultérieure, sans aucun calcul | L6 | livré |
 
 ---
 
@@ -254,6 +254,7 @@ référence. Aucun ne touche à une règle métier.
 | L4 | Sous-navigation « Paiements » et « Suivi journalier » désactivée | Ces deux écrans sont l'objet du lot L5. Les boutons sont présents, à leur place, en français comme dans le fichier. |
 | L4 | Le nombre de pages annoncé est une estimation, pas la coupure réelle | Le fichier calcule `financePageTotal = ceil(lignes / 31)` et n'impose aucune coupure : la place prise par les blocs de synthèse en tête de première page fait que celle-ci n'accueille que 29 lignes. Une journée de 34 lignes tient donc en 2 pages — 29 puis 5 — et le bandeau annonce bien « 1 sur 2 ». Le calcul est repris tel quel. |
 | L4 | Le compteur de pages n'est pas répété page par page | Voir O-11 : le fichier n'imprime le bandeau qu'une fois, avec un « 1 » figé. Reproduire une numérotation réelle serait une modification du fichier ; elle n'a pas été faite. |
+| L6 | Aucune statistique réelle n'est calculée | Le fichier de référence ne calcule rien sur cette page : il la réserve explicitement et l'annonce par l'étiquette « مرحلة لاحقة » et la phrase « تم حجز الصفحة دون إضافة حسابات أو رسوم الآن، حتى لا تتأثر الفوترة. ». La règle de fidélité prime : rien n'a été inventé. Des indicateurs réels seraient un **ajout** au fichier, à décider séparément. |
 | L5 | Champs `mois` et `date` affichés dans la langue du navigateur | Le fichier utilise les mêmes contrôles natifs `<input type="month">` et `<input type="date">` : leur libellé suit la locale du poste, ici « July 2026 » et « mm/dd/yyyy ». Comportement identique au fichier. |
 | L5 | L'image est déposée dans le stockage de fichiers, et non en base64 | Le fichier conserve une `data:` URL dans l'enregistrement. Le comportement visible est identique — une image par opération, aperçu, suppression — mais seule une référence est stockée, conformément à la contrainte d'architecture. |
 | L5 | Sous-navigation « Paiements / Suivi journalier » extraite en composant partagé | Les trois écrans de la rubrique financière l'affichent ; le rendu est inchangé. Aucune règle du lot L4 n'est touchée. |

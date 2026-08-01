@@ -318,6 +318,7 @@ export const T = {
   },
 
   statistiques: {
+    titre: 'الإحصائيات',
     cartes: [
       { titre: 'إحصائيات عامة', sousTitre: 'المسافرون، الوصولات، الحالات' },
       { titre: 'المدفوعات والصندوق', sousTitre: 'المبالغ، طرق الدفع، الباقي' },
