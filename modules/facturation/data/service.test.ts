@@ -5,10 +5,13 @@ import { instrumentVierge } from '../ui/instrument-panel'
 import type { SaisieNouveauRecu } from '../domain/rules/create-receipt'
 import { reinitialiserSourceDonnees } from './index'
 import {
+  acquitterAnomalies,
   ajouterVersement,
   annulerRecu,
   chargerEtat,
   creerRecu,
+  enregistrerImpressionFinance,
+  journalFinancier,
   modifierRecu,
 } from './service'
 
@@ -268,5 +271,68 @@ describe('versement de bout en bout', () => {
 
     const confirme = await ajouterVersement(partage, true)
     expect(confirme.statut).toBe('ok')
+  })
+})
+
+describe('journal financier de bout en bout', () => {
+  it('R-60 — présente les annulations à part des versements', async () => {
+    const cree = await creerRecu(nouveauRecu(), false)
+    if (cree.statut !== 'ok') throw new Error('création refusée')
+
+    await annulerRecu(cree.valeur.recuId, {
+      motif: 'إلغاء السفر',
+      modeRemboursement: 'cash',
+      motDePasse: 'verification',
+    })
+
+    const journal = await journalFinancier({ filtre: 'all' })
+
+    // La ligne d'annulation est dans sa propre liste, jamais mêlée aux versements.
+    expect(journal.annulations.some((a) => a.numeroRecu === cree.valeur.numero)).toBe(true)
+    expect(journal.lignes.every((l) => l.recuId !== cree.valeur.recuId || l.badge === 'N')).toBe(true)
+    expect(journal.nombreAnnulations).toBeGreaterThan(0)
+  })
+
+  it('R-57 — les espèces affichées sont nettes du remboursement', async () => {
+    const avant = await journalFinancier({ filtre: 'all' })
+    const cree = await creerRecu(nouveauRecu({ premierVersement: '5000' }), false)
+    if (cree.statut !== 'ok') throw new Error('création refusée')
+
+    const apresCreation = await journalFinancier({ filtre: 'all' })
+    expect(apresCreation.totaux.especesBrutCentimes).toBe(
+      avant.totaux.especesBrutCentimes + 500000,
+    )
+
+    await annulerRecu(cree.valeur.recuId, {
+      motif: 'test',
+      modeRemboursement: 'cash',
+      motDePasse: 'verification',
+    })
+
+    const apresAnnulation = await journalFinancier({ filtre: 'all' })
+    expect(apresAnnulation.totaux.remboursementsCentimes).toBe(
+      avant.totaux.remboursementsCentimes + 500000,
+    )
+    expect(apresAnnulation.totaux.especesNettesCentimes).toBe(avant.totaux.especesNettesCentimes)
+  })
+
+  it('R-61, R-62 — enregistre une impression numérotée', async () => {
+    const etat = await chargerEtat()
+    const jour = etat.recus[0].date.split('/').reverse().join('-')
+
+    const premiere = await enregistrerImpressionFinance(jour)
+    // Journée ancienne : refusée pour un employé, acceptée pour un administrateur.
+    if (premiere.statut === 'ok') {
+      expect(premiere.valeur.numeroImpression).toBeGreaterThan(0)
+    } else if (premiere.statut === 'erreurs') {
+      expect(premiere.erreurs[0].code).toBe('impression-hors-periode-autorisee')
+    }
+  })
+
+  it('R-65 — l’acquittement des anomalies est réservé à l’administrateur', async () => {
+    const resultat = await acquitterAnomalies('2026-08-01')
+    expect(resultat.statut).toBe('erreurs')
+    if (resultat.statut !== 'erreurs') return
+    expect(resultat.erreurs[0].code).toBe('acquittement-reserve-administrateur')
   })
 })

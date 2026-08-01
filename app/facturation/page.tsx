@@ -9,7 +9,10 @@ import {
   connecter,
   creerRecu,
   deconnecter,
+  acquitterAnomalies,
   enregistrerImpression,
+  enregistrerImpressionFinance,
+  journalFinancier,
   modifierRecu,
 } from './actions'
 
@@ -38,6 +41,9 @@ export default async function PageFacturation() {
         annulerRecu,
         modifierRecu,
         enregistrerImpression,
+        journalFinancier,
+        enregistrerImpressionFinance,
+        acquitterAnomalies,
       }}
     />
   )

@@ -61,6 +61,10 @@ export type CodeErreur =
   | 'motif-modification-obligatoire'
   | 'section-obligatoire'
   | 'operation-partagee-non-modifiable-ici'
+  // Journal financier
+  | 'impression-hors-periode-autorisee'
+  | 'acquittement-reserve-administrateur'
+  | 'jour-unique-requis-pour-impression'
 
 export interface ErreurValidation {
   /** Champ concerné, tel qu'identifié dans le formulaire. */
@@ -165,6 +169,10 @@ export const MESSAGES: Record<CodeErreur, (p?: Record<string, string | number>) 
   'section-obligatoire': () => 'اختر قسمًا واحدًا.',
   'operation-partagee-non-modifiable-ici': () =>
     'بيانات العملية المشتركة تعدّل من سجل المدفوعات والتحويلات، وليس من الوصل.',
+
+  'impression-hors-periode-autorisee': () => 'يمكن للموظف طباعة اليوم أو أمس فقط.',
+  'acquittement-reserve-administrateur': () => 'تأكيد مراجعة التنبيه متاح للمدير فقط.',
+  'jour-unique-requis-pour-impression': () => 'اختر يوماً واحداً للطباعة.',
 }
 
 /** Rend le message d'une erreur, dans la langue du fichier de référence. */

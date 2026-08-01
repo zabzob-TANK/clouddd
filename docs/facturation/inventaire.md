@@ -25,7 +25,7 @@ séparées par `|`).
 | L1 | Noyau métier pur, entièrement testé, sans interface | livré |
 | L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | livré |
 | L3 | Reçu imprimable A4 sur `fond-facture.png` | livré |
-| L4 | Journal financier, impression, anomalies | prévu |
+| L4 | Journal financier, impression, anomalies | livré |
 | L5 | Suivi journalier, registre chèques et virements, images | prévu |
 | L6 | Statistiques | prévu |
 | L7 | Finitions visuelles, comparaison écran par écran | prévu |
@@ -117,7 +117,7 @@ séparées par `|`).
 | R-31 | Options : même nature, non archivée, restant positif, tri par création décroissante | L1 | livré |
 | R-32 | Dépassement autorisé après confirmation explicite, écart conservé | L1 | livré |
 | R-33 | Aucune surveillance automatique des doublons | L1 | livré |
-| R-34 | Totaux : une seule opération financière, sans double comptage | L4 | prévu |
+| R-34 | Totaux : une seule opération financière, sans double comptage | L4 | livré |
 
 ## Règles — images de chèques et virements
 
@@ -141,7 +141,7 @@ séparées par `|`).
 | R-45 | Statut annulé, aucune suppression, numéro jamais réutilisé | L1 | livré |
 | R-46 | Montant remboursé = total payé | L1 | livré |
 | R-47 | Remboursement espèces : mouvement de caisse ; hors caisse : aucun mouvement | L1 | livré |
-| R-48 | Trois mesures distinctes : personnes, montant total annulé, sortie de caisse | L4 | prévu |
+| R-48 | Trois mesures distinctes : personnes, montant total annulé, sortie de caisse | L4 | livré |
 
 ## Règles — modification
 
@@ -159,18 +159,18 @@ séparées par `|`).
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-56 | Filtres jour, plage, tout ; navigation et raccourcis | L4 | prévu |
-| R-57 | Espèces affichées nettes des remboursements de caisse | L4 | prévu |
-| R-58 | Codes de mode : E, CH, V, CH-P, V-P | L4 | prévu |
-| R-59 | Badge N sur le premier versement, sinon le rang | L4 | prévu |
-| R-60 | Lignes d'annulation présentées séparément | L4 | prévu |
-| R-61 | Impression : employé limité à aujourd'hui et hier, administrateur sans limite | L4 | prévu |
-| R-62 | Impression enregistrée : jour, numéro, horodatage, auteur, mouvements | L4 | prévu |
-| R-63 | Anomalies : apparus entre deux impressions et absents de la dernière | L4 | prévu |
-| R-64 | Aucune anomalie tant que le jour n'a jamais été imprimé | L4 | prévu |
-| R-65 | Levée réservée à l'administrateur, acquittement conservé | L4 | prévu |
-| R-66 | Indicateur d'état de la veille | L4 | prévu |
-| R-67 | Impression A4 paysage, marge 5 mm, 31 lignes par page | L4 | prévu |
+| R-56 | Filtres jour, plage, tout ; navigation et raccourcis | L4 | livré |
+| R-57 | Espèces affichées nettes des remboursements de caisse | L4 | livré |
+| R-58 | Codes de mode : E, CH, V, CH-P, V-P | L4 | livré |
+| R-59 | Badge N sur le premier versement, sinon le rang | L4 | livré |
+| R-60 | Lignes d'annulation présentées séparément | L4 | livré |
+| R-61 | Impression : employé limité à aujourd'hui et hier, administrateur sans limite | L4 | livré |
+| R-62 | Impression enregistrée : jour, numéro, horodatage, auteur, mouvements | L4 | livré |
+| R-63 | Anomalies : apparus entre deux impressions et absents de la dernière | L4 | livré |
+| R-64 | Aucune anomalie tant que le jour n'a jamais été imprimé | L4 | livré |
+| R-65 | Levée réservée à l'administrateur, acquittement conservé | L4 | livré |
+| R-66 | Indicateur d'état de la veille | L4 | livré |
+| R-67 | Impression A4 paysage, marge 5 mm, 31 lignes par page | L4 | livré |
 
 ## Règles — suivi journalier
 
@@ -249,6 +249,8 @@ référence. Aucun ne touche à une règle métier.
 | L2 | Capture d'image du passeport absente | Le stockage de fichiers est traité au lot L5. Les onze champs et la saisie manuelle sont opérationnels. |
 | L2 | Aperçu imprimable du reçu absent de la fiche | Objet du lot L3. L'emplacement est en place et le compteur d'impressions est affiché. |
 | L2 | Onglet « المالية » désactivé | Lot L4. |
+| L4 | Filtres « week-end » et « période personnalisée » présents dans la logique mais sans bouton | Le fichier calcule `financeWeekend`, `financeCustom` et leurs champs, mais son gabarit n'affiche que اليوم, أمس et الكل. Les règles sont reproduites et testées ; l'affichage suit le fichier. |
+| L4 | Sous-navigation « Paiements » et « Suivi journalier » désactivée | Ces deux écrans sont l'objet du lot L5. Les boutons sont présents, à leur place, en français comme dans le fichier. |
 | L3 | Papier à en-tête `fond-facture.png` absent | Le fichier n'a pas été fourni avec le prototype : seul son chemin y figure. L'aperçu affiche un papier blanc ; le calage reste utilisable. À déposer dans `public/facturation/`. |
 | L3 | Reçu rendu en composants React plutôt qu'en document isolé | Le fichier place le reçu dans une iframe avec un document complet en base64. Les dimensions, la structure et le comportement d'impression sont identiques ; la règle `@page` n'est posée que pendant l'affichage de l'écran, comme le fait le fichier pour le journal financier. |
 | L2 | Fenêtre du dossier : pas de bandeau photo en dégradé | Le fichier affiche une bande verte avec photo du voyageur. La structure et les informations sont présentes, l'habillage viendra au lot L7. |

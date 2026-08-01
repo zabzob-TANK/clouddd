@@ -29,11 +29,16 @@ import type { SaisieVersement } from '../domain/rules/payment'
 import { restantDu } from '../domain/rules/receipt'
 import { centimesEnTexteDevise } from '../domain/money'
 import type { Recu, Utilisateur } from '../domain/types'
+import { cleJour, decalerCleJour } from '../domain/dates'
+import type { JournalFinancier } from '../data/service'
+import type { PeriodeFinance } from '../domain/rules/finance-day'
 import { EcranConnexion } from './ecrans/connexion'
+import { EcranFinance } from './ecrans/finance'
 import { EcranRecu } from './ecrans/recu'
 import { EcranRegistre } from './ecrans/registre'
 import { EcranStatistiques } from './ecrans/statistiques'
 import { ModaleAnnulation } from './modales/annulation'
+import { ModaleAnomalieFinance } from './modales/anomalie-finance'
 import { ModaleDetail } from './modales/detail'
 import { ModaleJournal } from './modales/journal'
 import { ModaleModification } from './modales/modification'
@@ -44,7 +49,11 @@ import { creerStoreModeSombre, DUREE_NOTIFICATION } from './preferences'
 import { T } from './textes'
 import './styles.css'
 
-type Ecran = { nom: 'registre' } | { nom: 'recu'; recuId: string } | { nom: 'statistiques' }
+type Ecran =
+  | { nom: 'registre' }
+  | { nom: 'recu'; recuId: string }
+  | { nom: 'statistiques' }
+  | { nom: 'finance' }
 
 type Fenetre =
   | { type: 'aucune' }
@@ -54,6 +63,7 @@ type Fenetre =
   | { type: 'modification'; recuId: string }
   | { type: 'detail'; recuId: string }
   | { type: 'journal' }
+  | { type: 'anomalieFinance' }
 
 export interface ActionsFacturation {
   connecter: (identifiant: string, motDePasse: string) => Promise<Utilisateur | null>
@@ -70,6 +80,9 @@ export interface ActionsFacturation {
   annulerRecu: (recuId: string, saisie: SaisieAnnulation) => Promise<Resultat<null>>
   modifierRecu: (recuId: string, saisie: SaisieModification) => Promise<Resultat<null>>
   enregistrerImpression: (recuId: string) => Promise<Resultat<null>>
+  journalFinancier: (periode: PeriodeFinance) => Promise<JournalFinancier>
+  enregistrerImpressionFinance: (jour: string) => Promise<Resultat<{ numeroImpression: number }>>
+  acquitterAnomalies: (jour: string) => Promise<Resultat<null>>
 }
 
 export function ApplicationFacturation({
@@ -89,6 +102,8 @@ export function ApplicationFacturation({
   // R-85 — un reçu ouvert juste après sa création est l'original ; rouvert
   // ensuite, le fichier de référence le marque « نسخة ».
   const [recuOriginal, setRecuOriginal] = useState<string | null>(null)
+  const [journal, setJournal] = useState<JournalFinancier | null>(null)
+  const [periodeFinance, setPeriodeFinance] = useState<PeriodeFinance>({ filtre: 'day' })
   const [notification, setNotification] = useState<{ texte: string; erreur: boolean } | null>(null)
 
   const [rechercheNom, setRechercheNom] = useState('')
@@ -120,6 +135,18 @@ export function ApplicationFacturation({
   const rafraichir = useCallback(async () => {
     setEtat(await actions.recharger())
   }, [actions])
+
+  const aujourdhui = cleJour(new Date())
+  const hier = decalerCleJour(aujourdhui, -1)
+
+  const chargerJournal = useCallback(
+    async (periode: PeriodeFinance) => {
+      const resolue = periode.filtre === 'day' && !periode.jour ? { ...periode, jour: aujourdhui } : periode
+      setPeriodeFinance(resolue)
+      setJournal(await actions.journalFinancier(resolue))
+    },
+    [actions, aujourdhui],
+  )
 
   const recuParId = (id: string): Recu | undefined => etat.recus.find((recu) => recu.id === id)
   const fermer = () => setFenetre({ type: 'aucune' })
@@ -187,7 +214,13 @@ export function ApplicationFacturation({
           >
             {T.navigation.recu}
           </button>
-          <button className="omra-nav-item" disabled title="L4">
+          <button
+            className={`omra-nav-item${ecran.nom === 'finance' ? ' active' : ''}`}
+            onClick={() => {
+              setEcran({ nom: 'finance' })
+              void chargerJournal(periodeFinance)
+            }}
+          >
             {T.navigation.finance}
           </button>
           <button
@@ -264,6 +297,37 @@ export function ApplicationFacturation({
       ) : null}
 
       {ecran.nom === 'statistiques' ? <EcranStatistiques /> : null}
+
+      {ecran.nom === 'finance' && journal ? (
+        <EcranFinance
+          journal={journal}
+          aujourdhui={aujourdhui}
+          hier={hier}
+          onPeriode={(periode) => void chargerJournal(periode)}
+          onImprimer={async () => {
+            if (!journal.jourSelectionne) {
+              notifier('اختر يوماً واحداً للطباعة.', true)
+              return
+            }
+            const resultat = await actions.enregistrerImpressionFinance(journal.jourSelectionne)
+            if (resultat.statut !== 'ok') {
+              notifier('يمكن للموظف طباعة اليوم أو أمس فقط.', true)
+              return
+            }
+            await chargerJournal(periodeFinance)
+            // R-67 — A4 paysage, marge 5 mm, posée le temps de l'impression.
+            const style = document.createElement('style')
+            style.textContent = '@page{size:A4 landscape;margin:5mm}'
+            document.head.appendChild(style)
+            document.body.classList.add('finance-impression')
+            window.print()
+            document.body.classList.remove('finance-impression')
+            style.remove()
+          }}
+          onAcquitter={() => setFenetre({ type: 'anomalieFinance' })}
+          onOuvrirDetail={(recuId) => setFenetre({ type: 'detail', recuId })}
+        />
+      ) : null}
 
       {fenetre.type === 'nouveau' ? (
         <ModaleNouveauRecu
@@ -382,6 +446,23 @@ export function ApplicationFacturation({
             )
           })()
         : null}
+
+      {fenetre.type === 'anomalieFinance' && journal ? (
+        <ModaleAnomalieFinance
+          nombre={journal.anomaliesEnAttente.length}
+          jour={journal.libellePeriode}
+          onFermer={fermer}
+          onConfirmer={async () => {
+            if (!journal.jourSelectionne) return
+            const resultat = await actions.acquitterAnomalies(journal.jourSelectionne)
+            if (resultat.statut === 'ok') {
+              await chargerJournal(periodeFinance)
+              await rafraichir()
+            }
+            fermer()
+          }}
+        />
+      ) : null}
 
       {fenetre.type === 'journal' ? (
         <ModaleJournal entrees={etat.audit} onFermer={fermer} />

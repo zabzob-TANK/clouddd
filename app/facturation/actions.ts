@@ -20,7 +20,12 @@ import {
   connecter as connecterService,
   deconnecter as deconnecterService,
   enregistrerImpressionRecu as enregistrerImpressionService,
+  journalFinancier as journalFinancierService,
+  enregistrerImpressionFinance as enregistrerImpressionFinanceService,
+  acquitterAnomalies as acquitterAnomaliesService,
+  type JournalFinancier,
 } from '@/modules/facturation/data/service'
+import type { PeriodeFinance } from '@/modules/facturation/domain/rules/finance-day'
 import type { Utilisateur } from '@/modules/facturation/domain/types'
 import type { SaisieAnnulation } from '@/modules/facturation/domain/rules/cancellation'
 import type { SaisieNouveauRecu } from '@/modules/facturation/domain/rules/create-receipt'
@@ -41,6 +46,20 @@ export async function deconnecter(): Promise<void> {
 
 export async function enregistrerImpression(recuId: string): Promise<Resultat<null>> {
   return enregistrerImpressionService(recuId)
+}
+
+export async function journalFinancier(periode: PeriodeFinance): Promise<JournalFinancier> {
+  return journalFinancierService(periode)
+}
+
+export async function enregistrerImpressionFinance(
+  jour: string,
+): Promise<Resultat<{ numeroImpression: number }>> {
+  return enregistrerImpressionFinanceService(jour)
+}
+
+export async function acquitterAnomalies(jour: string): Promise<Resultat<null>> {
+  return acquitterAnomaliesService(jour)
 }
 
 export async function chargerEtat(): Promise<EtatFacturation> {
