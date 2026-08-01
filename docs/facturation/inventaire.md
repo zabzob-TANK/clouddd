@@ -1,0 +1,237 @@
+# Registre des règles — reconstruction Zemzem Asfar
+
+Registre de référence de la reconstruction. Chaque ligne correspond à un élément
+identifié dans le fichier `Zemzem Asfar.dc.html` et validé par le commanditaire.
+
+Ce fichier est **lu par un script** : `npm run couverture` vérifie que chaque
+identifiant d'un lot déjà livré apparaît dans le code *et* dans les tests.
+Le tableau ne doit donc pas changer de forme (une ligne par identifiant, colonnes
+séparées par `|`).
+
+## Colonnes
+
+| Colonne | Sens |
+| --- | --- |
+| `ID` | Identifiant stable, cité dans le code et dans le nom des tests |
+| `Élément` | Description issue du fichier de référence |
+| `Lot` | Lot de réalisation prévu |
+| `Statut` | `livré`, `prévu` |
+
+## Lots
+
+| Lot | Contenu | État |
+| --- | --- | --- |
+| L0 | Socle : structure, types, argent, formatage, bidi, ports, adaptateur de démonstration, registre, tests | livré |
+| L1 | Noyau métier pur, entièrement testé, sans interface | prévu |
+| L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | prévu |
+| L3 | Reçu imprimable A4 sur `fond-facture.png` | prévu |
+| L4 | Journal financier, impression, anomalies | prévu |
+| L5 | Suivi journalier, registre chèques et virements, images | prévu |
+| L6 | Statistiques | prévu |
+| L7 | Finitions visuelles, comparaison écran par écran | prévu |
+
+---
+
+## Constantes
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| C-01 | Hôtels du prototype | L0 | livré |
+| C-02 | Compagnies aériennes | L0 | livré |
+| C-03 | Types de chambre, 2 à 7 | L0 | livré |
+| C-04 | Rabatteurs | L0 | livré |
+| C-05 | Grille tarifaire indexée hôtel, vol puis chambre | L0 | livré |
+| C-06 | Saison : nom, réduction maximale, durée | L0 | livré |
+| C-07 | Maximum de six versements | L0 | livré |
+| C-08 | Comptes et rôles | L0 | livré |
+| C-09 | Filtre de saisie des caractères arabes | L0 | livré |
+
+## Utilitaires
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| U-01 | Formatage d'un montant en centimes, `fr-FR`, espaces normalisés | L0 | livré |
+| U-02 | Montant avec devise, isolé en lecture gauche-à-droite | L0 | livré |
+| U-03 | Date du jour, heure courante, horodatage complet | L0 | livré |
+| U-04 | Conversions date française ↔ clé de journée | L0 | livré |
+| U-05 | Total payé et restant dû d'un reçu | L1 | prévu |
+| U-06 | Statut affiché : annulé, soldé, incomplet | L1 | prévu |
+| U-07 | Validation de forme d'une date saisie | L0 | livré |
+| U-08 | Masque du numéro de téléphone | L0 | livré |
+| U-09 | Masque de date à la frappe | L0 | livré |
+| U-10 | Masque de montant, chiffres seuls | L0 | livré |
+| U-11 | Nettoyage des champs arabes | L0 | livré |
+| U-12 | Normalisation de la nature de paiement, libellés et couleurs | L0 | livré |
+| U-13 | Identité dérivée d'une opération partagée | L0 | livré |
+| U-14 | Échappement HTML pour le gabarit du reçu | L0 | livré |
+
+## Règles — création d'un reçu
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-01 | Prénom, nom et téléphone obligatoires | L1 | prévu |
+| R-02 | Téléphone d'exactement dix chiffres | L1 | prévu |
+| R-03 | Hôtel, vol, chambre, rabatteur et premier versement obligatoires | L1 | prévu |
+| R-04 | Code de groupe obligatoire si la case est cochée | L1 | prévu |
+| R-05 | Combinaison sans tarif défini : blocage | L1 | prévu |
+| R-06 | Réduction inférieure ou égale au plafond de la saison | L1 | prévu |
+| R-07 | Réduction strictement inférieure au tarif | L1 | prévu |
+| R-08 | Montant convenu = tarif − réduction | L1 | prévu |
+| R-09 | Premier versement strictement positif | L1 | prévu |
+| R-10 | Premier versement au plus égal au convenu, surpaiement interdit | L1 | prévu |
+| R-11 | Numéro pris sur la séquence et incrémenté | L1 | prévu |
+| R-12 | Statut initial actif, compteur d'impressions à zéro | L1 | prévu |
+| R-13 | Client créé et passeport rattaché s'il a été saisi | L1 | prévu |
+| R-14 | Instantané figé sur le premier versement | L1 | prévu |
+
+## Règles — versements
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-15 | Numéro de reçu obligatoire et existant | L1 | prévu |
+| R-16 | Reçu annulé : ajout refusé | L1 | prévu |
+| R-17 | Reçu soldé : ajout refusé | L1 | prévu |
+| R-18 | Six versements atteints : ajout refusé | L1 | prévu |
+| R-19 | Montant strictement positif | L1 | prévu |
+| R-20 | Sixième versement exactement égal au restant | L1 | prévu |
+| R-21 | Montant au plus égal au restant | L1 | prévu |
+| R-22 | Instantané figé à chaque versement | L1 | prévu |
+
+## Règles — instrument bancaire
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-23 | Espèces : aucun champ d'instrument | L1 | prévu |
+| R-24 | Opération partagée existante : seul l'identifiant est requis | L1 | prévu |
+| R-25 | Référence, date et banque obligatoires | L1 | prévu |
+| R-26 | Opération partagée : payeur et montant total obligatoires, total positif | L1 | prévu |
+| R-27 | Opération existante : disponible = restant de l'opération | L1 | prévu |
+| R-28 | Opération nouvelle : création et disponible = total | L1 | prévu |
+
+## Règles — opérations partagées
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-29 | Attribué = somme des versements portant l'identifiant | L1 | prévu |
+| R-30 | Restant = total − attribué | L1 | prévu |
+| R-31 | Options : même nature, non archivée, restant positif, tri par création décroissante | L1 | prévu |
+| R-32 | Dépassement autorisé après confirmation explicite, écart conservé | L1 | prévu |
+| R-33 | Aucune surveillance automatique des doublons | L1 | prévu |
+| R-34 | Totaux : une seule opération financière, sans double comptage | L4 | prévu |
+
+## Règles — images de chèques et virements
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-35 | Une seule image active par opération | L5 | prévu |
+| R-36 | Image existante : ajout et remplacement refusés | L5 | prévu |
+| R-37 | Opération partagée déjà enregistrée : ajout renvoyé vers le registre | L5 | prévu |
+| R-38 | Image portée par l'opération, jamais dupliquée par reçu | L5 | prévu |
+| R-39 | Suppression réservée à l'administrateur, avec confirmation | L5 | prévu |
+| R-40 | Nouvel ajout possible après suppression | L5 | prévu |
+| R-41 | Ajout et suppression tracés au journal | L5 | prévu |
+| R-42 | Migration : image d'un versement partagé remontée vers l'opération | L5 | prévu |
+
+## Règles — annulation
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-43 | Motif, mode de remboursement et mot de passe obligatoires | L2 | prévu |
+| R-44 | Mot de passe vérifié contre l'utilisateur connecté | L2 | prévu |
+| R-45 | Statut annulé, aucune suppression, numéro jamais réutilisé | L2 | prévu |
+| R-46 | Montant remboursé = total payé | L2 | prévu |
+| R-47 | Remboursement espèces : mouvement de caisse ; hors caisse : aucun mouvement | L2 | prévu |
+| R-48 | Trois mesures distinctes : personnes, montant total annulé, sortie de caisse | L4 | prévu |
+
+## Règles — modification
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-49 | Une seule section modifiable à la fois | L2 | prévu |
+| R-50 | Motif obligatoire | L2 | prévu |
+| R-51 | Différence champ par champ, empilée | L2 | prévu |
+| R-52 | Section programme : recalcul du tarif et du convenu, blocage si sans prix | L2 | prévu |
+| R-53 | Section premier versement : méthode et instrument seulement, montant inchangé | L2 | prévu |
+| R-54 | Rabatteur et montants non modifiables | L2 | prévu |
+| R-55 | Versements de rang deux et suivants jamais modifiables | L2 | prévu |
+
+## Règles — journal financier
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-56 | Filtres jour, plage, tout ; navigation et raccourcis | L4 | prévu |
+| R-57 | Espèces affichées nettes des remboursements de caisse | L4 | prévu |
+| R-58 | Codes de mode : E, CH, V, CH-P, V-P | L4 | prévu |
+| R-59 | Badge N sur le premier versement, sinon le rang | L4 | prévu |
+| R-60 | Lignes d'annulation présentées séparément | L4 | prévu |
+| R-61 | Impression : employé limité à aujourd'hui et hier, administrateur sans limite | L4 | prévu |
+| R-62 | Impression enregistrée : jour, numéro, horodatage, auteur, mouvements | L4 | prévu |
+| R-63 | Anomalies : apparus entre deux impressions et absents de la dernière | L4 | prévu |
+| R-64 | Aucune anomalie tant que le jour n'a jamais été imprimé | L4 | prévu |
+| R-65 | Levée réservée à l'administrateur, acquittement conservé | L4 | prévu |
+| R-66 | Indicateur d'état de la veille | L4 | prévu |
+| R-67 | Impression A4 paysage, marge 5 mm, 31 lignes par page | L4 | prévu |
+
+## Règles — suivi journalier
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-68 | Une ligne par jour du mois, y compris les jours sans activité | L5 | prévu |
+| R-69 | Définition d'une journée active | L5 | prévu |
+| R-70 | Sélection multiple, tout sélectionner, effacer, masquer les jours vides | L5 | prévu |
+| R-71 | Samedi et dimanche teintés | L5 | prévu |
+| R-72 | Agrégats par journée | L5 | prévu |
+
+## Règles — registre des chèques et virements
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-73 | Regroupement par opération, partagée ou unique | L5 | prévu |
+| R-74 | Filtres date, recherche, mode, type, présence d'image | L5 | prévu |
+| R-75 | Tri interne par date et heure d'enregistrement, heure non affichée | L5 | prévu |
+| R-76 | Détail : répartition entre reçus avec situation de chacun | L5 | prévu |
+| R-77 | Attribué et restant calculés par opération | L5 | prévu |
+
+## Règles — reçu imprimable
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-78 | A4, deux parties détachables : partie client et talon | L3 | prévu |
+| R-79 | Toujours six lignes, les vides masquées et retirées de l'accessibilité | L3 | prévu |
+| R-80 | Champs d'instrument manquants remplacés par le motif de remplissage | L3 | prévu |
+| R-81 | Message d'anomalie si les paiements dépassent six | L3 | prévu |
+| R-82 | Fond `fond-facture.png` en référence écran, masquable | L3 | prévu |
+| R-83 | Réglage de calage horizontal et vertical, guides affichables | L3 | prévu |
+| R-84 | Compteur d'impressions incrémenté et tracé | L3 | prévu |
+| R-85 | Mode original et copie, libellé du numéro d'impression | L3 | prévu |
+
+## Règles — divers
+
+| ID | Élément | Lot | Statut |
+| --- | --- | --- | --- |
+| R-86 | Journal d'audit, entrée la plus récente en tête | L2 | prévu |
+| R-87 | Mode sombre persistant | L2 | prévu |
+| R-88 | Notification transitoire de 2 800 ms | L2 | prévu |
+| R-89 | Touche d'échappement fermant toute fenêtre | L2 | prévu |
+| R-90 | Passeport : onze champs, images, remplissage manuel | L2 | prévu |
+| R-91 | Statistiques : quatre cartes de phase ultérieure | L6 | prévu |
+
+---
+
+## Observations
+
+Comportements du fichier de référence qui paraissent incohérents ou perfectibles.
+**Aucune n'entraîne de correction.** Elles sont reproduites telles quelles tant que
+le commanditaire n'a pas explicitement décidé de les modifier.
+
+| ID | Observation | Décision |
+| --- | --- | --- |
+| O-01 | Le gabarit du reçu gère un dépassement au-delà de six paiements alors que l'interface le rend impossible | conservé |
+| O-02 | R-20 et R-21 rendent le sixième versement toujours soldant | conservé |
+| O-03 | Le mot de passe d'annulation est celui de l'utilisateur connecté, comparé en clair | conservé, délégué à `SessionPort` |
+| O-04 | L'identité d'opération partagée fusionne deux instruments de même banque, numéro et date | conservé |
+| O-05 | Les totaux retiennent le plus grand montant déclaré et non la somme des parts | conservé |
+| O-06 | Le montant annulé se calcule différemment dans le journal financier et dans le suivi journalier | conservé |
+| O-07 | La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu | conservé |
+| O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
+| O-09 | Les libellés sont mélangés français et arabe selon les écrans | traduit en français, exception validée |

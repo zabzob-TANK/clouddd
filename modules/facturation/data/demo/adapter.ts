@@ -1,0 +1,419 @@
+/**
+ * Adaptateur de démonstration — implémentation en mémoire de `SourceDonnees`.
+ *
+ * ⚠️ ISOLATION — Cet adaptateur est remplaçable en une ligne (voir
+ * `modules/facturation/data/index.ts`). Il ne contient **aucune règle métier** :
+ * il ne fait que stocker et restituer. Toute logique de validation appartient à
+ * `domain/rules/` (lot L1).
+ *
+ * Limites assumées, et c'est volontaire :
+ *  - les données vivent dans le processus et disparaissent à son redémarrage ;
+ *  - aucune concurrence réelle n'est gérée.
+ *
+ * Ce n'est pas l'architecture cible : c'est un support de développement pour
+ * que les lots métier avancent sans dépendre d'un projet Supabase.
+ */
+
+import { cleJour } from '../../domain/dates'
+import {
+  HOTELS_DEMO,
+  CHAMBRES_DEMO,
+  RABATTEURS_DEMO,
+  ROLE_ADMINISTRATEUR,
+  SAISON_DEMO,
+  TARIFS_DEMO,
+  VOLS_DEMO,
+} from '../../domain/constants'
+import type {
+  AcquittementAnomalie,
+  Chambre,
+  Client,
+  EntreeAudit,
+  Hotel,
+  ImpressionFinance,
+  ModeRemboursement,
+  Modification,
+  MouvementCaisse,
+  OperationPartagee,
+  Passeport,
+  Rabatteur,
+  Recu,
+  ReferenceFichier,
+  Saison,
+  Tarif,
+  Utilisateur,
+  Versement,
+  Vol,
+} from '../../domain/types'
+import type {
+  AcquittementsAnomaliePort,
+  ClientsPort,
+  CreationRecu,
+  FiltreRecus,
+  HorlogePort,
+  IdentifiantsPort,
+  ImpressionsFinancePort,
+  JournalAuditPort,
+  LecteurPasseportPort,
+  MouvementsCaissePort,
+  OperationsPartageesPort,
+  RecusPort,
+  ReferentielsPort,
+  SessionPort,
+  SourceDonnees,
+  StockageFichiersPort,
+} from '../ports'
+import { construireJeuDemonstration } from './dataset'
+
+/** Copie défensive : l'appelant ne doit jamais muter le contenu du dépôt. */
+function copier<T>(valeur: T): T {
+  return structuredClone(valeur)
+}
+
+export interface OptionsAdaptateurDemonstration {
+  /** Date servant d'« aujourd'hui ». Injectable pour les tests. */
+  reference?: Date
+  /** Utilisateur connecté simulé. */
+  utilisateur?: Utilisateur
+  /** Compteur d'identifiants de départ, pour rendre les tests déterministes. */
+  compteurInitial?: number
+}
+
+const UTILISATEUR_DEMONSTRATION: Utilisateur = {
+  id: 'demo-caisse',
+  nom: 'سمير بنعلي',
+  role: 'صندوق',
+  initiales: 'SB',
+}
+
+/**
+ * Construit une source de données de démonstration complète et indépendante.
+ * Chaque appel produit un état neuf : deux tests ne se contaminent pas.
+ */
+export function creerSourceDemonstration(
+  options: OptionsAdaptateurDemonstration = {},
+): SourceDonnees {
+  const reference = options.reference ?? new Date()
+  const jeu = construireJeuDemonstration(reference)
+
+  const recus: Recu[] = jeu.recus
+  const clients: Client[] = jeu.clients
+  const operations: OperationPartagee[] = jeu.operationsPartagees
+  const mouvements: MouvementCaisse[] = jeu.mouvementsCaisse
+  const impressions: ImpressionFinance[] = jeu.impressionsFinance
+  const acquittements = new Map<string, AcquittementAnomalie>()
+  const audit: EntreeAudit[] = jeu.audit
+  const fichiers = new Map<string, { contenu: Blob | ArrayBuffer; typeMime: string }>()
+
+  let prochainNumero = jeu.prochainNumero
+  let compteur = options.compteurInitial ?? 1
+
+  const horloge: HorlogePort = {
+    maintenant: () => new Date(reference),
+  }
+
+  const identifiants: IdentifiantsPort = {
+    nouvelId: (prefixe) => `${prefixe}-demo-${String(compteur++).padStart(5, '0')}`,
+  }
+
+  const referentiels: ReferentielsPort = {
+    async saisonActive(): Promise<Saison> {
+      return {
+        id: 'saison-demo',
+        nom: SAISON_DEMO.nom,
+        reductionMaxCentimes: SAISON_DEMO.reductionMaxCentimes,
+        duree: SAISON_DEMO.duree,
+        active: true,
+      }
+    },
+    async saisons() {
+      return [await referentiels.saisonActive()]
+    },
+    async hotels(): Promise<Hotel[]> {
+      return HOTELS_DEMO.map((nom) => ({ id: nom, nom }))
+    },
+    async vols(): Promise<Vol[]> {
+      return VOLS_DEMO.map((nom) => ({ id: nom, nom }))
+    },
+    async chambres(): Promise<Chambre[]> {
+      return CHAMBRES_DEMO.map((code) => ({ id: code, code }))
+    },
+    async rabatteurs(): Promise<Rabatteur[]> {
+      return RABATTEURS_DEMO.map((nom) => ({ id: nom, nom }))
+    },
+    async tarifs(saisonId: string): Promise<Tarif[]> {
+      // Seules les combinaisons réellement définies sont renvoyées : une
+      // combinaison absente doit bloquer la création (R-05), pas valoir zéro.
+      const sortie: Tarif[] = []
+      for (const [cle, parChambre] of Object.entries(TARIFS_DEMO)) {
+        const [hotelId, volId] = cle.split('|')
+        for (const [chambreId, montant] of Object.entries(parChambre)) {
+          sortie.push({
+            saisonId,
+            hotelId,
+            volId,
+            chambreId,
+            montantCentimes: montant * 100,
+          })
+        }
+      }
+      return sortie
+    },
+  }
+
+  const session: SessionPort = {
+    async utilisateurCourant() {
+      return copier(options.utilisateur ?? UTILISATEUR_DEMONSTRATION)
+    },
+    estAdministrateur(utilisateur: Utilisateur) {
+      return utilisateur.role === ROLE_ADMINISTRATEUR
+    },
+    async verifierIdentite(motDePasse: string) {
+      // Aucun secret n'est stocké. En démonstration, toute saisie non vide est
+      // acceptée ; l'implémentation Omra délèguera à une ré-authentification.
+      return motDePasse.trim().length > 0
+    },
+  }
+
+  const depotRecus: RecusPort = {
+    async lister(filtre: FiltreRecus = {}) {
+      let sortie = recus
+      if (!filtre.inclureAnnules) sortie = sortie.filter((r) => r.statut !== 'ملغى')
+      if (filtre.nom) {
+        const q = filtre.nom.trim()
+        sortie = sortie.filter((r) => `${r.prenom} ${r.nom}`.includes(q))
+      }
+      if (filtre.numero) {
+        const q = filtre.numero.trim()
+        sortie = sortie.filter((r) => String(r.numero).includes(q))
+      }
+      return copier(sortie)
+    },
+    async parId(id) {
+      const trouve = recus.find((r) => r.id === id)
+      return trouve ? copier(trouve) : null
+    },
+    async parNumero(numero) {
+      const trouve = recus.find((r) => r.numero === numero)
+      return trouve ? copier(trouve) : null
+    },
+    async reserverNumero() {
+      return prochainNumero++
+    },
+    async creer(donnees: CreationRecu) {
+      const recu: Recu = {
+        id: identifiants.nouvelId('recu'),
+        numero: donnees.numero,
+        clientId: donnees.clientId,
+        passeport: donnees.passeport,
+        prenom: donnees.prenom,
+        nom: donnees.nom,
+        telephone: donnees.telephone,
+        hotel: donnees.hotel,
+        vol: donnees.vol,
+        chambre: donnees.chambre,
+        tarifCentimes: donnees.tarifCentimes,
+        reductionCentimes: donnees.reductionCentimes,
+        convenuCentimes: donnees.convenuCentimes,
+        rabatteur: donnees.rabatteur,
+        groupe: donnees.groupe,
+        note: donnees.note,
+        date: horloge.maintenant().toLocaleDateString('fr-FR'),
+        creeLe: horloge.maintenant().toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        employe: donnees.employe,
+        statut: 'نشط',
+        motifAnnulation: '',
+        impressions: 0,
+        modifications: [],
+        versements: [donnees.premierVersement],
+      }
+      recus.push(recu)
+      return copier(recu)
+    },
+    async ajouterVersement(recuId: string, versement: Versement) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      recu.versements.push(versement)
+      return copier(recu)
+    },
+    async appliquerModification(
+      recuId: string,
+      champsModifies: Partial<Recu>,
+      modification: Modification,
+    ) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      Object.assign(recu, champsModifies)
+      recu.modifications.unshift(modification)
+      recu.derniereModification = modification.dateHeure
+      recu.modifiePar = modification.employe
+      return copier(recu)
+    },
+    async annuler(
+      recuId: string,
+      donnees: {
+        motif: string
+        annulePar: string
+        annuleLe: string
+        modeRemboursement: ModeRemboursement
+        montantRembourseCentimes: number
+      },
+    ) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      recu.statut = 'ملغى'
+      recu.motifAnnulation = donnees.motif
+      recu.annulePar = donnees.annulePar
+      recu.annuleLe = donnees.annuleLe
+      recu.modeRemboursement = donnees.modeRemboursement
+      recu.montantRembourseCentimes = donnees.montantRembourseCentimes
+      return copier(recu)
+    },
+    async incrementerImpressions(recuId: string) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      recu.impressions += 1
+      return recu.impressions
+    },
+  }
+
+  const depotClients: ClientsPort = {
+    async lister() {
+      return copier(clients)
+    },
+    async parId(id) {
+      const trouve = clients.find((c) => c.id === id)
+      return trouve ? copier(trouve) : null
+    },
+    async creer(client) {
+      clients.push(client)
+      return copier(client)
+    },
+    async rattacherRecu(clientId, recuId) {
+      const client = clients.find((c) => c.id === clientId)
+      if (!client) throw new Error(`Client introuvable : ${clientId}`)
+      if (!client.recuIds.includes(recuId)) client.recuIds.push(recuId)
+    },
+  }
+
+  const depotOperations: OperationsPartageesPort = {
+    async lister() {
+      return copier(operations)
+    },
+    async parId(id) {
+      const trouve = operations.find((o) => o.id === id)
+      return trouve ? copier(trouve) : null
+    },
+    async creer(operation) {
+      operations.push(operation)
+      return copier(operation)
+    },
+    async definirImage(operationId, image) {
+      const operation = operations.find((o) => o.id === operationId)
+      if (!operation) throw new Error(`Opération introuvable : ${operationId}`)
+      operation.image = image
+    },
+  }
+
+  const depotMouvements: MouvementsCaissePort = {
+    async listerParJour(jour) {
+      return copier(mouvements.filter((m) => m.jour === jour))
+    },
+    async lister() {
+      return copier(mouvements)
+    },
+    async creer(mouvement) {
+      mouvements.push(mouvement)
+      return copier(mouvement)
+    },
+  }
+
+  const depotImpressions: ImpressionsFinancePort = {
+    async listerParJour(jour) {
+      return copier(impressions.filter((p) => p.jour === jour))
+    },
+    async creer(impression) {
+      impressions.push(impression)
+      return copier(impression)
+    },
+  }
+
+  const depotAcquittements: AcquittementsAnomaliePort = {
+    async parJour(jour) {
+      const trouve = acquittements.get(jour)
+      return trouve ? copier(trouve) : null
+    },
+    async acquitter(acquittement) {
+      const existant = acquittements.get(acquittement.jour)
+      const fusion = existant
+        ? [...new Set([...existant.mouvementIds, ...acquittement.mouvementIds])]
+        : acquittement.mouvementIds
+      acquittements.set(acquittement.jour, { ...acquittement, mouvementIds: fusion })
+    },
+  }
+
+  const journalAudit: JournalAuditPort = {
+    async lister(limite) {
+      return copier(limite ? audit.slice(0, limite) : audit)
+    },
+    async enregistrer(entree) {
+      audit.unshift(entree)
+    },
+  }
+
+  const stockage: StockageFichiersPort = {
+    async deposer({ contenu, nomOrigine, typeMime, origine }) {
+      const chemin = `demo/${identifiants.nouvelId('fichier')}`
+      fichiers.set(chemin, { contenu, typeMime })
+      return {
+        chemin,
+        nomOrigine,
+        origine,
+        deposeLe: horloge.maintenant().toISOString(),
+      }
+    },
+    async url(reference: ReferenceFichier) {
+      // En démonstration, l'URL est un identifiant opaque. L'implémentation
+      // Supabase Storage renverra une URL signée.
+      return `demo-fichier:${reference.chemin}`
+    },
+    async supprimer(reference) {
+      fichiers.delete(reference.chemin)
+    },
+  }
+
+  const lecteurPasseport: LecteurPasseportPort = {
+    // R-90 — Aucune lecture automatique dans le fichier de référence.
+    disponible: () => false,
+    async lire(): Promise<Partial<Passeport> | null> {
+      return null
+    },
+  }
+
+  return {
+    referentiels,
+    session,
+    recus: depotRecus,
+    clients: depotClients,
+    operationsPartagees: depotOperations,
+    mouvementsCaisse: depotMouvements,
+    impressionsFinance: depotImpressions,
+    acquittementsAnomalie: depotAcquittements,
+    audit: journalAudit,
+    fichiers: stockage,
+    lecteurPasseport,
+    horloge,
+    identifiants,
+  }
+}
+
+/** Clé de journée de la date de référence — pratique pour les tests. */
+export function jourDeReference(reference: Date): string {
+  return cleJour(reference)
+}
