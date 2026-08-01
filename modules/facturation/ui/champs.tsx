@@ -10,7 +10,8 @@
 import type { ReactNode } from 'react'
 
 import type { ErreurValidation } from '../domain/rules/errors'
-import { messageFr } from '../domain/rules/errors'
+import { messageErreur } from '../domain/rules/errors'
+import { T } from './textes'
 
 /** Vrai si le champ porte une erreur — pilote l'état visuel « invalide ». */
 export function enErreur(erreurs: ErreurValidation[], champ: string): boolean {
@@ -21,10 +22,10 @@ export function ListeErreurs({ erreurs }: { erreurs: ErreurValidation[] }) {
   if (!erreurs.length) return null
   return (
     <div className="omra-errors" role="alert">
-      <strong>Corrigez les points suivants :</strong>
+      <strong>{T.nouveau.erreurs}</strong>
       <ul>
         {erreurs.map((erreur, index) => (
-          <li key={`${erreur.champ}-${erreur.code}-${index}`}>{messageFr(erreur)}</li>
+          <li key={`${erreur.champ}-${erreur.code}-${index}`}>{messageErreur(erreur)}</li>
         ))}
       </ul>
     </div>
@@ -92,7 +93,7 @@ interface ProprietesSelection {
   vide?: string
 }
 
-export function Selection({ valeur, onChange, options, invalide, vide = 'Choisir…' }: ProprietesSelection) {
+export function Selection({ valeur, onChange, options, invalide, vide = T.nouveau.choisir }: ProprietesSelection) {
   return (
     <select
       className={`omra-input${invalide ? ' invalide' : ''}`}

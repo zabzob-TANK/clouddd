@@ -9,6 +9,7 @@
 import type { EntreeAudit } from '../../domain/types'
 import { Dialogue } from '../dialogue'
 import { DateValeur } from '../bidi'
+import { T } from '../textes'
 
 export function ModaleJournal({
   entrees,
@@ -18,11 +19,10 @@ export function ModaleJournal({
   onFermer: () => void
 }) {
   return (
-    <Dialogue titre="Journal des opérations" taille="large" onFermer={onFermer}>
+    <Dialogue titre={T.journal.titre} taille="large" onFermer={onFermer}>
       {entrees.length === 0 ? (
         <div className="omra-empty">
-          <strong>Aucune opération</strong>
-          <span>Le journal se remplit au fur et à mesure des actions.</span>
+          <strong>{T.journal.vide}</strong>
         </div>
       ) : (
         entrees.map((entree) => (

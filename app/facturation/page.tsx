@@ -2,7 +2,15 @@ import type { Metadata } from 'next'
 
 import { ApplicationFacturation } from '@/modules/facturation/ui/application'
 
-import { ajouterVersement, annulerRecu, chargerEtat, creerRecu, modifierRecu } from './actions'
+import {
+  ajouterVersement,
+  annulerRecu,
+  chargerEtat,
+  connecter,
+  creerRecu,
+  deconnecter,
+  modifierRecu,
+} from './actions'
 
 export const metadata: Metadata = {
   title: 'Zemzem Asfar — Facturation et registre des paiements',
@@ -19,7 +27,10 @@ export default async function PageFacturation() {
   return (
     <ApplicationFacturation
       etatInitial={etatInitial}
+      comptesEssai={['3 / 3', 'samir / 1234']}
       actions={{
+        connecter,
+        deconnecter,
         recharger: chargerEtat,
         creerRecu,
         ajouterVersement,

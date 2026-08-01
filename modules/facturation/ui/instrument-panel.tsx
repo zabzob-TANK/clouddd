@@ -19,12 +19,13 @@ import { optionsOperations } from '../domain/rules/shared-payment'
 import type { OperationPartagee, Recu } from '../domain/types'
 import { Champ, CaseACocher, enErreur, Saisie, Selection } from './champs'
 import { Montant } from './bidi'
+import { T } from './textes'
 
 /** Libellés français des natures. L'interface ne montre aucun libellé arabe. */
 const NATURES = [
-  { valeur: NATURE_ESPECES, libelle: 'Espèces' },
-  { valeur: NATURE_CHEQUE, libelle: 'Chèque' },
-  { valeur: NATURE_VIREMENT, libelle: 'Virement' },
+  { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
+  { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },
+  { valeur: NATURE_VIREMENT, libelle: T.methodes.virement },
 ]
 
 interface Proprietes {
@@ -80,9 +81,9 @@ export function BlocInstrument({
 
   return (
     <div className="omra-panel">
-      <h3>Méthode de paiement</h3>
+      <h3>{T.nouveau.methode}</h3>
 
-      <div className="omra-choice" role="group" aria-label="Nature du paiement">
+      <div className="omra-choice" role="group" aria-label={T.nouveau.methode}>
         {NATURES.map((option) => (
           <button
             key={option.valeur}
@@ -97,7 +98,7 @@ export function BlocInstrument({
 
       {bancaire ? (
         <>
-          <div className="omra-choice" style={{ marginTop: 12 }} role="group" aria-label="Portée">
+          <div className="omra-choice" style={{ marginTop: 12 }} role="group" aria-label={T.instrument.dansLaMemeFenetre}>
             <button
               type="button"
               className={!partage ? 'active' : ''}
@@ -111,19 +112,19 @@ export function BlocInstrument({
                 })
               }
             >
-              Opération individuelle
+              {T.instrument.operationUnique}
             </button>
             <button
               type="button"
               className={partage ? 'active' : ''}
               onClick={() => modifier({ portee: 'shared' })}
             >
-              Opération partagée
+              {T.instrument.operationPartagee}
             </button>
           </div>
 
           {partage ? (
-            <div className="omra-choice" style={{ marginTop: 8 }} role="group" aria-label="Origine">
+            <div className="omra-choice" style={{ marginTop: 8 }} role="group" aria-label={T.instrument.dansLaMemeFenetre}>
               <button
                 type="button"
                 className={saisie.sourceOperation === 'new' ? 'active' : ''}
@@ -139,7 +140,7 @@ export function BlocInstrument({
                   })
                 }
               >
-                Créer une opération
+                {T.instrument.creerOperation}
               </button>
               <button
                 type="button"
@@ -156,14 +157,14 @@ export function BlocInstrument({
                   })
                 }
               >
-                Choisir une opération existante
+                {T.instrument.choisirOperation}
               </button>
             </div>
           ) : null}
 
           {existante ? (
             <div className="omra-fields" style={{ marginTop: 12 }}>
-              <Champ label="Opérations partagées disponibles *" pleine>
+              <Champ label={T.instrument.operationsDisponibles} pleine>
                 {options.length ? (
                   <Selection
                     valeur={saisie.operationId}
@@ -182,18 +183,18 @@ export function BlocInstrument({
                       libelle: option.libelle,
                     }))}
                     invalide={enErreur(erreurs, 'operationId')}
-                    vide="Choisir l’opération…"
+                    vide={T.instrument.choisirOperationVide}
                   />
                 ) : (
                   <p className="omra-hint">
-                    Aucune opération partagée disponible pour cette méthode. Créez-en une d’abord.
+                    {T.instrument.aucuneOperation}
                   </p>
                 )}
               </Champ>
             </div>
           ) : (
             <div className="omra-fields" style={{ marginTop: 12 }}>
-              <Champ label={nature === NATURE_CHEQUE ? 'Numéro du chèque *' : 'Référence du virement *'}>
+              <Champ label={T.instrument.reference}>
                 <Saisie
                   valeur={saisie.reference}
                   onChange={(valeur) => modifier({ reference: valeur })}
@@ -201,7 +202,7 @@ export function BlocInstrument({
                   mono
                 />
               </Champ>
-              <Champ label="Date de l’opération *" aide="Format : 02/07/2025">
+              <Champ label={T.instrument.dateOperation}>
                 <Saisie
                   valeur={saisie.dateInstrument}
                   onChange={(valeur) => modifier({ dateInstrument: formaterDate(valeur) })}
@@ -210,7 +211,7 @@ export function BlocInstrument({
                   inputMode="numeric"
                 />
               </Champ>
-              <Champ label="Banque *">
+              <Champ label={T.instrument.banque}>
                 <Saisie
                   valeur={saisie.banque}
                   onChange={(valeur) => modifier({ banque: valeur })}
@@ -220,7 +221,7 @@ export function BlocInstrument({
               </Champ>
               {partage ? (
                 <>
-                  <Champ label="Personne ayant payé *">
+                  <Champ label={T.instrument.payeur}>
                     <Saisie
                       valeur={saisie.payeur}
                       onChange={(valeur) => modifier({ payeur: valeur })}
@@ -229,8 +230,8 @@ export function BlocInstrument({
                     />
                   </Champ>
                   <Champ
-                    label="Montant total de l’opération *"
-                    aide="Le montant saisi plus haut est la part de ce voyageur."
+                    label={T.instrument.montantOperation}
+                    aide={T.instrument.partDeCeVoyageur}
                   >
                     <Saisie
                       valeur={saisie.montantOperation}
@@ -248,7 +249,7 @@ export function BlocInstrument({
           {partage ? (
             <div className="omra-summary">
               <div>
-                <span>Montant de l’opération</span>
+                <span>{T.detail.colonnes.montantOperation}</span>
                 <Montant
                   centimes={
                     existante
@@ -258,11 +259,11 @@ export function BlocInstrument({
                 />
               </div>
               <div>
-                <span>Déjà attribué</span>
+                <span>{T.instrument.montantDistribue}</span>
                 <Montant centimes={etatChoisi?.attribueCentimes ?? 0} />
               </div>
               <div>
-                <span>Restant disponible</span>
+                <span>{T.instrument.restantDisponible}</span>
                 <Montant
                   centimes={
                     existante
@@ -272,14 +273,14 @@ export function BlocInstrument({
                 />
               </div>
               <div>
-                <span>Part de ce reçu</span>
+                <span>{T.instrument.uneSeuleImage}</span>
                 <Montant centimes={partCentimes} />
               </div>
             </div>
           ) : null}
 
           <p className="omra-hint" style={{ marginTop: 10 }}>
-            Une seule image par opération. Elle s’ajoute depuis le registre des paiements.
+            {T.instrument.imageDepuisRegistre}
           </p>
         </>
       ) : null}

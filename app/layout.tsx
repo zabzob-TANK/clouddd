@@ -13,9 +13,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // L'interface est en français et se lit de gauche à droite ; seules les
-    // valeurs arabes sont isolées en droite-à-gauche, au niveau des composants.
-    <html lang="fr" dir="ltr">
+    // La langue et l'orientation sont fixées par chaque écran, comme dans le
+    // fichier de référence : les écrans de facturation sont en arabe RTL, les
+    // écrans financiers du fichier sont en français LTR.
+    <html lang="ar">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

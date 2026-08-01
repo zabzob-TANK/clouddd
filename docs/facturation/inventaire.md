@@ -234,7 +234,7 @@ le commanditaire n'a pas explicitement décidé de les modifier.
 | O-06 | Le montant annulé se calcule différemment dans le journal financier et dans le suivi journalier | conservé |
 | O-07 | ~~La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu~~ — **observation erronée, retirée**. Le fichier de référence contient bien ce contrôle (`if(newConv<this.paye(r))`). Il est intégré à R-52. L'identifiant reste réservé pour ne pas décaler les suivants. | retirée |
 | O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
-| O-09 | Les libellés sont mélangés français et arabe selon les écrans | traduit en français, exception validée |
+| O-09 | Les libellés sont mélangés français et arabe selon les écrans | conservé — chaque écran garde la langue et l'orientation du fichier |
 
 ---
 
@@ -247,6 +247,7 @@ référence. Aucun ne touche à une règle métier.
 | --- | --- | --- |
 | L2 | Capture d'image du passeport absente | Le stockage de fichiers est traité au lot L5. Les onze champs et la saisie manuelle sont opérationnels. |
 | L2 | Aperçu imprimable du reçu absent de la fiche | Objet du lot L3. L'emplacement est en place et le compteur d'impressions est affiché. |
-| L2 | Onglets « Finances » et « Statistiques » désactivés | Lots L4 et L6. |
-| L2 | Interface passée de droite-à-gauche à gauche-à-droite | Exception validée : interface en français, valeurs arabes isolées en RTL. |
-| L2 | Marque de l'en-tête : lettre arabe « ز » conservée | Élément graphique de la marque, pas un libellé d'interface. |
+| L2 | Onglet « المالية » désactivé | Lot L4. |
+| L2 | Écran du reçu sans aperçu imprimable | Objet du lot L3. La barre « رجوع » et la zone du reçu sont en place, à la même dimension. |
+| L2 | Fenêtre du dossier : pas de bandeau photo en dégradé | Le fichier affiche une bande verte avec photo du voyageur. La structure et les informations sont présentes, l'habillage viendra au lot L7. |
+| L2 | Fenêtres : icônes en caractères plutôt qu'en SVG | Les pictogrammes du fichier sont des SVG. Détail visuel, repris au lot L7. |

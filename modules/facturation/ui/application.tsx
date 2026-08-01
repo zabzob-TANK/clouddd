@@ -1,13 +1,19 @@
 'use client'
 
 /**
- * Coque de l'application de facturation.
+ * Coque de l'application.
  *
- * Porte l'en-tête global, la navigation, l’écran courant, les fenêtres modales
- * et les notifications. Aucune règle métier n’est décidée ici : toute écriture
- * passe par les actions serveur, qui appellent le noyau.
+ * Reproduit la navigation du fichier de référence : écran de connexion, puis
+ * en-tête global (marque, navigation الوصل / المالية / الإحصائيات, saison,
+ * journal, mode nuit, utilisateur, sortie) et l'écran courant.
  *
- * R-87 — Mode sombre conservé d’une session à l'autre.
+ * Langue et orientation par écran, conformes au fichier : les écrans de ce lot
+ * sont en arabe, de droite à gauche.
+ *
+ * Aucune règle métier n'est décidée ici : toute écriture passe par les actions
+ * serveur, qui appellent le noyau.
+ *
+ * R-87 — Mode sombre conservé d'une session à l'autre.
  * R-88 — Notification transitoire de 2 800 ms.
  * R-89 — La touche d'échappement ferme toute fenêtre (voir `Dialogue`).
  */
@@ -20,9 +26,13 @@ import type { SaisieNouveauRecu } from '../domain/rules/create-receipt'
 import type { SaisieModification } from '../domain/rules/edit-sections'
 import type { Resultat } from '../domain/rules/errors'
 import type { SaisieVersement } from '../domain/rules/payment'
-import type { Recu } from '../domain/types'
-import { EcranFiche } from './ecrans/fiche'
+import { restantDu } from '../domain/rules/receipt'
+import { centimesEnTexteDevise } from '../domain/money'
+import type { Recu, Utilisateur } from '../domain/types'
+import { EcranConnexion } from './ecrans/connexion'
+import { EcranRecu } from './ecrans/recu'
 import { EcranRegistre } from './ecrans/registre'
+import { EcranStatistiques } from './ecrans/statistiques'
 import { ModaleAnnulation } from './modales/annulation'
 import { ModaleDetail } from './modales/detail'
 import { ModaleJournal } from './modales/journal'
@@ -31,7 +41,10 @@ import { ModaleNouveauRecu } from './modales/nouveau-recu'
 import { ModaleVersement } from './modales/versement'
 import { TexteArabe } from './bidi'
 import { creerStoreModeSombre, DUREE_NOTIFICATION } from './preferences'
+import { T } from './textes'
 import './styles.css'
+
+type Ecran = { nom: 'registre' } | { nom: 'recu'; recuId: string } | { nom: 'statistiques' }
 
 type Fenetre =
   | { type: 'aucune' }
@@ -43,6 +56,8 @@ type Fenetre =
   | { type: 'journal' }
 
 export interface ActionsFacturation {
+  connecter: (identifiant: string, motDePasse: string) => Promise<Utilisateur | null>
+  deconnecter: () => Promise<void>
   recharger: () => Promise<EtatFacturation>
   creerRecu: (
     saisie: SaisieNouveauRecu,
@@ -59,14 +74,16 @@ export interface ActionsFacturation {
 export function ApplicationFacturation({
   etatInitial,
   actions,
+  comptesEssai,
 }: {
   etatInitial: EtatFacturation
   actions: ActionsFacturation
+  /** Comptes d'essai affichés sur l'écran de connexion, comme dans la référence. */
+  comptesEssai: string[]
 }) {
   const [etat, setEtat] = useState(etatInitial)
-  const [ecran, setEcran] = useState<{ nom: 'registre' } | { nom: 'fiche'; recuId: string }>({
-    nom: 'registre',
-  })
+  const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null)
+  const [ecran, setEcran] = useState<Ecran>({ nom: 'registre' })
   const [fenetre, setFenetre] = useState<Fenetre>({ type: 'aucune' })
   const [notification, setNotification] = useState<{ texte: string; erreur: boolean } | null>(null)
 
@@ -74,9 +91,7 @@ export function ApplicationFacturation({
   const [rechercheNumero, setRechercheNumero] = useState('')
   const [afficherAnnules, setAfficherAnnules] = useState(false)
 
-  // R-87 — préférence d'affichage, conservée dans le stockage du navigateur.
-  // Ce n’est pas une donnée métier : la base reste la seule source des données.
-  // Le mode sombre vit hors de React : on s'y abonne au lieu de le recopier.
+  // R-87 — préférence d'affichage, hors de React, dans le stockage du navigateur.
   const storeSombre = useMemo(
     () => creerStoreModeSombre(typeof window === 'undefined' ? null : window.localStorage),
     [],
@@ -103,34 +118,59 @@ export function ApplicationFacturation({
   }, [actions])
 
   const recuParId = (id: string): Recu | undefined => etat.recus.find((recu) => recu.id === id)
-
   const fermer = () => setFenetre({ type: 'aucune' })
 
+  const classeRacine = `omra${sombre ? ' sombre' : ''}`
+
+  // ---- Écran de connexion, conservé comme dans le fichier de référence.
+  if (!utilisateur) {
+    return (
+      <div className={classeRacine}>
+        <EcranConnexion
+          comptesEssai={comptesEssai}
+          onConnexion={async (identifiant, motDePasse) => {
+            const connecte = await actions.connecter(identifiant, motDePasse)
+            if (connecte) {
+              setUtilisateur(connecte)
+              await rafraichir()
+            }
+            return connecte
+          }}
+        />
+      </div>
+    )
+  }
+
+  const estAdministrateur = etat.estAdministrateur
+
   return (
-    <div className={`omra${sombre ? ' sombre' : ''}`}>
+    <div className={classeRacine}>
       <header className="omra-header">
         <div className="omra-brand">
           <div className="omra-logo" aria-hidden="true">
             ز
           </div>
           <div>
-            <div className="omra-brand-name">Zemzem Asfar</div>
-            <div className="omra-brand-sub">Gestion de la Omra</div>
+            <div className="omra-brand-name">{T.marque.nom}</div>
+            <div className="omra-brand-sub">{T.marque.sousTitre}</div>
           </div>
         </div>
 
-        <nav className="omra-nav" aria-label="Navigation principale">
+        <nav className="omra-nav" aria-label={T.navigation.recu}>
           <button
-            className={`omra-nav-item${ecran.nom !== 'fiche' ? ' active' : ''}`}
+            className={`omra-nav-item${ecran.nom === 'registre' || ecran.nom === 'recu' ? ' active' : ''}`}
             onClick={() => setEcran({ nom: 'registre' })}
           >
-            Reçus
+            {T.navigation.recu}
           </button>
-          <button className="omra-nav-item" disabled title="Lot L4">
-            Finances
+          <button className="omra-nav-item" disabled title="L4">
+            {T.navigation.finance}
           </button>
-          <button className="omra-nav-item" disabled title="Lot L6">
-            Statistiques
+          <button
+            className={`omra-nav-item${ecran.nom === 'statistiques' ? ' active' : ''}`}
+            onClick={() => setEcran({ nom: 'statistiques' })}
+          >
+            {T.navigation.statistiques}
           </button>
         </nav>
 
@@ -138,49 +178,52 @@ export function ApplicationFacturation({
 
         <div className="omra-season">
           <span className="omra-season-dot" />
-          <TexteArabe>{etat.saison.nom}</TexteArabe>
+          <TexteArabe>{T.saisonActive(etat.saison.nom)}</TexteArabe>
         </div>
 
         <button
           className="omra-icon-btn"
-          title="Journal des opérations"
+          title={T.navigation.journal}
           onClick={() => setFenetre({ type: 'journal' })}
         >
           ⏱
         </button>
 
-        <button
-          className="omra-icon-btn"
-          title={sombre ? 'Mode clair' : 'Mode sombre'}
-          onClick={storeSombre.basculer}
-        >
-          {sombre ? '☀' : '☾'}
-        </button>
-
         <div className="omra-user">
-          <div className="omra-avatar">{etat.utilisateur?.initiales ?? '—'}</div>
+          <div className="omra-avatar">{utilisateur.initiales}</div>
           <div>
             <div className="omra-user-name">
-              <TexteArabe>{etat.utilisateur?.nom ?? '—'}</TexteArabe>
+              <TexteArabe>{utilisateur.nom}</TexteArabe>
             </div>
             <div className="omra-user-role">
-              {etat.estAdministrateur ? 'Administrateur' : 'Caisse'}
+              <TexteArabe>{utilisateur.role}</TexteArabe>
             </div>
           </div>
+          <button
+            className="omra-icon-btn"
+            title={T.navigation.sortie}
+            onClick={async () => {
+              await actions.deconnecter()
+              setUtilisateur(null)
+              setEcran({ nom: 'registre' })
+              setFenetre({ type: 'aucune' })
+            }}
+          >
+            ⏻
+          </button>
+          <button
+            className="omra-icon-btn omra-no-print"
+            title={sombre ? T.navigation.modeJour : T.navigation.modeNuit}
+            onClick={storeSombre.basculer}
+          >
+            {sombre ? '☀' : '☾'}
+          </button>
         </div>
       </header>
-
-      {etat.modeDemonstration ? (
-        <div className="omra-demo-banner">
-          Mode démonstration — données fictives en mémoire, remplaçables par la base réelle sans
-          modifier le métier ni l&apos;interface.
-        </div>
-      ) : null}
 
       {ecran.nom === 'registre' ? (
         <EcranRegistre
           recus={etat.recus}
-          saison={etat.saison}
           rechercheNom={rechercheNom}
           rechercheNumero={rechercheNumero}
           afficherAnnules={afficherAnnules}
@@ -190,29 +233,19 @@ export function ApplicationFacturation({
           onNouveauRecu={() => setFenetre({ type: 'nouveau' })}
           onNouveauVersement={(numero) => setFenetre({ type: 'versement', numero })}
           onOuvrirDetail={(recu) => setFenetre({ type: 'detail', recuId: recu.id })}
-          onOuvrirFiche={(recu) => setEcran({ nom: 'fiche', recuId: recu.id })}
+          onOuvrirRecu={(recu) => setEcran({ nom: 'recu', recuId: recu.id })}
           onAnnuler={(recu) => setFenetre({ type: 'annulation', recuId: recu.id })}
           onModifier={(recu) => setFenetre({ type: 'modification', recuId: recu.id })}
         />
       ) : null}
 
-      {ecran.nom === 'fiche'
+      {ecran.nom === 'statistiques' ? <EcranStatistiques /> : null}
+
+      {ecran.nom === 'recu'
         ? (() => {
             const recu = recuParId(ecran.recuId)
             if (!recu) return null
-            return (
-              <EcranFiche
-                recu={recu}
-                saison={etat.saison}
-                onRetour={() => setEcran({ nom: 'registre' })}
-                onDetail={() => setFenetre({ type: 'detail', recuId: recu.id })}
-                onVersement={() =>
-                  setFenetre({ type: 'versement', numero: String(recu.numero) })
-                }
-                onModifier={() => setFenetre({ type: 'modification', recuId: recu.id })}
-                onAnnuler={() => setFenetre({ type: 'annulation', recuId: recu.id })}
-              />
-            )
+            return <EcranRecu recu={recu} onRetour={() => setEcran({ nom: 'registre' })} />
           })()
         : null}
 
@@ -233,8 +266,8 @@ export function ApplicationFacturation({
             const resultat = await actions.creerRecu(saisie, confirme)
             if (resultat.statut === 'ok') {
               await rafraichir()
-              notifier(`Reçu ${resultat.valeur.numero} enregistré.`)
-              setEcran({ nom: 'fiche', recuId: resultat.valeur.recuId })
+              notifier(`تم حفظ الوصل رقم ${resultat.valeur.numero}`)
+              setEcran({ nom: 'recu', recuId: resultat.valeur.recuId })
             }
             return resultat
           }}
@@ -250,8 +283,16 @@ export function ApplicationFacturation({
           onEnregistrer={async (saisie, confirme) => {
             const resultat = await actions.ajouterVersement(saisie, confirme)
             if (resultat.statut === 'ok') {
-              await rafraichir()
-              notifier('Versement enregistré.')
+              const suivant = await actions.recharger()
+              setEtat(suivant)
+              const cible = suivant.recus.find((r) => r.id === resultat.valeur.recuId)
+              const reste = cible ? restantDu(cible) : 0
+              // Message du fichier de référence, selon que le reçu est soldé ou non.
+              notifier(
+                reste === 0
+                  ? `تم — الوصل ${cible?.numero ?? ''} مسدد بالكامل`
+                  : `تم تسجيل الدفعة — الباقي ${centimesEnTexteDevise(reste)}`,
+              )
             }
             return resultat
           }}
@@ -270,9 +311,7 @@ export function ApplicationFacturation({
                   const resultat = await actions.annulerRecu(recu.id, saisie)
                   if (resultat.statut === 'ok') {
                     await rafraichir()
-                    notifier(
-                      `Reçu ${recu.numero} annulé. Son numéro ne sera jamais réutilisé.`,
-                    )
+                    notifier(`تم إلغاء الوصل ${recu.numero}. الرقم لن يُستعمل مجددًا.`)
                     setEcran({ nom: 'registre' })
                   }
                   return resultat
@@ -300,7 +339,7 @@ export function ApplicationFacturation({
                   const resultat = await actions.modifierRecu(recu.id, saisie)
                   if (resultat.statut === 'ok') {
                     await rafraichir()
-                    notifier('Modification enregistrée avec son historique.')
+                    notifier('تم حفظ التعديل مع الاحتفاظ بالتاريخ الكامل.')
                   }
                   return resultat
                 }}
@@ -318,8 +357,8 @@ export function ApplicationFacturation({
                 recu={recu}
                 saison={etat.saison}
                 onFermer={fermer}
-                onOuvrirFiche={() => {
-                  setEcran({ nom: 'fiche', recuId: recu.id })
+                onOuvrirRecu={() => {
+                  setEcran({ nom: 'recu', recuId: recu.id })
                   fermer()
                 }}
               />
@@ -336,6 +375,10 @@ export function ApplicationFacturation({
           {notification.texte}
         </div>
       ) : null}
+
+      {/* `estAdministrateur` conditionnera les actions réservées à la direction
+          dans les lots L4 et L5 (impression du journal, suppression d'image). */}
+      <span hidden data-administrateur={estAdministrateur} />
     </div>
   )
 }

@@ -73,6 +73,27 @@ async function tracer(
   })
 }
 
+/**
+ * Écran de connexion du fichier de référence.
+ * Renvoie `null` lorsque le couple identifiant / mot de passe est refusé.
+ */
+export async function connecter(
+  identifiant: string,
+  motDePasse: string,
+): Promise<Utilisateur | null> {
+  const source = sourceDonnees()
+  const utilisateur = await source.session.connecter(identifiant, motDePasse)
+  if (utilisateur) await tracer(source, 'دخول', 'اتصال بالنظام', utilisateur)
+  return utilisateur
+}
+
+/** Trace la déconnexion, comme `logout()` du fichier de référence. */
+export async function deconnecter(): Promise<void> {
+  const source = sourceDonnees()
+  const utilisateur = await source.session.utilisateurCourant()
+  await tracer(source, 'خروج', 'قطع الاتصال', utilisateur)
+}
+
 /** Charge tout ce dont l'interface a besoin, en une fois. */
 export async function chargerEtat(): Promise<EtatFacturation> {
   const source = sourceDonnees()
@@ -176,8 +197,8 @@ export async function creerRecu(
 
   await tracer(
     source,
-    'Création',
-    `Reçu ${recu.numero} — ${donnees.prenom} ${donnees.nom} — ` +
+    'إنشاء',
+    `وصل ${recu.numero} — ${donnees.prenom} ${donnees.nom} — ` +
       centimesEnTexteDevise(donnees.premierVersement.montantCentimes),
     base.utilisateur,
   )
@@ -217,8 +238,8 @@ export async function ajouterVersement(
 
   await tracer(
     source,
-    'Versement',
-    `Reçu ${cible.numero} — versement ${versement.rang} — ` +
+    'دفعة',
+    `وصل ${cible.numero} — دفعة ${versement.rang} — ` +
       centimesEnTexteDevise(versement.montantCentimes),
     base.utilisateur,
   )
@@ -259,9 +280,9 @@ export async function annulerRecu(
 
   await tracer(
     source,
-    'Annulation',
-    `Reçu ${recu.numero} — ${donnees.motif} — ` +
-      (donnees.modeRemboursement === 'cash' ? 'depuis la caisse' : 'hors caisse'),
+    'إلغاء',
+    `وصل ${recu.numero} — ${donnees.motif} — ` +
+      (donnees.modeRemboursement === 'cash' ? 'من الصندوق' : 'خارج الصندوق'),
     base.utilisateur,
   )
 
@@ -303,8 +324,8 @@ export async function modifierRecu(
     .join(' · ')
   await tracer(
     source,
-    'Modification',
-    `Reçu ${recu.numero} — ${sectionLibelle} — ${resume} — motif : ${motif}`,
+    'تعديل',
+    `وصل ${recu.numero} — ${sectionLibelle} — ${resume} — السبب: ${motif}`,
     base.utilisateur,
   )
 
@@ -319,6 +340,6 @@ export async function enregistrerImpressionRecu(recuId: string): Promise<Resulta
   if (!recu) return { statut: 'erreurs', erreurs: [{ champ: 'recu', code: 'numero-recu-introuvable' }] }
 
   const total = await source.recus.incrementerImpressions(recuId)
-  await tracer(source, 'Impression', `Reçu ${recu.numero} — impression ${total}`, utilisateur)
+  await tracer(source, 'طباعة', `وصل ${recu.numero} — طباعة رقم ${total}`, utilisateur)
   return ok(null)
 }

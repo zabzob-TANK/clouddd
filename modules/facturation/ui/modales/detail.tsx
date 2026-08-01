@@ -14,21 +14,23 @@ import { restantDu, statutAffiche, totalPaye } from '../../domain/rules/receipt'
 import type { Recu, Saison } from '../../domain/types'
 import { Dialogue } from '../dialogue'
 import { DateValeur, Montant, Reference, Telephone, TexteArabe } from '../bidi'
+import { T } from '../textes'
+
 
 function libelleNature(valeur: string): string {
   const nature = natureNormalisee(valeur)
-  if (nature === 'نقد') return 'Espèces'
-  if (nature === 'شيك') return 'Chèque'
-  if (nature === 'تحويل بنكي') return 'Virement'
+  if (nature === 'نقد') return T.methodes.especes
+  if (nature === 'شيك') return T.methodes.cheque
+  if (nature === 'تحويل بنكي') return T.methodes.virement
   return '—'
 }
 
 /** Libellés français des statuts calculés. */
 export function libelleStatut(recu: Recu): { texte: string; classe: string } {
   const statut = statutAffiche(recu)
-  if (statut === 'ملغى') return { texte: 'Annulé', classe: 'annule' }
-  if (statut === 'مسدد') return { texte: 'Soldé', classe: 'solde' }
-  return { texte: 'Incomplet', classe: 'incomplet' }
+  if (statut === 'ملغى') return { texte: T.statuts.annule, classe: 'annule' }
+  if (statut === 'مسدد') return { texte: T.statuts.solde, classe: 'solde' }
+  return { texte: T.statuts.incomplet, classe: 'incomplet' }
 }
 
 function Definition({ label, children }: { label: string; children: React.ReactNode }) {
@@ -44,129 +46,138 @@ interface Proprietes {
   recu: Recu
   saison: Saison
   onFermer: () => void
-  onOuvrirFiche: () => void
+  onOuvrirRecu: () => void
 }
 
-export function ModaleDetail({ recu, saison, onFermer, onOuvrirFiche }: Proprietes) {
+export function ModaleDetail({ recu, saison, onFermer, onOuvrirRecu }: Proprietes) {
   const statut = libelleStatut(recu)
   const paye = totalPaye(recu)
   const restant = restantDu(recu)
 
   return (
     <Dialogue
-      titre="Dossier complet du voyageur"
+      titre={T.detail.titre}
       taille="large"
       onFermer={onFermer}
-      entete={<span className={`omra-pill ${statut.classe}`}>{statut.texte}</span>}
+      entete={
+        <>
+          <span className={`omra-pill ${statut.classe}`}>{statut.texte}</span>
+          <span className="omra-pill" style={{ background: '#F1F1EC', color: '#6E7565' }}>
+            {recu.modifications.length
+              ? T.detail.modifieNFois(recu.modifications.length)
+              : T.detail.nonModifie}
+          </span>
+        </>
+      }
       pied={
         <>
           <button className="omra-btn" onClick={onFermer}>
-            Fermer
+            {T.detail.fermer}
           </button>
-          <button className="omra-btn primary" onClick={onOuvrirFiche}>
-            Voir le reçu
+          <button className="omra-btn primary" onClick={onOuvrirRecu}>
+            {T.detail.voirRecu}
           </button>
         </>
       }
     >
       <div className="omra-summary" style={{ marginTop: 0 }}>
         <div>
-          <span>Reçu</span>
+          <span>{T.registre.colonnes.numero}</span>
           <Reference>{recu.numero}</Reference>
         </div>
         <div>
-          <span>Prix d’origine</span>
+          <span>{T.detail.prixOrigine}</span>
           <Montant centimes={recu.tarifCentimes} />
         </div>
         <div>
-          <span>Réduction</span>
+          <span>{T.registre.colonnes.reduction}</span>
           <Montant centimes={recu.reductionCentimes} />
         </div>
         <div>
-          <span>Montant convenu</span>
+          <span>{T.detail.convenu}</span>
           <Montant centimes={recu.convenuCentimes} />
         </div>
         <div>
-          <span>Payé</span>
+          <span>{T.detail.paye}</span>
           <Montant centimes={paye} />
         </div>
         <div>
-          <span>Restant</span>
+          <span>{T.detail.restant}</span>
           <Montant centimes={restant} />
         </div>
       </div>
 
       <div className="omra-panel">
-        <h3>Identité et contact</h3>
+        <h3>{T.detail.identiteContact}</h3>
         <div className="omra-defs">
-          <Definition label="Prénom et nom">
+          <Definition label={T.registre.colonnes.nom}>
             <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
           </Definition>
-          <Definition label="Téléphone">
+          <Definition label={T.detail.telephone}>
             <Telephone>{recu.telephone}</Telephone>
           </Definition>
-          <Definition label="Passeport">
+          <Definition label={T.detail.passeport}>
             {recu.passeport?.numero ? (
               <Reference>{recu.passeport.numero}</Reference>
             ) : (
               <span className="omra-cell-muted">Non renseigné</span>
             )}
           </Definition>
-          <Definition label="Groupe">
+          <Definition label={T.detail.groupe}>
             {recu.groupe || <span className="omra-cell-muted">—</span>}
           </Definition>
-          <Definition label="Note">
+          <Definition label={T.detail.note}>
             {recu.note || <span className="omra-cell-muted">—</span>}
           </Definition>
         </div>
       </div>
 
       <div className="omra-panel">
-        <h3>Programme</h3>
+        <h3>{T.detail.programme}</h3>
         <div className="omra-defs">
-          <Definition label="Hôtel">
+          <Definition label={T.detail.hotel}>
             <TexteArabe>{recu.hotel}</TexteArabe>
           </Definition>
-          <Definition label="Chambre">
+          <Definition label={T.detail.chambre}>
             <Reference>{recu.chambre}</Reference>
           </Definition>
-          <Definition label="Vol">
+          <Definition label={T.detail.vol}>
             <TexteArabe>{recu.vol}</TexteArabe>
           </Definition>
-          <Definition label="Intermédiaire">
+          <Definition label={T.detail.rabatteur}>
             <TexteArabe>{recu.rabatteur}</TexteArabe>
           </Definition>
-          <Definition label="Saison">
+          <Definition label={T.detail.saison}>
             <TexteArabe>{saison.nom}</TexteArabe>
           </Definition>
-          <Definition label="Durée">
+          <Definition label=" ">
             <TexteArabe>{saison.duree}</TexteArabe>
           </Definition>
         </div>
       </div>
 
       <div className="omra-panel">
-        <h3>Informations d’enregistrement</h3>
+        <h3>{T.detail.infosEnregistrement}</h3>
         <div className="omra-defs">
-          <Definition label="Date d’enregistrement">
+          <Definition label={T.registre.colonnes.date}>
             <DateValeur>{recu.date}</DateValeur>
           </Definition>
-          <Definition label="Employé">
+          <Definition label={T.detail.employe}>
             <TexteArabe>{recu.employe}</TexteArabe>
           </Definition>
-          <Definition label="Impressions">
+          <Definition label={T.detail.impression}>
             <Reference>{recu.impressions}</Reference>
           </Definition>
-          <Definition label="Versements">
+          <Definition label={T.registre.colonnes.nbVersements}>
             <Reference>{`${recu.versements.length} / ${MAX_VERSEMENTS}`}</Reference>
           </Definition>
           {recu.derniereModification ? (
-            <Definition label="Dernière modification">
+            <Definition label={T.detail.derniereModification}>
               <DateValeur>{recu.derniereModification}</DateValeur>
             </Definition>
           ) : null}
           {recu.modifiePar ? (
-            <Definition label="Modifié par">
+            <Definition label={T.detail.modifiePar}>
               <TexteArabe>{recu.modifiePar}</TexteArabe>
             </Definition>
           ) : null}
@@ -174,19 +185,19 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirFiche }: Propriet
       </div>
 
       <div className="omra-panel">
-        <h3>Versements enregistrés</h3>
+        <h3>{T.detail.dfpEnregistrees}</h3>
         <table className="omra-mini-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Date</th>
-              <th>Montant</th>
-              <th>Méthode</th>
-              <th>Référence</th>
-              <th>Date instrument</th>
-              <th>Banque</th>
-              <th>Payeur</th>
-              <th>Montant opération</th>
+              <th>{T.detail.colonnes.rang}</th>
+              <th>{T.detail.colonnes.date}</th>
+              <th>{T.detail.colonnes.montant}</th>
+              <th>{T.detail.colonnes.document}</th>
+              <th>{T.detail.colonnes.reference}</th>
+              <th>{T.detail.colonnes.dateInstrument}</th>
+              <th>{T.detail.colonnes.banque}</th>
+              <th>{T.detail.colonnes.payeur}</th>
+              <th>{T.detail.colonnes.montantOperation}</th>
             </tr>
           </thead>
           <tbody>
@@ -233,7 +244,7 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirFiche }: Propriet
 
       {recu.modifications.length ? (
         <div className="omra-panel">
-          <h3>Historique des modifications ({recu.modifications.length})</h3>
+          <h3>{T.detail.journalModifications}</h3>
           {recu.modifications.map((modification) => (
             <div className="omra-log-entry" key={modification.id}>
               <div className="omra-log-head">
@@ -249,7 +260,7 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirFiche }: Propriet
                 </div>
               ))}
               <div className="omra-log-detail" style={{ color: 'var(--muted)', marginTop: 4 }}>
-                Motif : {modification.motif}
+                {T.detail.motifPrefixe} {modification.motif}
               </div>
             </div>
           ))}
@@ -258,21 +269,21 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirFiche }: Propriet
 
       {recu.statut === 'ملغى' ? (
         <div className="omra-panel">
-          <h3>Informations d’annulation</h3>
+          <h3>{T.detail.infosAnnulation}</h3>
           <div className="omra-defs">
-            <Definition label="Motif">
+            <Definition label={T.detail.motif}>
               <TexteArabe>{recu.motifAnnulation}</TexteArabe>
             </Definition>
-            <Definition label="Annulé par">
+            <Definition label={T.detail.annulePar}>
               <TexteArabe>{recu.annulePar ?? '—'}</TexteArabe>
             </Definition>
-            <Definition label="Date d’annulation">
+            <Definition label={T.detail.dateAnnulation}>
               <DateValeur>{recu.annuleLe ?? '—'}</DateValeur>
             </Definition>
-            <Definition label="Mode de remboursement">
-              {recu.modeRemboursement === 'cash' ? 'Depuis la caisse' : 'Hors caisse'}
+            <Definition label={T.annulation.modeRemboursement}>
+              {recu.modeRemboursement === 'cash' ? T.annulation.depuisCaisse : T.annulation.horsCaisse}
             </Definition>
-            <Definition label="Montant remboursé">
+            <Definition label={T.annulation.montantPaye}>
               <Montant centimes={recu.montantRembourseCentimes ?? 0} />
             </Definition>
           </div>

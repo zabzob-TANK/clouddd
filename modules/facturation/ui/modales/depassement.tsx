@@ -11,6 +11,7 @@
 
 import { centimesEnTexteDevise } from '../../domain/money'
 import { Dialogue } from '../dialogue'
+import { T } from '../textes'
 
 interface Proprietes {
   montantCentimes: number
@@ -27,38 +28,37 @@ export function ModaleDepassement({
 }: Proprietes) {
   return (
     <Dialogue
-      titre="Dépassement du montant restant de l’opération"
+      titre={T.depassement.titre}
       taille="small"
       onFermer={onRetour}
       pied={
         <>
           <button className="omra-btn" onClick={onRetour}>
-            Retour
+            {T.depassement.retour}
           </button>
           <button className="omra-btn primary" onClick={onConfirmer}>
-            Confirmer et enregistrer
+            {T.depassement.confirmer}
           </button>
         </>
       }
     >
       <p style={{ fontSize: 13, marginTop: 0 }}>
-        L’enregistrement est possible, mais il demande une confirmation explicite.
+        {T.depassement.consigne}
       </p>
 
       <div className="omra-summary" style={{ marginTop: 14 }}>
         <div>
-          <span>Part à enregistrer</span>
+          <span>{T.depassement.partAvant}</span>
           <span className="mono">{centimesEnTexteDevise(montantCentimes)}</span>
         </div>
         <div>
-          <span>Restant sur l’opération</span>
+          <span>{T.instrument.restantDisponible}</span>
           <span className="mono">{centimesEnTexteDevise(disponibleCentimes)}</span>
         </div>
       </div>
 
       <p className="omra-hint" style={{ marginTop: 14 }}>
-        Cet écart sera conservé dans les données de l’opération. Aucune surveillance automatique des
-        opérations dupliquées n’est effectuée.
+        {T.depassement.conservation}
       </p>
     </Dialogue>
   )

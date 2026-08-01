@@ -20,6 +20,7 @@ import type { SaisieNouveauRecu } from '../../domain/rules/create-receipt'
 import { construireGrille, montantConvenu } from '../../domain/rules/tarif'
 import type { OperationPartagee, Passeport, Recu, Saison, Tarif } from '../../domain/types'
 import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
+import { T } from '../textes'
 import { Dialogue } from '../dialogue'
 import { BlocInstrument, instrumentVierge } from '../instrument-panel'
 import { ModaleDepassement } from './depassement'
@@ -141,16 +142,16 @@ export function ModaleNouveauRecu({
 
   return (
     <Dialogue
-      titre="Nouveau reçu"
+      titre={T.nouveau.titre}
       taille="large"
       onFermer={onFermer}
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
-            Annuler
+            {T.nouveau.annuler}
           </button>
           <button className="omra-btn primary" onClick={() => soumettre(false)} disabled={envoi}>
-            Enregistrer le reçu
+            {T.nouveau.enregistrer}
           </button>
         </>
       }
@@ -158,14 +159,14 @@ export function ModaleNouveauRecu({
       <ListeErreurs erreurs={erreurs} />
 
       <div className="omra-panel" style={{ marginTop: 0 }}>
-        <h3>Voyageur</h3>
+        <h3>{T.nouveau.sectionVoyageur}</h3>
         {saisie.passeport ? (
           <p className="omra-hint" style={{ marginBottom: 10 }}>
-            ✓ Passeport rattaché{saisie.passeport.numero ? ` — ${saisie.passeport.numero}` : ''}
+            {T.nouveau.passeportLie}{saisie.passeport.numero ? ` — ${saisie.passeport.numero}` : ''}
           </p>
         ) : null}
         <div className="omra-fields">
-          <Champ label="Prénom *">
+          <Champ label={T.nouveau.prenom}>
             <Saisie
               valeur={saisie.prenom}
               onChange={(v) => modifier({ prenom: nettoyerArabe(v) })}
@@ -173,7 +174,7 @@ export function ModaleNouveauRecu({
               arabe
             />
           </Champ>
-          <Champ label="Nom *">
+          <Champ label={T.nouveau.nom}>
             <Saisie
               valeur={saisie.nom}
               onChange={(v) => modifier({ nom: nettoyerArabe(v) })}
@@ -181,7 +182,7 @@ export function ModaleNouveauRecu({
               arabe
             />
           </Champ>
-          <Champ label="Téléphone *" aide="10 chiffres">
+          <Champ label={T.nouveau.telephone}>
             <Saisie
               valeur={saisie.telephone}
               onChange={(v) => modifier({ telephone: formaterTelephone(v) })}
@@ -190,18 +191,18 @@ export function ModaleNouveauRecu({
               inputMode="tel"
             />
           </Champ>
-          <Champ label="Passeport">
+          <Champ label=" ">
             <button className="omra-btn" type="button" onClick={() => setPasseportOuvert(true)}>
-              {saisie.passeport ? 'Modifier le passeport' : 'Scanner le passeport'}
+              {T.nouveau.scannerPasseport}
             </button>
           </Champ>
         </div>
       </div>
 
       <div className="omra-panel">
-        <h3>Programme et prix</h3>
+        <h3>{T.modification.sections.program.titre}</h3>
         <div className="omra-fields">
-          <Champ label="Hôtel *">
+          <Champ label={T.nouveau.hotel}>
             <Selection
               valeur={saisie.hotel}
               onChange={(v) => modifier({ hotel: v })}
@@ -209,7 +210,7 @@ export function ModaleNouveauRecu({
               invalide={enErreur(erreurs, 'hotel')}
             />
           </Champ>
-          <Champ label="Vol *">
+          <Champ label={T.nouveau.vol}>
             <Selection
               valeur={saisie.vol}
               onChange={(v) => modifier({ vol: v })}
@@ -217,7 +218,7 @@ export function ModaleNouveauRecu({
               invalide={enErreur(erreurs, 'vol')}
             />
           </Champ>
-          <Champ label="Chambre *">
+          <Champ label={T.nouveau.chambre}>
             <Selection
               valeur={saisie.chambre}
               onChange={(v) => modifier({ chambre: v })}
@@ -225,7 +226,7 @@ export function ModaleNouveauRecu({
               invalide={enErreur(erreurs, 'chambre')}
             />
           </Champ>
-          <Champ label="Intermédiaire *">
+          <Champ label={T.nouveau.rabatteur}>
             <Selection
               valeur={saisie.rabatteur}
               onChange={(v) => modifier({ rabatteur: v })}
@@ -234,8 +235,8 @@ export function ModaleNouveauRecu({
             />
           </Champ>
           <Champ
-            label="Réduction (DH)"
-            aide={`Maximum ${centimesEnTexteDevise(referentiels.saison.reductionMaxCentimes)}`}
+            label={T.nouveau.reduction}
+            aide={centimesEnTexteDevise(referentiels.saison.reductionMaxCentimes)}
           >
             <Saisie
               valeur={saisie.reduction}
@@ -256,15 +257,15 @@ export function ModaleNouveauRecu({
         {tarif !== null ? (
           <div className="omra-summary">
             <div>
-              <span>Prix d’origine</span>
+              <span>{T.detail.prixOrigine}</span>
               <span className="mono">{centimesEnTexteDevise(tarif)}</span>
             </div>
             <div>
-              <span>Réduction</span>
+              <span>{T.registre.colonnes.reduction}</span>
               <span className="mono">{centimesEnTexteDevise(reduction)}</span>
             </div>
             <div>
-              <span>Montant convenu</span>
+              <span>{T.registre.colonnes.convenu}</span>
               <span className="mono">{centimesEnTexteDevise(convenu ?? 0)}</span>
             </div>
           </div>
@@ -274,12 +275,12 @@ export function ModaleNouveauRecu({
           <CaseACocher
             coche={saisie.groupeCoche}
             onChange={(coche) => modifier({ groupeCoche: coche })}
-            label="Appartient à un groupe ou une famille"
+            label={T.nouveau.groupeCoche}
           />
         </div>
         {saisie.groupeCoche ? (
           <div className="omra-fields" style={{ marginTop: 10 }}>
-            <Champ label="Code du groupe *">
+            <Champ label={T.nouveau.groupeCode}>
               <Saisie
                 valeur={saisie.groupe}
                 onChange={(v) => modifier({ groupe: v })}
@@ -290,16 +291,16 @@ export function ModaleNouveauRecu({
         ) : null}
 
         <div className="omra-fields" style={{ marginTop: 12 }}>
-          <Champ label="Note" pleine>
+          <Champ label={T.nouveau.note} pleine>
             <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
           </Champ>
         </div>
       </div>
 
       <div className="omra-panel">
-        <h3>Premier versement — obligatoire</h3>
+        <h3>{T.nouveau.sectionPremiereDfp}</h3>
         <div className="omra-fields">
-          <Champ label="Montant versé (DH) *">
+          <Champ label={T.nouveau.montant}>
             <Saisie
               valeur={saisie.premierVersement}
               onChange={(v) => modifier({ premierVersement: formaterMontant(v) })}

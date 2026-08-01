@@ -16,6 +16,7 @@ import type { Recu } from '../../domain/types'
 import { Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
 import { Dialogue } from '../dialogue'
 import { Montant, Reference, TexteArabe } from '../bidi'
+import { T } from '../textes'
 
 interface Proprietes {
   recu: Recu
@@ -47,15 +48,15 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
 
   return (
     <Dialogue
-      titre="Annuler le reçu"
+      titre={T.annulation.titre}
       onFermer={onFermer}
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
-            Retour
+            {T.annulation.retour}
           </button>
           <button className="omra-btn danger" onClick={soumettre} disabled={envoi}>
-            Confirmer l’annulation
+            {T.annulation.confirmer}
           </button>
         </>
       }
@@ -63,36 +64,35 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
       <ListeErreurs erreurs={erreurs} />
 
       <p style={{ fontSize: 13, marginTop: 0 }}>
-        Le reçu n’est jamais supprimé. Indiquez seulement si le remboursement sort de la caisse
-        espèces ou s’il est géré en dehors.
+        {T.annulation.avertissement}
       </p>
 
       <div className="omra-summary" style={{ marginTop: 14 }}>
         <div>
-          <span>Reçu</span>
+          <span>{T.registre.colonnes.numero}</span>
           <Reference>{recu.numero}</Reference>
         </div>
         <div>
-          <span>Voyageur</span>
+          <span>{T.registre.colonnes.nom}</span>
           <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
         </div>
         <div>
-          <span>Montant payé</span>
+          <span>{T.annulation.montantPaye}</span>
           <Montant centimes={totalPaye(recu)} />
         </div>
       </div>
 
       <div className="omra-fields" style={{ marginTop: 16 }}>
-        <Champ label="Mode de remboursement *" pleine>
+        <Champ label={T.annulation.modeRemboursement} pleine>
           <Selection
             valeur={saisie.modeRemboursement}
             onChange={(v) => modifier({ modeRemboursement: v as SaisieAnnulation['modeRemboursement'] })}
             options={[
-              { valeur: 'cash', libelle: 'Depuis la caisse espèces' },
-              { valeur: 'none', libelle: 'Hors caisse' },
+              { valeur: 'cash', libelle: T.annulation.depuisCaisse },
+              { valeur: 'none', libelle: T.annulation.horsCaisse },
             ]}
             invalide={enErreur(erreurs, 'modeRemboursement')}
-            vide="Choisir…"
+            vide={T.annulation.choisir}
           />
         </Champ>
         <Champ label="Motif de l'annulation *" pleine>
@@ -104,9 +104,8 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
           />
         </Champ>
         <Champ
-          label="Mot de passe *"
+          label={T.annulation.motDePasse}
           pleine
-          aide="Vérification de votre identité, exigée par le fichier de référence."
         >
           <Saisie
             valeur={saisie.motDePasse}
@@ -117,9 +116,7 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
         </Champ>
       </div>
 
-      <p className="omra-hint" style={{ marginTop: 12 }}>
-        Après annulation, le numéro de ce reçu ne sera jamais réutilisé.
-      </p>
+
     </Dialogue>
   )
 }

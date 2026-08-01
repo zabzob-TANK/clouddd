@@ -81,6 +81,15 @@ export interface ReferentielsPort {
  * n'est défini dans ce module (observation O-03).
  */
 export interface SessionPort {
+  /**
+   * Vérifie un couple identifiant / mot de passe et renvoie l'utilisateur.
+   *
+   * Le fichier de référence conserve l'écran de connexion : il est reproduit.
+   * Aucun compte n'est défini dans le domaine ni dans l'interface — seule
+   * l'implémentation en connaît, et l'adaptateur Omra déléguera à
+   * l'authentification existante.
+   */
+  connecter(identifiant: string, motDePasse: string): Promise<Utilisateur | null>
   utilisateurCourant(): Promise<Utilisateur | null>
   /** R-39, R-61, R-65 — droits réservés à l'administrateur. */
   estAdministrateur(utilisateur: Utilisateur): boolean

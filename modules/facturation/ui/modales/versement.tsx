@@ -18,7 +18,7 @@ import { formaterMontant } from '../../domain/format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../../domain/money'
 import { natureAbregee, natureNormalisee } from '../../domain/payment-method'
 import type { ErreurValidation, Resultat } from '../../domain/rules/errors'
-import { messageFr } from '../../domain/rules/errors'
+import { messageErreur } from '../../domain/rules/errors'
 import { motifRefusVersement, type SaisieVersement } from '../../domain/rules/payment'
 import { restantDu, totalPaye } from '../../domain/rules/receipt'
 import type { OperationPartagee, Recu } from '../../domain/types'
@@ -27,13 +27,14 @@ import { Dialogue } from '../dialogue'
 import { BlocInstrument, instrumentVierge } from '../instrument-panel'
 import { Montant, TexteArabe } from '../bidi'
 import { ModaleDepassement } from './depassement'
+import { T } from '../textes'
 
-/** Libellé français d’une nature de paiement. */
+/** Libellé abrégé de la méthode, comme `receiptMethodDisplay()`. */
 function libelleNature(valeur: string): string {
   const nature = natureNormalisee(valeur)
-  if (nature === 'نقد') return 'Espèces'
-  if (nature === 'شيك') return 'Chèque'
-  if (nature === 'تحويل بنكي') return 'Virement'
+  if (nature === 'نقد') return T.methodes.especes
+  if (nature === 'شيك') return T.methodes.cheque
+  if (nature === 'تحويل بنكي') return T.methodes.virement
   return natureAbregee(valeur)
 }
 
@@ -112,20 +113,20 @@ export function ModaleVersement({
 
   return (
     <Dialogue
-      titre="Ajouter un versement"
+      titre={T.versement.titre}
       taille="large"
       onFermer={onFermer}
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
-            Annuler
+            {T.versement.annuler}
           </button>
           <button
             className="omra-btn primary"
             onClick={() => soumettre(false)}
             disabled={envoi || !utilisable}
           >
-            Enregistrer le versement
+            {T.versement.enregistrer}
           </button>
         </>
       }
@@ -133,7 +134,7 @@ export function ModaleVersement({
       <ListeErreurs erreurs={erreurs} />
 
       <div className="omra-fields">
-        <Champ label="Numéro du reçu *" aide="Saisissez directement le numéro">
+        <Champ label={T.versement.numeroRecu} aide={T.versement.aideNumero}>
           <Saisie
             valeur={saisie.numeroRecu}
             onChange={(v) => modifier({ numeroRecu: v.replace(/\D/g, '') })}
@@ -146,7 +147,7 @@ export function ModaleVersement({
 
       {refus ? (
         <div className="omra-errors" style={{ marginTop: 14 }} role="alert">
-          <strong>{messageFr(refus)}</strong>
+          <strong>{messageErreur(refus)}</strong>
         </div>
       ) : null}
 
@@ -154,50 +155,49 @@ export function ModaleVersement({
         <>
           <div className="omra-summary" style={{ marginTop: 14 }}>
             <div>
-              <span>Voyageur</span>
+              <span>{T.registre.colonnes.nom}</span>
               <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
             </div>
             <div>
-              <span>Montant convenu</span>
+              <span>{T.registre.colonnes.convenu}</span>
               <Montant centimes={recu.convenuCentimes} />
             </div>
             <div>
-              <span>Déjà payé</span>
+              <span>{T.versement.payeAvant}</span>
               <Montant centimes={totalPaye(recu)} />
             </div>
             <div>
-              <span>Restant dû</span>
+              <span>{T.registre.colonnes.restant}</span>
               <Montant centimes={restant} />
             </div>
             <div>
-              <span>Versements</span>
+              <span>{T.registre.colonnes.nbVersements}</span>
               <span className="mono">
                 {recu.versements.length} / {MAX_VERSEMENTS}
               </span>
             </div>
             <div>
-              <span>Restant après ce versement</span>
+              <span>{T.versement.restantApres}</span>
               <Montant centimes={Math.max(0, restant - montantCentimes)} />
             </div>
           </div>
 
           {recu.versements.length === MAX_VERSEMENTS - 1 ? (
             <p className="omra-hint" style={{ marginTop: 10, color: 'var(--warn)' }}>
-              Sixième versement : le montant doit être exactement égal au restant dû (
-              {centimesEnTexteDevise(restant)}).
+              الدفعة السادسة يجب أن تساوي كامل الباقي بالضبط ({centimesEnTexteDevise(restant)}).
             </p>
           ) : null}
 
           <div className="omra-panel">
-            <h3>Récapitulatif des six versements</h3>
+            <h3>{T.versement.recap}</h3>
             <table className="omra-mini-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Date</th>
-                  <th>Montant</th>
-                  <th>Méthode</th>
-                  <th>Détails</th>
+                  <th>{T.versement.colonnes.rang}</th>
+                  <th>{T.versement.colonnes.date}</th>
+                  <th>{T.versement.colonnes.montant}</th>
+                  <th>{T.versement.colonnes.methode}</th>
+                  <th>{T.versement.colonnes.details}</th>
                 </tr>
               </thead>
               <tbody>
@@ -238,12 +238,12 @@ export function ModaleVersement({
               </tbody>
             </table>
             <p className="omra-hint" style={{ marginTop: 8 }}>
-              Lecture seule.
+              {T.versement.recapAide}
             </p>
           </div>
 
           <div className="omra-fields" style={{ marginTop: 14 }}>
-            <Champ label="Montant (DH) *">
+            <Champ label={T.versement.montant}>
               <Saisie
                 valeur={saisie.montant}
                 onChange={(v) => modifier({ montant: formaterMontant(v) })}

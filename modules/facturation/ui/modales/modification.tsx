@@ -24,14 +24,16 @@ import {
 import type { Recu, SectionModifiable, Tarif } from '../../domain/types'
 import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
 import { Dialogue } from '../dialogue'
+import { T } from '../textes'
 
+/** Sous-titres des sections, repris du fichier de référence. */
 const DESCRIPTIONS: Record<SectionModifiable, string> = {
-  identity: 'Le prénom et le nom ensemble',
-  contact: 'Le numéro de téléphone seul',
-  program: 'Hôtel, vol, chambre et réduction',
-  group: 'Ajouter, changer ou retirer le groupe',
-  note: 'Modifier la note seule',
-  firstPayment: "Méthode et données de l'instrument, sans changer le montant",
+  identity: T.modification.sections.identity.sousTitre,
+  contact: T.modification.sections.contact.sousTitre,
+  program: T.modification.sections.program.sousTitre,
+  group: T.modification.sections.group.sousTitre,
+  note: T.modification.sections.note.sousTitre,
+  firstPayment: T.modification.sections.firstPayment.sousTitre,
 }
 
 interface Proprietes {
@@ -93,7 +95,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
   return (
     <Dialogue
-      titre="Modifier les données du reçu"
+      titre={T.modification.titre}
       taille="large"
       onFermer={onFermer}
       pied={
@@ -107,15 +109,15 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
               }}
               disabled={envoi}
             >
-              Changer de section
+              {T.modification.retour}
             </button>
             <button className="omra-btn primary" onClick={soumettre} disabled={envoi}>
-              Enregistrer la modification
+              {T.modification.enregistrer}
             </button>
           </>
         ) : (
           <button className="omra-btn" onClick={onFermer}>
-            Fermer
+            {T.detail.fermer}
           </button>
         )
       }
@@ -125,8 +127,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
       {!section ? (
         <>
           <p style={{ fontSize: 13, marginTop: 0 }}>
-            Choisissez une seule section. Après l’avoir enregistrée, vous pourrez rouvrir cette
-            fenêtre pour en modifier une autre.
+            {T.modification.consigne}
           </p>
           <div style={{ display: 'grid', gap: 9, marginTop: 14 }}>
             {(Object.keys(LIBELLES_SECTIONS) as SectionModifiable[]).map((cle) => {
@@ -146,7 +147,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                     style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginTop: 2 }}
                   >
                     {bloquee
-                      ? "Opération partagée : à modifier depuis le registre des paiements, pas depuis le reçu."
+                      ? T.modification.portePartagee
                       : DESCRIPTIONS[cle]}
                   </span>
                 </button>
@@ -154,8 +155,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
             })}
           </div>
           <p className="omra-hint" style={{ marginTop: 14 }}>
-            L’intermédiaire et les montants des versements ne sont pas modifiables. Les versements à
-            partir du deuxième restent tels qu’ils ont été enregistrés.
+            {T.modification.fixes}
           </p>
         </>
       ) : (
@@ -165,7 +165,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
             {section === 'identity' ? (
               <div className="omra-fields">
-                <Champ label="Prénom *">
+                <Champ label={T.nouveau.prenom}>
                   <Saisie
                     valeur={saisie.prenom}
                     onChange={(v) => modifier({ prenom: nettoyerArabe(v) })}
@@ -173,7 +173,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                     arabe
                   />
                 </Champ>
-                <Champ label="Nom *">
+                <Champ label={T.nouveau.nom}>
                   <Saisie
                     valeur={saisie.nom}
                     onChange={(v) => modifier({ nom: nettoyerArabe(v) })}
@@ -186,7 +186,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
             {section === 'contact' ? (
               <div className="omra-fields">
-                <Champ label="Téléphone *" aide="10 chiffres">
+                <Champ label={T.nouveau.telephone}>
                   <Saisie
                     valeur={saisie.telephone}
                     onChange={(v) => modifier({ telephone: formaterTelephone(v) })}
@@ -200,7 +200,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
             {section === 'program' ? (
               <div className="omra-fields">
-                <Champ label="Hôtel *">
+                <Champ label={T.nouveau.hotel}>
                   <Selection
                     valeur={saisie.hotel}
                     onChange={(v) => modifier({ hotel: v })}
@@ -208,7 +208,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                     invalide={enErreur(erreurs, 'hotel')}
                   />
                 </Champ>
-                <Champ label="Vol *">
+                <Champ label={T.nouveau.vol}>
                   <Selection
                     valeur={saisie.vol}
                     onChange={(v) => modifier({ vol: v })}
@@ -216,7 +216,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                     invalide={enErreur(erreurs, 'vol')}
                   />
                 </Champ>
-                <Champ label="Chambre *">
+                <Champ label={T.nouveau.chambre}>
                   <Selection
                     valeur={saisie.chambre}
                     onChange={(v) => modifier({ chambre: v })}
@@ -224,7 +224,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                     invalide={enErreur(erreurs, 'chambre')}
                   />
                 </Champ>
-                <Champ label="Réduction (DH)">
+                <Champ label={T.nouveau.reduction}>
                   <Saisie
                     valeur={saisie.reduction}
                     onChange={(v) => modifier({ reduction: formaterMontant(v) })}
@@ -241,11 +241,11 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                 <CaseACocher
                   coche={saisie.groupeCoche}
                   onChange={(coche) => modifier({ groupeCoche: coche })}
-                  label="Appartient à un groupe ou une famille"
+                  label={T.nouveau.groupeCoche}
                 />
                 {saisie.groupeCoche ? (
                   <div className="omra-fields" style={{ marginTop: 10 }}>
-                    <Champ label="Code du groupe *">
+                    <Champ label={T.nouveau.groupeCode}>
                       <Saisie
                         valeur={saisie.groupe}
                         onChange={(v) => modifier({ groupe: v })}
@@ -259,7 +259,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
             {section === 'note' ? (
               <div className="omra-fields">
-                <Champ label="Note" pleine>
+                <Champ label={T.nouveau.note} pleine>
                   <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
                 </Champ>
               </div>
@@ -269,9 +269,9 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
               <>
                 <div className="omra-choice">
                   {[
-                    { valeur: NATURE_ESPECES, libelle: 'Espèces' },
-                    { valeur: NATURE_CHEQUE, libelle: 'Chèque' },
-                    { valeur: NATURE_VIREMENT, libelle: 'Virement' },
+                    { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
+                    { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },
+                    { valeur: NATURE_VIREMENT, libelle: T.methodes.virement },
                   ].map((option) => (
                     <button
                       key={option.valeur}
@@ -286,7 +286,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
                 {saisie.nature !== NATURE_ESPECES ? (
                   <div className="omra-fields" style={{ marginTop: 12 }}>
-                    <Champ label="Numéro / référence *">
+                    <Champ label={T.instrument.reference}>
                       <Saisie
                         valeur={saisie.reference}
                         onChange={(v) => modifier({ reference: v })}
@@ -294,7 +294,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                         mono
                       />
                     </Champ>
-                    <Champ label="Date de l’opération *">
+                    <Champ label={T.instrument.dateOperation}>
                       <Saisie
                         valeur={saisie.dateInstrument}
                         onChange={(v) => modifier({ dateInstrument: formaterDate(v) })}
@@ -303,7 +303,7 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                         inputMode="numeric"
                       />
                     </Champ>
-                    <Champ label="Banque *">
+                    <Champ label={T.instrument.banque}>
                       <Saisie
                         valeur={saisie.banque}
                         onChange={(v) => modifier({ banque: v })}
@@ -315,15 +315,14 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                 ) : null}
 
                 <p className="omra-hint" style={{ marginTop: 12 }}>
-                  Cette modification ne concerne que la méthode et les données du premier versement.
-                  Son montant et les versements suivants ne changent pas.
+                  {T.modification.noteFirstPayment}
                 </p>
               </>
             ) : null}
           </div>
 
           <div className="omra-fields">
-            <Champ label="Motif de la modification *" pleine>
+            <Champ label={T.modification.motif} pleine>
               <Saisie
                 valeur={saisie.motif}
                 onChange={(v) => modifier({ motif: v })}

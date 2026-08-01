@@ -1,43 +1,46 @@
 'use client'
 
 /**
- * Écran « Reçus » — le registre.
+ * Écran « الوصل » — le registre des reçus.
  *
- * Reproduit la structure de référence : barre d'outils (actions à gauche,
- * recherches, titre à droite), puis un grand tableau dense à colonnes fixes,
- * en-têtes collants et actions en fin de ligne.
+ * Structure, langue, orientation, colonnes et ordre repris du fichier de
+ * référence : barre d'outils (actions, recherches, titre), puis un tableau
+ * dense de vingt colonnes en arabe, de droite à gauche, avec en-têtes collants
+ * et actions en fin de ligne.
  *
- * Les colonnes sont celles du fichier de référence, dans le même ordre :
- * numéro, nom, convenu, payé, restant, date, nombre de versements, dernier
- * versement, méthode, statut, hôtel, chambre, vol, intermédiaire, note,
- * employé, réduction, téléphone, groupe, actions.
+ * Les colonnes suivent exactement l'ordre du fichier :
+ * رقم · الاسم / النسب · المبلغ المتفق عليه · مجموع الدفعات · الباقي ·
+ * تاريخ التسجيل · عدد الدفعات · آخر دفعة · الطريقة · الحالة · الفندق ·
+ * الغرفة · الرحلة · الوسيط · ملاحظة · الموظف · التخفيض · رقم الهاتف ·
+ * المجموعة · الإجراءات
  */
 
 import { MAX_VERSEMENTS } from '../../domain/constants'
 import { codeCouleurNature, natureNormalisee } from '../../domain/payment-method'
 import { motifRefusVersement } from '../../domain/rules/payment'
 import { dernierVersement, restantDu, statutAffiche, totalPaye } from '../../domain/rules/receipt'
-import type { Recu, Saison } from '../../domain/types'
+import type { Recu } from '../../domain/types'
 import { DateValeur, Montant, Reference, Telephone, TexteArabe } from '../bidi'
+import { T } from '../textes'
 
-function libelleNature(valeur: string): string {
+/** Libellé abrégé de la méthode, comme `receiptMethodDisplay()`. */
+function libelleMethode(valeur: string): string {
   const nature = natureNormalisee(valeur)
-  if (nature === 'نقد') return 'Espèces'
-  if (nature === 'شيك') return 'Chèque'
-  if (nature === 'تحويل بنكي') return 'Virement'
+  if (nature === 'نقد') return T.methodes.especes
+  if (nature === 'شيك') return T.methodes.cheque
+  if (nature === 'تحويل بنكي') return T.methodes.virement
   return '—'
 }
 
-function statut(recu: Recu): { texte: string; classe: string } {
+function situation(recu: Recu): { texte: string; classe: string } {
   const valeur = statutAffiche(recu)
-  if (valeur === 'ملغى') return { texte: 'Annulé', classe: 'annule' }
-  if (valeur === 'مسدد') return { texte: 'Soldé', classe: 'solde' }
-  return { texte: 'Incomplet', classe: 'incomplet' }
+  if (valeur === 'ملغى') return { texte: T.statuts.annule, classe: 'annule' }
+  if (valeur === 'مسدد') return { texte: T.statuts.solde, classe: 'solde' }
+  return { texte: T.statuts.incomplet, classe: 'incomplet' }
 }
 
 interface Proprietes {
   recus: Recu[]
-  saison: Saison
   rechercheNom: string
   rechercheNumero: string
   afficherAnnules: boolean
@@ -47,14 +50,13 @@ interface Proprietes {
   onNouveauRecu: () => void
   onNouveauVersement: (numero?: string) => void
   onOuvrirDetail: (recu: Recu) => void
-  onOuvrirFiche: (recu: Recu) => void
+  onOuvrirRecu: (recu: Recu) => void
   onAnnuler: (recu: Recu) => void
   onModifier: (recu: Recu) => void
 }
 
 export function EcranRegistre({
   recus,
-  saison,
   rechercheNom,
   rechercheNumero,
   afficherAnnules,
@@ -64,54 +66,54 @@ export function EcranRegistre({
   onNouveauRecu,
   onNouveauVersement,
   onOuvrirDetail,
-  onOuvrirFiche,
+  onOuvrirRecu,
   onAnnuler,
   onModifier,
 }: Proprietes) {
   const lignes = recus
     .filter((recu) => (afficherAnnules ? true : recu.statut !== 'ملغى'))
     .filter((recu) =>
-      rechercheNom.trim()
-        ? `${recu.prenom} ${recu.nom}`.includes(rechercheNom.trim())
-        : true,
+      rechercheNom.trim() ? `${recu.prenom} ${recu.nom}`.includes(rechercheNom.trim()) : true,
     )
     .filter((recu) =>
       rechercheNumero.trim() ? String(recu.numero).includes(rechercheNumero.trim()) : true,
     )
     .sort((a, b) => b.numero - a.numero)
 
+  const actifs = recus.filter((recu) => recu.statut !== 'ملغى').length
+  const annules = recus.length - actifs
+  const C = T.registre.colonnes
+
   return (
     <div className="omra-page">
       <div className="omra-tools">
         <div className="omra-actions">
           <button className="omra-action primary" onClick={onNouveauRecu}>
-            Nouveau reçu
+            {T.registre.nouveauRecu}
           </button>
           <button className="omra-action" onClick={() => onNouveauVersement()}>
-            Ajouter un versement
+            {T.registre.ajouterDfp}
           </button>
         </div>
 
         <div className="omra-searches">
           <div className="omra-search name">
-            <label htmlFor="recherche-nom">Nom</label>
+            <label htmlFor="recherche-nom">{T.registre.rechercheNom}</label>
             <input
               id="recherche-nom"
               type="search"
-              placeholder="Rechercher…"
-              dir="rtl"
-              style={{ unicodeBidi: 'plaintext', textAlign: 'right' }}
+              placeholder={T.registre.rechercher}
               value={rechercheNom}
               onChange={(evenement) => onRechercheNom(evenement.target.value)}
             />
           </div>
           <div className="omra-search receipt">
-            <label htmlFor="recherche-numero">Numéro de reçu</label>
+            <label htmlFor="recherche-numero">{T.registre.rechercheNumero}</label>
             <input
               id="recherche-numero"
               type="search"
               className="mono"
-              placeholder="N°"
+              dir="ltr"
               value={rechercheNumero}
               onChange={(evenement) =>
                 onRechercheNumero(evenement.target.value.replace(/\D/g, ''))
@@ -124,23 +126,20 @@ export function EcranRegistre({
               checked={afficherAnnules}
               onChange={(evenement) => onAfficherAnnules(evenement.target.checked)}
             />
-            Afficher les reçus annulés
+            {T.registre.afficherAnnules}
           </label>
         </div>
 
         <div className="omra-title">
-          <h1>Reçus</h1>
-          <p>
-            {lignes.length} reçu{lignes.length > 1 ? 's' : ''} · <TexteArabe>{saison.nom}</TexteArabe>
-          </p>
+          <p>{T.registre.sousTitre(actifs, annules)}</p>
         </div>
       </div>
 
       <div className="omra-card">
         {lignes.length === 0 ? (
           <div className="omra-empty">
-            <strong>Aucun reçu ne correspond</strong>
-            <span>Modifiez le nom ou le numéro dans la zone de recherche.</span>
+            <strong>{T.registre.videTitre}</strong>
+            <span>{T.registre.videAide}</span>
           </div>
         ) : (
           <div className="omra-scroll">
@@ -148,28 +147,28 @@ export function EcranRegistre({
               <thead>
                 <tr>
                   <th className="centre" style={{ width: 52 }}>
-                    N°
+                    {C.numero}
                   </th>
-                  <th style={{ width: 232 }}>Prénom / Nom</th>
-                  <th className="centre">Montant convenu</th>
-                  <th className="centre">Total versé</th>
-                  <th className="centre">Restant</th>
-                  <th className="centre">Date d&apos;enregistrement</th>
-                  <th className="centre">Versements</th>
-                  <th className="centre">Dernier versement</th>
-                  <th className="centre">Méthode</th>
-                  <th>Situation</th>
-                  <th>Hôtel</th>
-                  <th className="centre">Chambre</th>
-                  <th>Vol</th>
-                  <th>Intermédiaire</th>
-                  <th className="secondaire">Note</th>
-                  <th className="secondaire">Employé</th>
-                  <th className="secondaire centre">Réduction</th>
-                  <th className="secondaire">Téléphone</th>
-                  <th className="secondaire">Groupe</th>
+                  <th style={{ width: 232 }}>{C.nom}</th>
+                  <th className="centre">{C.convenu}</th>
+                  <th className="centre">{C.paye}</th>
+                  <th className="centre">{C.restant}</th>
+                  <th className="centre">{C.date}</th>
+                  <th className="centre">{C.nbVersements}</th>
+                  <th className="centre">{C.derniereDfp}</th>
+                  <th className="centre">{C.methode}</th>
+                  <th>{C.statut}</th>
+                  <th>{C.hotel}</th>
+                  <th className="centre">{C.chambre}</th>
+                  <th>{C.vol}</th>
+                  <th>{C.rabatteur}</th>
+                  <th className="secondaire">{C.note}</th>
+                  <th className="secondaire">{C.employe}</th>
+                  <th className="secondaire centre">{C.reduction}</th>
+                  <th className="secondaire">{C.telephone}</th>
+                  <th className="secondaire">{C.groupe}</th>
                   <th className="centre" style={{ width: 136 }}>
-                    Actions
+                    {C.actions}
                   </th>
                 </tr>
               </thead>
@@ -179,14 +178,14 @@ export function EcranRegistre({
                   const paye = totalPaye(recu)
                   const restant = restantDu(recu)
                   const dernier = dernierVersement(recu)
-                  const situation = statut(recu)
+                  const etat = situation(recu)
                   const versementImpossible = Boolean(motifRefusVersement(recu))
 
                   return (
                     <tr
                       key={recu.id}
                       className={annule ? 'annule' : ''}
-                      title="Double-cliquez pour ouvrir le dossier complet"
+                      title={T.registre.infobulleLigne}
                       onDoubleClick={() => onOuvrirDetail(recu)}
                     >
                       <td className="centre">
@@ -204,7 +203,7 @@ export function EcranRegistre({
                       <td className="centre">
                         <span
                           style={{
-                            color: restant === 0 ? 'var(--muted)' : 'var(--danger)',
+                            color: restant === 0 ? '#6E7565' : 'var(--danger)',
                             fontWeight: restant === 0 ? 400 : 600,
                           }}
                         >
@@ -215,14 +214,14 @@ export function EcranRegistre({
                         <DateValeur>{recu.date}</DateValeur>
                       </td>
                       <td className="centre">
-                        <span className="mono" style={{ fontWeight: 600 }}>
+                        <span className="mono" style={{ fontWeight: 600 }} dir="ltr">
                           {recu.versements.length}
-                          <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 10.5 }}>
+                          <span style={{ fontWeight: 400, color: '#6E7565', fontSize: 10.5 }}>
                             /{MAX_VERSEMENTS}
                           </span>
                         </span>
                       </td>
-                      <td className="centre" style={{ color: '#7c8374' }}>
+                      <td className="centre" style={{ color: '#7C8374' }}>
                         {dernier ? (
                           <Montant centimes={dernier.montantCentimes} avecDevise={false} />
                         ) : (
@@ -232,14 +231,14 @@ export function EcranRegistre({
                       <td className="centre">
                         {dernier ? (
                           <span className={`omra-method ${codeCouleurNature(dernier.nature)}`}>
-                            {libelleNature(dernier.nature)}
+                            {libelleMethode(dernier.nature)}
                           </span>
                         ) : (
                           <span className="omra-method none">—</span>
                         )}
                       </td>
                       <td>
-                        <span className={`omra-pill ${situation.classe}`}>{situation.texte}</span>
+                        <span className={`omra-pill ${etat.classe}`}>{etat.texte}</span>
                       </td>
                       <td>
                         <TexteArabe>{recu.hotel}</TexteArabe>
@@ -270,7 +269,7 @@ export function EcranRegistre({
                         <div className="omra-row-actions">
                           <button
                             className="omra-row-btn danger"
-                            title="Annuler le reçu"
+                            title={T.registre.actionAnnuler}
                             disabled={annule}
                             onClick={() => onAnnuler(recu)}
                           >
@@ -278,7 +277,7 @@ export function EcranRegistre({
                           </button>
                           <button
                             className="omra-row-btn warn"
-                            title="Modifier"
+                            title={T.registre.actionModifier}
                             disabled={annule}
                             onClick={() => onModifier(recu)}
                           >
@@ -286,7 +285,7 @@ export function EcranRegistre({
                           </button>
                           <button
                             className="omra-row-btn accent"
-                            title="Ajouter un versement"
+                            title={T.registre.actionDfp}
                             disabled={versementImpossible}
                             onClick={() => onNouveauVersement(String(recu.numero))}
                           >
@@ -294,8 +293,8 @@ export function EcranRegistre({
                           </button>
                           <button
                             className="omra-row-btn accent"
-                            title="Voir le reçu"
-                            onClick={() => onOuvrirFiche(recu)}
+                            title={T.registre.actionVoir}
+                            onClick={() => onOuvrirRecu(recu)}
                           >
                             ↗
                           </button>

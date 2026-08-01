@@ -15,6 +15,7 @@ import { formaterDate } from '../../domain/format'
 import type { Passeport } from '../../domain/types'
 import { Champ, Saisie } from '../champs'
 import { Dialogue } from '../dialogue'
+import { T } from '../textes'
 
 export function passeportVierge(): Passeport {
   return {
@@ -52,7 +53,7 @@ export function ModalePasseport({ initial, onFermer, onValider }: Proprietes) {
     // Le fichier de référence exige le nom et le prénom avant de reporter le
     // résultat du scan dans le formulaire du reçu.
     if (!brouillon.prenom.trim() || !brouillon.nom.trim()) {
-      setMessage('Le prénom et le nom sont nécessaires pour utiliser le résultat du scan.')
+      setMessage(T.passeport.manqueNom)
       return
     }
     onValider({
@@ -64,23 +65,22 @@ export function ModalePasseport({ initial, onFermer, onValider }: Proprietes) {
 
   return (
     <Dialogue
-      titre="Passeport du voyageur"
+      titre={T.passeport.titre}
       taille="large"
       onFermer={onFermer}
       pied={
         <>
           <button className="omra-btn" onClick={onFermer}>
-            Annuler
+            {T.passeport.annuler}
           </button>
           <button className="omra-btn primary" onClick={valider}>
-            Utiliser ces données
+            {T.passeport.utiliser}
           </button>
         </>
       }
     >
       <p className="omra-hint" style={{ marginBottom: 14 }}>
-        Saisie et correction manuelles. La lecture automatique n’est pas encore branchée : elle
-        viendra derrière le port prévu à cet effet, sans modifier cet écran.
+        {T.passeport.sousTitre}
       </p>
 
       {message ? (
@@ -90,23 +90,23 @@ export function ModalePasseport({ initial, onFermer, onValider }: Proprietes) {
       ) : null}
 
       <div className="omra-fields">
-        <Champ label="Prénom *">
+        <Champ label={T.passeport.prenom}>
           <Saisie valeur={brouillon.prenom} onChange={(v) => modifier({ prenom: v })} arabe />
         </Champ>
-        <Champ label="Nom *">
+        <Champ label={T.passeport.nom}>
           <Saisie valeur={brouillon.nom} onChange={(v) => modifier({ nom: v })} arabe />
         </Champ>
-        <Champ label="Numéro de passeport">
+        <Champ label={T.passeport.numero}>
           <Saisie valeur={brouillon.numero} onChange={(v) => modifier({ numero: v })} mono />
         </Champ>
-        <Champ label="Nationalité">
+        <Champ label={T.passeport.nationalite}>
           <Saisie
             valeur={brouillon.nationalite}
             onChange={(v) => modifier({ nationalite: v })}
             arabe
           />
         </Champ>
-        <Champ label="Date de naissance" aide="Format : 14/03/1986">
+        <Champ label={T.passeport.naissance}>
           <Saisie
             valeur={brouillon.dateNaissance}
             onChange={(v) => modifier({ dateNaissance: formaterDate(v) })}
@@ -114,7 +114,7 @@ export function ModalePasseport({ initial, onFermer, onValider }: Proprietes) {
             inputMode="numeric"
           />
         </Champ>
-        <Champ label="Lieu de naissance">
+        <Champ label={T.passeport.lieuNaissance}>
           <Saisie
             valeur={brouillon.lieuNaissance}
             onChange={(v) => modifier({ lieuNaissance: v })}
@@ -144,10 +144,10 @@ export function ModalePasseport({ initial, onFermer, onValider }: Proprietes) {
             arabe
           />
         </Champ>
-        <Champ label="Sexe">
+        <Champ label={T.passeport.sexe}>
           <Saisie valeur={brouillon.sexe} onChange={(v) => modifier({ sexe: v })} mono />
         </Champ>
-        <Champ label="Zone de lecture optique (MRZ)" pleine>
+        <Champ label={T.passeport.mrz} pleine>
           <textarea
             className="omra-input mono"
             dir="ltr"

@@ -40,37 +40,41 @@ export const SECTIONS_MODIFIABLES: readonly SectionModifiable[] = [
 ] as const
 
 /**
- * Libellés français des sections.
- * Traduction des libellés arabes de `editSectionName()`.
+ * Libellés des sections, repris tels quels de `editSectionName()`.
+ * Ils sont enregistrés dans l'historique des modifications et dans le journal :
+ * les traduire changerait les données produites.
  */
 export const LIBELLES_SECTIONS: Record<SectionModifiable, string> = {
-  identity: 'Identité',
-  contact: 'Téléphone',
-  program: 'Programme et prix',
-  group: 'Groupe / famille',
-  note: 'Note',
-  firstPayment: 'Méthode du premier versement',
+  identity: 'الهوية',
+  contact: 'الهاتف',
+  program: 'البرنامج والسعر',
+  group: 'المجموعة / العائلة',
+  note: 'الملاحظة',
+  firstPayment: 'طريقة الدفعة الأولى',
 }
 
-/** Noms de champs consignés dans l'historique, en français. */
+/**
+ * Noms de champs consignés dans l'historique, repris de `pushChange()`.
+ * Ces libellés sont stockés dans les données : ils ne sont pas traduits.
+ */
 const CHAMPS = {
-  prenom: 'Prénom',
-  nom: 'Nom',
-  telephone: 'Téléphone',
-  hotel: 'Hôtel',
-  vol: 'Vol',
-  chambre: 'Chambre',
-  tarif: "Prix d'origine",
-  reduction: 'Réduction',
-  convenu: 'Montant convenu',
-  groupe: 'Groupe',
-  note: 'Note',
-  nature: 'Méthode de paiement',
-  reference: 'Numéro / référence',
-  dateInstrument: "Date de l'opération",
-  banque: 'Banque',
-  payeur: 'Payeur',
-  montantOperation: "Montant de l'opération",
+  prenom: 'الاسم',
+  nom: 'النسب',
+  telephone: 'رقم الهاتف',
+  hotel: 'الفندق',
+  vol: 'الرحلة',
+  chambre: 'الغرفة',
+  tarif: 'الثمن الأصلي',
+  reduction: 'التخفيض',
+  convenu: 'المبلغ المتفق عليه',
+  groupe: 'المجموعة',
+  note: 'الملاحظة',
+  nature: 'طريقة الدفع',
+  reference: 'رقم الشيك / المرجع',
+  dateInstrument: 'تاريخ العملية',
+  banque: 'البنك',
+  payeur: 'الدافع',
+  montantOperation: 'قيمة العملية',
 } as const
 
 export interface SaisieModification {
@@ -211,7 +215,7 @@ export function preparerModification(
 
     // R-52
     if (nouveauTarif === null) {
-      liste.push({ champ: 'hotel', code: 'tarif-introuvable' })
+      liste.push({ champ: 'hotel', code: 'tarif-introuvable-combinaison' })
     } else {
       if (reductionDepasseLePlafond(nouvelleReduction, contexte.reductionMaxCentimes)) {
         liste.push({

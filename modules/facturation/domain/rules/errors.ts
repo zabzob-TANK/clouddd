@@ -1,10 +1,9 @@
 /**
  * Erreurs de validation.
  *
- * Le fichier de référence pousse des messages en arabe directement dans l'état.
- * Ici les règles renvoient des **codes**, et la traduction est séparée : le
- * domaine reste pur et l'interface peut être en français sans que la logique
- * change.
+ * Le fichier de référence pousse ses messages directement dans l'état. Ici les
+ * règles renvoient des **codes**, et les textes sont séparés : le domaine reste
+ * pur, et les libellés restent exactement ceux du fichier.
  *
  * L'ordre dans lequel les erreurs sont produites est significatif et reproduit
  * exactement celui du fichier de référence.
@@ -24,6 +23,7 @@ export type CodeErreur =
   | 'chambre-obligatoire'
   | 'rabatteur-obligatoire'
   | 'tarif-introuvable'
+  | 'tarif-introuvable-combinaison'
   | 'reduction-superieure-au-plafond'
   | 'reduction-superieure-ou-egale-au-tarif'
   | 'convenu-inferieur-au-paye'
@@ -103,78 +103,73 @@ export function ok<T>(valeur: T): Resultat<T> {
 }
 
 /**
- * Messages français.
+ * Messages repris **tels quels** du fichier de référence.
  *
- * Traduction des messages arabes du fichier de référence. Le sens et le
- * déclenchement sont identiques ; seule la langue change, conformément à
- * l'exception validée (observation O-09).
+ * Ils s'affichent en arabe, comme dans le fichier : les écrans concernés y sont
+ * en arabe. Rien n'est traduit ni reformulé.
  */
-export const MESSAGES_FR: Record<CodeErreur, (p?: Record<string, string | number>) => string> = {
-  'prenom-obligatoire': () => 'Le prénom est obligatoire.',
-  'nom-obligatoire': () => 'Le nom est obligatoire.',
-  'telephone-obligatoire': () => 'Le numéro de téléphone est obligatoire.',
-  'telephone-dix-chiffres': () => 'Le numéro de téléphone doit comporter 10 chiffres.',
+export const MESSAGES: Record<CodeErreur, (p?: Record<string, string | number>) => string> = {
+  'prenom-obligatoire': () => 'الاسم إجباري.',
+  'nom-obligatoire': () => 'النسب إجباري.',
+  'telephone-obligatoire': () => 'رقم الهاتف إجباري.',
+  'telephone-dix-chiffres': () => 'رقم الهاتف يجب أن يتكون من 10 أرقام.',
 
-  'hotel-obligatoire': () => "Choisissez l'hôtel.",
-  'vol-obligatoire': () => 'Choisissez le vol.',
-  'chambre-obligatoire': () => 'Choisissez la chambre.',
-  'rabatteur-obligatoire': () => "Choisissez l'intermédiaire.",
-  'tarif-introuvable': () =>
-    "Aucun prix n'est défini pour ce choix. Changez l'hôtel, le vol ou la chambre.",
+  'hotel-obligatoire': () => 'اختر الفندق.',
+  'vol-obligatoire': () => 'اختر الرحلة.',
+  'chambre-obligatoire': () => 'اختر الغرفة.',
+  'rabatteur-obligatoire': () => 'اختر الوسيط.',
+  'tarif-introuvable': () => 'لا يوجد ثمن لهذا الاختيار. غيّر الفندق أو الرحلة أو الغرفة.',
+  // Le fichier de référence emploie un message distinct dans la modification.
+  'tarif-introuvable-combinaison': () => 'لا يوجد ثمن لهذه التركيبة.',
   'reduction-superieure-au-plafond': (p) =>
-    `La réduction maximale pour cette saison est de ${p?.plafond ?? ''}.`,
-  'reduction-superieure-ou-egale-au-tarif': () =>
-    'La réduction ne peut pas égaler ni dépasser le prix.',
+    `التخفيض الأقصى لهذا الموسم هو ${p?.plafond ?? ''}.`,
+  'reduction-superieure-ou-egale-au-tarif': () => 'التخفيض لا يمكن أن يساوي أو يفوق الثمن.',
   'convenu-inferieur-au-paye': (p) =>
-    `Le nouveau montant convenu est inférieur au montant déjà payé (${p?.paye ?? ''}).`,
+    `المبلغ المتفق عليه الجديد أقل من المبلغ المدفوع بالفعل (${p?.paye ?? ''}).`,
 
-  'groupe-obligatoire': () => 'Le code de groupe est obligatoire.',
+  'groupe-obligatoire': () => 'رمز المجموعة إجباري.',
 
-  'premier-versement-obligatoire': () => 'Le premier versement est obligatoire.',
-  'montant-obligatoire': () => 'Le montant est obligatoire.',
-  'montant-doit-etre-positif': () => 'Le montant doit être supérieur à 0 DH.',
+  'premier-versement-obligatoire': () => 'الدفعة الأولى إجبارية.',
+  'montant-obligatoire': () => 'المبلغ إجباري.',
+  'montant-doit-etre-positif': () => 'المبلغ يجب أن يفوق 0 درهم.',
   'montant-superieur-au-convenu': (p) =>
-    `Le montant versé dépasse le montant convenu (${p?.convenu ?? ''}). Le surpaiement est interdit.`,
+    `المبلغ المدفوع يفوق المبلغ المتفق عليه (${p?.convenu ?? ''}). الدفع الزائد ممنوع.`,
   'montant-superieur-au-restant': (p) =>
-    `Le montant dépasse le restant dû (${p?.restant ?? ''}). Le surpaiement est interdit.`,
+    `المبلغ يفوق الباقي (${p?.restant ?? ''}). الدفع الزائد ممنوع.`,
   'sixieme-versement-doit-solder': (p) =>
-    `Le sixième versement doit être exactement égal au restant dû (${p?.restant ?? ''}). ` +
-    "Aucun montant inférieur ou supérieur n'est accepté.",
-  'numero-recu-obligatoire': () => 'Saisissez le numéro du reçu.',
-  'numero-recu-introuvable': () => "Ce numéro n'existe pas.",
-  'recu-annule': () => 'Ce reçu est annulé.',
-  'recu-deja-solde': () => 'Ce reçu est intégralement soldé.',
+    `الدفعة السادسة يجب أن تساوي كامل الباقي بالضبط (${p?.restant ?? ''}). لا يُقبل مبلغ أقل أو أكبر.`,
+  'numero-recu-obligatoire': () => 'اكتب رقم الوصل.',
+  'numero-recu-introuvable': () => 'هذا الرقم غير موجود.',
+  'recu-annule': () => 'هذا الوصل ملغى.',
+  'recu-deja-solde': () => 'هذا الوصل مسدد بالكامل.',
   'nombre-maximal-de-versements-atteint': (p) =>
-    `Ce reçu a atteint le maximum de ${p?.maximum ?? ''} versements.`,
-  'premier-versement-absent': () => "Aucun premier versement n'est rattaché à ce reçu.",
+    `بلغ هذا الوصل الحد الأقصى: ${p?.maximum ?? ''} دفعات.`,
+  'premier-versement-absent': () => 'لا توجد دفعة أولى مرتبطة بهذا الوصل.',
 
-  'reference-instrument-obligatoire': () =>
-    'Le numéro de chèque ou la référence de virement est obligatoire.',
-  'date-instrument-obligatoire': () => "La date de l'opération est obligatoire.",
-  'date-instrument-invalide': () => "Date invalide. Format attendu : 02/07/2025.",
-  'banque-obligatoire': () => 'La banque est obligatoire.',
-  'payeur-obligatoire': () => "Le nom de la personne ayant payé est obligatoire.",
-  'montant-operation-obligatoire': () => "Le montant total de l'opération est obligatoire.",
-  'montant-operation-doit-etre-positif': () =>
-    "Le montant total de l'opération doit être supérieur à 0 DH.",
-  'operation-partagee-obligatoire': () => 'Choisissez une opération partagée existante.',
-  'operation-partagee-introuvable': () => "L'opération partagée choisie n'existe pas.",
+  'reference-instrument-obligatoire': () => 'رقم الشيك أو مرجع التحويل إجباري.',
+  'date-instrument-obligatoire': () => 'تاريخ العملية إجباري.',
+  'date-instrument-invalide': () => 'تاريخ العملية غير صحيح. الشكل: 02/07/2025',
+  'banque-obligatoire': () => 'البنك إجباري.',
+  'payeur-obligatoire': () => 'اسم الشخص الذي قام بالدفع إجباري.',
+  'montant-operation-obligatoire': () => 'المبلغ الإجمالي للعملية إجباري.',
+  'montant-operation-doit-etre-positif': () => 'المبلغ الإجمالي للعملية يجب أن يفوق 0 درهم.',
+  'operation-partagee-obligatoire': () => 'اختر عملية مشتركة موجودة.',
+  'operation-partagee-introuvable': () => 'العملية المشتركة المختارة غير موجودة.',
 
-  'motif-annulation-obligatoire': () => "Le motif d'annulation est obligatoire.",
-  'mode-remboursement-obligatoire': () => 'Choisissez le mode de remboursement.',
-  'mot-de-passe-obligatoire': () => 'Le mot de passe est obligatoire.',
-  'mot-de-passe-incorrect': () => 'Mot de passe incorrect.',
+  'motif-annulation-obligatoire': () => 'سبب الإلغاء إجباري.',
+  'mode-remboursement-obligatoire': () => 'اختر طريقة الاسترجاع.',
+  'mot-de-passe-obligatoire': () => 'كلمة المرور إجبارية.',
+  'mot-de-passe-incorrect': () => 'كلمة المرور غير صحيحة.',
 
-  'motif-modification-obligatoire': () => 'Le motif de modification est obligatoire.',
-  'section-obligatoire': () => 'Choisissez une section à modifier.',
+  'motif-modification-obligatoire': () => 'سبب التعديل إجباري.',
+  'section-obligatoire': () => 'اختر قسمًا واحدًا.',
   'operation-partagee-non-modifiable-ici': () =>
-    "Les données d'une opération partagée se modifient depuis le registre des paiements, " +
-    'et non depuis le reçu.',
+    'بيانات العملية المشتركة تعدّل من سجل المدفوعات والتحويلات، وليس من الوصل.',
 }
 
-/** Rend une erreur en français. */
-export function messageFr(erreurValidation: ErreurValidation): string {
-  return MESSAGES_FR[erreurValidation.code](erreurValidation.parametres)
+/** Rend le message d'une erreur, dans la langue du fichier de référence. */
+export function messageErreur(erreurValidation: ErreurValidation): string {
+  return MESSAGES[erreurValidation.code](erreurValidation.parametres)
 }
 
 /** Raccourci pour formater un montant destiné à un message. */

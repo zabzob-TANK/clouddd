@@ -80,10 +80,28 @@ export interface OptionsAdaptateurDemonstration {
 }
 
 const UTILISATEUR_DEMONSTRATION: Utilisateur = {
-  id: 'demo-caisse',
+  id: 'samir',
   nom: 'سمير بنعلي',
   role: 'صندوق',
   initiales: 'SB',
+}
+
+/**
+ * Comptes de démonstration, repris du fichier de référence.
+ *
+ * ⚠️ Ce sont des comptes fictifs de démonstration, confinés à cet adaptateur.
+ * Ni le domaine ni l'interface n'en connaissent l'existence, et l'adaptateur
+ * Omra les remplacera par l'authentification réelle sans rien changer d'autre.
+ */
+const COMPTES_DEMONSTRATION: Record<string, { motDePasse: string; utilisateur: Utilisateur }> = {
+  '3': {
+    motDePasse: '3',
+    utilisateur: { id: '3', nom: 'المدير', role: ROLE_ADMINISTRATEUR, initiales: 'AD' },
+  },
+  samir: {
+    motDePasse: '1234',
+    utilisateur: UTILISATEUR_DEMONSTRATION,
+  },
 }
 
 /**
@@ -161,9 +179,17 @@ export function creerSourceDemonstration(
     },
   }
 
+  let connecte: Utilisateur | null = options.utilisateur ?? null
+
   const session: SessionPort = {
+    async connecter(identifiant, motDePasse) {
+      const compte = COMPTES_DEMONSTRATION[identifiant.trim()]
+      if (!compte || compte.motDePasse !== motDePasse) return null
+      connecte = compte.utilisateur
+      return copier(connecte)
+    },
     async utilisateurCourant() {
-      return copier(options.utilisateur ?? UTILISATEUR_DEMONSTRATION)
+      return copier(connecte ?? options.utilisateur ?? UTILISATEUR_DEMONSTRATION)
     },
     estAdministrateur(utilisateur: Utilisateur) {
       return utilisateur.role === ROLE_ADMINISTRATEUR

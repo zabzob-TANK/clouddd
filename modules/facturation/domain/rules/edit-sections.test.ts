@@ -73,9 +73,10 @@ describe('R-49 — une seule section à la fois', () => {
     expect(Object.keys(resultat.valeur.champsModifies)).toEqual(['note'])
   })
 
-  it('donne un libellé français à chaque section', () => {
-    expect(LIBELLES_SECTIONS.program).toBe('Programme et prix')
-    expect(LIBELLES_SECTIONS.firstPayment).toBe('Méthode du premier versement')
+  it('reprend les libellés de section du fichier de référence', () => {
+    // Ces libellés sont enregistrés dans l'historique : ils ne sont pas traduits.
+    expect(LIBELLES_SECTIONS.program).toBe('البرنامج والسعر')
+    expect(LIBELLES_SECTIONS.firstPayment).toBe('طريقة الدفعة الأولى')
   })
 })
 
@@ -111,7 +112,7 @@ describe('R-51 — historique champ par champ', () => {
       CONTEXTE,
     )
     expect(resultat.statut === 'ok' && resultat.valeur.changements).toEqual([
-      { champ: 'Note', ancienne: '', nouvelle: 'à rappeler' },
+      { champ: 'الملاحظة', ancienne: '', nouvelle: 'à rappeler' },
     ])
   })
 })
@@ -124,7 +125,9 @@ describe('R-52 — section programme', () => {
   })
 
   it('bloque une combinaison sans tarif', () => {
-    expect(codes(saisie({ section: 'program', chambre: '7' }))).toContain('tarif-introuvable')
+    expect(codes(saisie({ section: 'program', chambre: '7' }))).toContain(
+      'tarif-introuvable-combinaison',
+    )
   })
 
   it('recalcule le tarif, la réduction et le convenu', () => {
@@ -199,7 +202,7 @@ describe('R-53 — section premier versement', () => {
     )
     expect(resultat.statut).toBe('ok')
     if (resultat.statut !== 'ok') return
-    const reference = resultat.valeur.changements.find((c) => c.champ === 'Numéro / référence')
+    const reference = resultat.valeur.changements.find((c) => c.champ === 'رقم الشيك / المرجع')
     expect(reference?.nouvelle).toBe('')
   })
 

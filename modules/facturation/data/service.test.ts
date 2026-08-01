@@ -111,7 +111,7 @@ describe('R-86 — journal d’audit', () => {
   it('trace la création, la plus récente en tête', async () => {
     await creerRecu(nouveauRecu(), false)
     const etat = await chargerEtat()
-    expect(etat.audit[0].action).toBe('Création')
+    expect(etat.audit[0].action).toBe('إنشاء')
   })
 
   it('trace le versement', async () => {
@@ -127,7 +127,7 @@ describe('R-86 — journal d’audit', () => {
       false,
     )
     const etat = await chargerEtat()
-    expect(etat.audit[0].action).toBe('Versement')
+    expect(etat.audit[0].action).toBe('دفعة')
   })
 
   it('trace l’annulation et son mode de remboursement', async () => {
@@ -140,8 +140,8 @@ describe('R-86 — journal d’audit', () => {
       motDePasse: 'verification',
     })
     const etat = await chargerEtat()
-    expect(etat.audit[0].action).toBe('Annulation')
-    expect(etat.audit[0].detail).toContain('depuis la caisse')
+    expect(etat.audit[0].action).toBe('إلغاء')
+    expect(etat.audit[0].detail).toContain('من الصندوق')
   })
 
   it('trace la modification avec son motif', async () => {
@@ -170,7 +170,7 @@ describe('R-86 — journal d’audit', () => {
       montantOperation: '',
     })
     const etat = await chargerEtat()
-    expect(etat.audit[0].action).toBe('Modification')
+    expect(etat.audit[0].action).toBe('تعديل')
     expect(etat.audit[0].detail).toContain('précision demandée')
   })
 })
