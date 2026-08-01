@@ -166,6 +166,15 @@ export interface RecusPort {
     versementId: string,
     image: ReferenceFichier | null,
   ): Promise<void>
+  /**
+   * R-90 — Images du passeport rattachées au reçu : l'original et le portrait
+   * qui en est tiré. Seules leurs références sont conservées.
+   */
+  definirImagesPasseport(
+    recuId: string,
+    originale: ReferenceFichier | null,
+    portrait: ReferenceFichier | null,
+  ): Promise<void>
 }
 
 export interface ClientsPort {

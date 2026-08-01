@@ -121,6 +121,7 @@ export interface ActionsFacturation {
   ajouterImageOperation: (donnees: FormData) => Promise<Resultat<null>>
   supprimerImageOperation: (cle: string) => Promise<Resultat<null>>
   ajouterImageDernierVersement: (donnees: FormData) => Promise<Resultat<null>>
+  ajouterImagesPasseport: (donnees: FormData) => Promise<Resultat<null>>
 }
 
 export function ApplicationFacturation({
@@ -227,6 +228,24 @@ export function ApplicationFacturation({
     if (resultat.statut === 'erreurs') notifier(messageErreur(resultat.erreurs[0]), true)
   }
 
+  /**
+   * R-90 — Dépose l'image du passeport et son portrait après l'enregistrement
+   * du reçu. Aucune lecture automatique n'intervient : ce sont les fichiers
+   * choisis par l'utilisateur.
+   */
+  const envoyerImagesPasseport = async (
+    recuId: string,
+    images: { originale: Blob; portrait: Blob } | null,
+  ) => {
+    if (!images) return
+    const donnees = new FormData()
+    donnees.set('recuId', recuId)
+    donnees.set('originale', images.originale, 'passeport.jpg')
+    donnees.set('portrait', images.portrait, 'passeport-portrait.jpg')
+    const resultat = await actions.ajouterImagesPasseport(donnees)
+    if (resultat.statut === 'erreurs') notifier(messageErreur(resultat.erreurs[0]), true)
+  }
+
   const ouvrirSuivi = () => {
     setEcran({ nom: 'suivi' })
     void chargerSuivi({
@@ -318,7 +337,20 @@ export function ApplicationFacturation({
       <header className="omra-header">
         <div className="omra-brand">
           <div className="omra-logo" aria-hidden="true">
-            ز
+            <svg
+              fill="none"
+              height="20"
+              stroke="#fff"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.7"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <path d="M10 2h4M12 2v3" />
+              <path d="M9 5h6a5 5 0 0 1 5 5v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-7a5 5 0 0 1 5-5z" />
+              <path d="M4.5 14c2 0 2-1.4 4-1.4s2 1.4 4 1.4 2-1.4 4-1.4 2 1.4 3.5 1.4" />
+            </svg>
           </div>
           <div>
             <div className="omra-brand-name">{T.marque.nom}</div>
@@ -362,7 +394,19 @@ export function ApplicationFacturation({
           title={T.navigation.journal}
           onClick={() => setFenetre({ type: 'journal' })}
         >
-          ⏱
+          <svg
+            fill="none"
+            height="15"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            width="15"
+            aria-hidden="true"
+          >
+            <path d="M12 8v4l3 2" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
         </button>
 
         <div className="omra-user">
@@ -385,14 +429,53 @@ export function ApplicationFacturation({
               setFenetre({ type: 'aucune' })
             }}
           >
-            ⏻
+            <svg
+              fill="none"
+              height="15"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="15"
+              aria-hidden="true"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
           </button>
           <button
             className="omra-icon-btn omra-no-print"
             title={sombre ? T.navigation.modeJour : T.navigation.modeNuit}
             onClick={storeSombre.basculer}
           >
-            {sombre ? '☀' : '☾'}
+            {sombre ? (
+              <svg
+                fill="none"
+                height="15"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                width="15"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+            ) : (
+              <svg
+                fill="none"
+                height="15"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                width="15"
+                aria-hidden="true"
+              >
+                <path d="M20 14.5A8.2 8.2 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" />
+              </svg>
+            )}
           </button>
         </div>
       </header>
@@ -565,10 +648,11 @@ export function ApplicationFacturation({
           recus={etat.recus}
           imagesOperations={etat.imagesOperations}
           onFermer={fermer}
-          onEnregistrer={async (saisie, confirme, image) => {
+          onEnregistrer={async (saisie, confirme, image, passeport) => {
             const resultat = await actions.creerRecu(saisie, confirme)
             if (resultat.statut === 'ok') {
               await envoyerImageInstrument(resultat.valeur.recuId, image)
+              await envoyerImagesPasseport(resultat.valeur.recuId, passeport)
               await rafraichir()
               notifier(`تم حفظ الوصل رقم ${resultat.valeur.numero}`)
               setRecuOriginal(resultat.valeur.recuId)
@@ -663,6 +747,7 @@ export function ApplicationFacturation({
               <ModaleDetail
                 recu={recu}
                 saison={etat.saison}
+                portrait={etat.portraitsPasseport[recu.id]}
                 onFermer={fermer}
                 onOuvrirRecu={() => {
                   setEcran({ nom: 'recu', recuId: recu.id })

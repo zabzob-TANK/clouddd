@@ -45,11 +45,13 @@ function Definition({ label, children }: { label: string; children: React.ReactN
 interface Proprietes {
   recu: Recu
   saison: Saison
+  /** R-90 — portrait du passeport, s'il en existe un. */
+  portrait?: string
   onFermer: () => void
   onOuvrirRecu: () => void
 }
 
-export function ModaleDetail({ recu, saison, onFermer, onOuvrirRecu }: Proprietes) {
+export function ModaleDetail({ recu, saison, portrait, onFermer, onOuvrirRecu }: Proprietes) {
   const statut = libelleStatut(recu)
   const paye = totalPaye(recu)
   const restant = restantDu(recu)
@@ -80,6 +82,54 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirRecu }: Propriete
         </>
       }
     >
+      {/* Bande d'identité du fichier : photo, nom et contacts, numéro de reçu. */}
+      <div className="detail-bande">
+        <div className="detail-photo">
+          {portrait ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={portrait} alt={T.passeport.alternativePortrait} />
+          ) : (
+            <div className="vide" aria-hidden="true">
+              <svg
+                fill="none"
+                height="28"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.4"
+                viewBox="0 0 24 24"
+                width="28"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          )}
+        </div>
+        <div className="detail-identite">
+          <div className="nom">
+            <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
+          </div>
+          <div className="lignes">
+            <span>
+              <Telephone>{recu.telephone}</Telephone>
+            </span>
+            <span>
+              <TexteArabe>{recu.groupe || '—'}</TexteArabe>
+            </span>
+            <span>
+              <TexteArabe>{saison.nom}</TexteArabe>
+            </span>
+          </div>
+        </div>
+        <div className="detail-numero">
+          <div className="etiquette">{T.detail.numeroRecu}</div>
+          <div className="valeur">{recu.numero}</div>
+          <div className="date">{recu.date}</div>
+          <div className="heure">{recu.creeLe.split(' ')[1] ?? ''}</div>
+        </div>
+      </div>
+
       <div className="omra-summary" style={{ marginTop: 0 }}>
         <div>
           <span>{T.registre.colonnes.numero}</span>
@@ -117,10 +167,21 @@ export function ModaleDetail({ recu, saison, onFermer, onOuvrirRecu }: Propriete
             <Telephone>{recu.telephone}</Telephone>
           </Definition>
           <Definition label={T.detail.passeport}>
-            {recu.passeport?.numero ? (
-              <Reference>{recu.passeport.numero}</Reference>
+            {/* Le fichier annonce l'état du passeport, pas un tiret. */}
+            {recu.passeport ? (
+              <span style={{ color: '#47593C' }}>
+                <TexteArabe>{T.detail.passeportEnregistre}</TexteArabe>
+                {recu.passeport.numero ? (
+                  <>
+                    {' — '}
+                    <Reference>{recu.passeport.numero}</Reference>
+                  </>
+                ) : null}
+              </span>
             ) : (
-              <span className="omra-cell-muted">Non renseigné</span>
+              <span style={{ color: '#9CA28F' }}>
+                <TexteArabe>{T.detail.passeportAbsent}</TexteArabe>
+              </span>
             )}
           </Definition>
           <Definition label={T.detail.groupe}>

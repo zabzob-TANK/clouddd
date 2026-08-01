@@ -28,7 +28,7 @@ séparées par `|`).
 | L4 | Journal financier, impression, anomalies | livré |
 | L5 | Suivi journalier, registre chèques et virements, images | livré |
 | L6 | Statistiques | livré |
-| L7 | Finitions visuelles, comparaison écran par écran | prévu |
+| L7 | Finitions visuelles, comparaison écran par écran | livré |
 
 ---
 
@@ -213,7 +213,7 @@ séparées par `|`).
 | R-87 | Mode sombre persistant | L2 | livré |
 | R-88 | Notification transitoire de 2 800 ms | L2 | livré |
 | R-89 | Touche d'échappement fermant toute fenêtre | L2 | livré |
-| R-90 | Passeport : onze champs et remplissage manuel — la capture d'image du passeport reste à faire, le stockage de fichiers étant désormais en place (lot L7) | L2 | livré |
+| R-90 | Passeport : onze champs, saisie manuelle, choix d'une image et remplissage de démonstration — aucune lecture automatique, comme dans le fichier | L2 | livré |
 | R-91 | Statistiques : page réservée — titre, phrase d'explication, étiquette « مرحلة لاحقة » et quatre cartes de phase ultérieure, sans aucun calcul | L6 | livré |
 
 ---
@@ -247,19 +247,13 @@ référence. Aucun ne touche à une règle métier.
 
 | Lot | Écart | Raison |
 | --- | --- | --- |
-| L2 | Capture d'image du passeport absente | Le stockage de fichiers est traité au lot L5. Les onze champs et la saisie manuelle sont opérationnels. |
-| L2 | Aperçu imprimable du reçu absent de la fiche | Objet du lot L3. L'emplacement est en place et le compteur d'impressions est affiché. |
-| L2 | Onglet « المالية » désactivé | Lot L4. |
 | L4 | Filtres « week-end » et « période personnalisée » présents dans la logique mais sans bouton | Le fichier calcule `financeWeekend`, `financeCustom` et leurs champs, mais son gabarit n'affiche que اليوم, أمس et الكل. Les règles sont reproduites et testées ; l'affichage suit le fichier. |
-| L4 | Sous-navigation « Paiements » et « Suivi journalier » désactivée | Ces deux écrans sont l'objet du lot L5. Les boutons sont présents, à leur place, en français comme dans le fichier. |
 | L4 | Le nombre de pages annoncé est une estimation, pas la coupure réelle | Le fichier calcule `financePageTotal = ceil(lignes / 31)` et n'impose aucune coupure : la place prise par les blocs de synthèse en tête de première page fait que celle-ci n'accueille que 29 lignes. Une journée de 34 lignes tient donc en 2 pages — 29 puis 5 — et le bandeau annonce bien « 1 sur 2 ». Le calcul est repris tel quel. |
 | L4 | Le compteur de pages n'est pas répété page par page | Voir O-11 : le fichier n'imprime le bandeau qu'une fois, avec un « 1 » figé. Reproduire une numérotation réelle serait une modification du fichier ; elle n'a pas été faite. |
 | L6 | Aucune statistique réelle n'est calculée | Le fichier de référence ne calcule rien sur cette page : il la réserve explicitement et l'annonce par l'étiquette « مرحلة لاحقة » et la phrase « تم حجز الصفحة دون إضافة حسابات أو رسوم الآن، حتى لا تتأثر الفوترة. ». La règle de fidélité prime : rien n'a été inventé. Des indicateurs réels seraient un **ajout** au fichier, à décider séparément. |
 | L5 | Champs `mois` et `date` affichés dans la langue du navigateur | Le fichier utilise les mêmes contrôles natifs `<input type="month">` et `<input type="date">` : leur libellé suit la locale du poste, ici « July 2026 » et « mm/dd/yyyy ». Comportement identique au fichier. |
 | L5 | L'image est déposée dans le stockage de fichiers, et non en base64 | Le fichier conserve une `data:` URL dans l'enregistrement. Le comportement visible est identique — une image par opération, aperçu, suppression — mais seule une référence est stockée, conformément à la contrainte d'architecture. |
 | L5 | Sous-navigation « Paiements / Suivi journalier » extraite en composant partagé | Les trois écrans de la rubrique financière l'affichent ; le rendu est inchangé. Aucune règle du lot L4 n'est touchée. |
-| L5 | La capture d'image du passeport n'est toujours pas construite | R-90 : le fichier ne contient aucune lecture automatique. Le stockage de fichiers est désormais en place ; la capture relève des finitions du lot L7. |
+| L7 | Le portrait du passeport n'est fabriqué qu'à partir de l'image choisie | Le fichier réduit la même image en deux tailles : l'original en 1100 × 760 et le portrait en 260 × 320. Rien n'est détouré ni analysé — c'est le comportement du fichier, sans lecture automatique ni OCR. |
 | L3 | Papier à en-tête `fond-facture.png` absent | Le fichier n'a pas été fourni avec le prototype : seul son chemin y figure. L'aperçu affiche un papier blanc ; le calage reste utilisable. À déposer dans `public/facturation/`. |
 | L3 | Reçu rendu en composants React plutôt qu'en document isolé | Le fichier place le reçu dans une iframe avec un document complet en base64. Les dimensions, la structure et le comportement d'impression sont identiques ; la règle `@page` n'est posée que pendant l'affichage de l'écran, comme le fait le fichier pour le journal financier. |
-| L2 | Fenêtre du dossier : pas de bandeau photo en dégradé | Le fichier affiche une bande verte avec photo du voyageur. La structure et les informations sont présentes, l'habillage viendra au lot L7. |
-| L2 | Fenêtres : icônes en caractères plutôt qu'en SVG | Les pictogrammes du fichier sont des SVG. Détail visuel, repris au lot L7. |

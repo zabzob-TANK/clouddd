@@ -449,6 +449,16 @@ export const T = {
       'هذا التعديل يخص طريقة وبيانات الدفعة الأولى فقط. مبلغها والدفعات التالية لا تتغير.',
   },
 
+  /** Bande « passeport lié » du formulaire de création. */
+  /** Aperçu du prix dans le formulaire de création — texte exact du fichier. */
+  prixIndefini: 'لا يوجد ثمن محدّد لهذا الاختيار في هذا الموسم.',
+
+  passeportLie: {
+    chip: '✓ تم ربط جواز السفر',
+    numero: 'رقم الجواز:',
+    detacher: 'فصل',
+  },
+
   passeport: {
     titre: 'مسح جواز السفر',
     sousTitre: 'محاكاة وظيفية للربط المستقبلي مع خدمة الذكاء الاصطناعي',
@@ -463,14 +473,24 @@ export const T = {
     paysEmission: 'بلد الإصدار',
     sexe: 'الجنس',
     mrz: 'منطقة MRZ / النتيجة الخام',
+    note: 'في النسخة النهائية، سيرسل زر المسح الصورة إلى خدمة خارجية، ثم تعود جميع بيانات الجواز. هنا يمكنك تحميل صورة وتجربة نفس مسار التحقق والحفظ.',
+    sansImage: 'لم يتم اختيار صورة بعد',
+    choisirImage: 'اختيار صورة الجواز',
+    remplirDemo: 'ملء بيانات تجريبية',
+    noteImage: 'الصورة المختارة تمثل النسخة الأصلية. تُنشأ منها صورة مصغرة للملف.',
+    imageIllisible: 'تعذر قراءة صورة الجواز.',
+    transfere: 'تم نقل الاسم والنسب والصورة إلى الوصل. ستُحفظ بقية البيانات عند الحفظ.',
+    alternativeImage: 'صورة الجواز',
+    alternativePortrait: 'صورة المسافر',
     utiliser: 'استعمال البيانات في الوصل',
-    annuler: 'إلغاء',
+    annuler: 'رجوع',
     manqueNom: 'الاسم والنسب ضروريان لاستعمال نتيجة المسح.',
     sauvegardeInfo: 'سيتم حفظ الصورة الأصلية وجميع البيانات عند حفظ الوصل.',
   },
 
   detail: {
     titre: 'الملف الكامل للمسافر',
+    numeroRecu: 'رقم الوصل',
     nonModifie: 'غير معدل',
     modifieNFois: (n: number) => `تم التعديل ${n} مرة`,
     prixOrigine: 'الثمن الأصلي',
@@ -479,6 +499,9 @@ export const T = {
     restant: 'الباقي',
     identiteContact: 'الهوية والاتصال',
     passeport: 'الجواز',
+    /** Le fichier affiche l'un ou l'autre de ces deux états, jamais un tiret. */
+    passeportEnregistre: 'مسجل ومحفوظ',
+    passeportAbsent: 'غير مضاف بعد',
     telephone: 'الهاتف',
     note: 'الملاحظة',
     programme: 'البرنامج',

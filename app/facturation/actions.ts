@@ -27,6 +27,7 @@ import {
   registreBancaire as registreBancaireService,
   ajouterImageOperation as ajouterImageOperationService,
   ajouterImageDernierVersement as ajouterImageDernierVersementService,
+  ajouterImagesPasseport as ajouterImagesPasseportService,
   supprimerImageOperation as supprimerImageOperationService,
   type JournalFinancier,
   type OptionsSuiviJournalier,
@@ -152,5 +153,30 @@ export async function ajouterImageDernierVersement(donnees: FormData): Promise<R
     contenu: await fichier.arrayBuffer(),
     nomOrigine: fichier.name || 'document-paiement',
     typeMime: fichier.type || 'application/octet-stream',
+  })
+}
+
+/**
+ * R-90 — Dépose l'image du passeport et son portrait, une fois le reçu
+ * enregistré. Aucune lecture automatique n'est effectuée.
+ */
+export async function ajouterImagesPasseport(donnees: FormData): Promise<Resultat<null>> {
+  const recuId = String(donnees.get('recuId') ?? '')
+  const originale = donnees.get('originale')
+  const portrait = donnees.get('portrait')
+  if (!(originale instanceof File) || !(portrait instanceof File)) {
+    return ajouterImagesPasseportService(recuId, null)
+  }
+  return ajouterImagesPasseportService(recuId, {
+    originale: {
+      contenu: await originale.arrayBuffer(),
+      nomOrigine: originale.name || 'passeport',
+      typeMime: originale.type || 'application/octet-stream',
+    },
+    portrait: {
+      contenu: await portrait.arrayBuffer(),
+      nomOrigine: portrait.name || 'passeport-portrait',
+      typeMime: portrait.type || 'application/octet-stream',
+    },
   })
 }

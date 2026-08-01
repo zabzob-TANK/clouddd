@@ -12,6 +12,7 @@ import {
   acquitterAnomalies,
   ajouterImageDernierVersement,
   ajouterImageOperation,
+  ajouterImagesPasseport,
   enregistrerImpression,
   enregistrerImpressionFinance,
   journalFinancier,
@@ -53,6 +54,7 @@ export default async function PageFacturation() {
         registreBancaire,
         ajouterImageOperation,
         ajouterImageDernierVersement,
+        ajouterImagesPasseport,
         supprimerImageOperation,
       }}
     />

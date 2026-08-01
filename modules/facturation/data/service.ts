@@ -122,6 +122,8 @@ export interface EtatFacturation {
    * manipulent que des références ; c'est le stockage de fichiers qui résout.
    */
   imagesOperations: Record<string, string>
+  /** R-90 — URL du portrait du passeport, par identifiant de reçu. */
+  portraitsPasseport: Record<string, string>
   audit: EntreeAudit[]
   modeDemonstration: boolean
 }
@@ -195,6 +197,12 @@ export async function chargerEtat(): Promise<EtatFacturation> {
     if (operation.image) imagesOperations[operation.id] = await source.fichiers.url(operation.image)
   }
 
+  const portraitsPasseport: Record<string, string> = {}
+  for (const recu of recus) {
+    const portrait = recu.passeport?.imagePortrait
+    if (portrait) portraitsPasseport[recu.id] = await source.fichiers.url(portrait)
+  }
+
   return {
     utilisateur,
     estAdministrateur: utilisateur ? source.session.estAdministrateur(utilisateur) : false,
@@ -207,6 +215,7 @@ export async function chargerEtat(): Promise<EtatFacturation> {
     recus,
     operations,
     imagesOperations,
+    portraitsPasseport,
     audit,
     modeDemonstration: modeDemonstration(),
   }
@@ -1306,4 +1315,44 @@ export async function supprimerImageOperation(cle: string): Promise<Resultat<nul
   )
 
   return ok(null)
+}
+
+/**
+ * R-90 — Dépose les deux images du passeport après l'enregistrement du reçu.
+ *
+ * Le fichier de référence conserve l'original et un portrait qui en est tiré.
+ * Ici, les deux passent par le stockage de fichiers ; seules leurs références
+ * sont conservées sur le reçu. Aucune lecture automatique n'intervient.
+ */
+export async function ajouterImagesPasseport(
+  recuId: string,
+  fichiers: {
+    originale: { contenu: ArrayBuffer; nomOrigine: string; typeMime: string }
+    portrait: { contenu: ArrayBuffer; nomOrigine: string; typeMime: string }
+  } | null,
+): Promise<Resultat<null>> {
+  const source = sourceDonnees()
+  if (!fichiers) return ok(null)
+
+  const recu = await source.recus.parId(recuId)
+  if (!recu) {
+    return {
+      statut: 'erreurs',
+      erreurs: [{ champ: 'passeport', code: 'operation-bancaire-introuvable' }],
+    }
+  }
+
+  const originale = await source.fichiers.deposer({ ...fichiers.originale, origine: 'upload' })
+  const portrait = await source.fichiers.deposer({ ...fichiers.portrait, origine: 'upload' })
+  await source.recus.definirImagesPasseport(recuId, originale, portrait)
+
+  return ok(null)
+}
+
+/** R-90 — URL affichable du portrait d'un reçu, s'il en porte un. */
+export async function urlPortraitPasseport(recuId: string): Promise<string> {
+  const source = sourceDonnees()
+  const recu = await source.recus.parId(recuId)
+  const portrait = recu?.passeport?.imagePortrait
+  return portrait ? source.fichiers.url(portrait) : ''
 }

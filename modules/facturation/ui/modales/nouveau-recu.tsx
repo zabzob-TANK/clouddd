@@ -27,7 +27,7 @@ import { CarteImageInstrument } from '../carte-image-instrument'
 import { cibleImageInstrument, useBrouillonImage } from '../image-instrument'
 import { ModalePaiementImage } from './paiement-image'
 import { ModaleDepassement } from './depassement'
-import { ModalePasseport } from './passeport'
+import { ModalePasseport, type ImagesPasseport } from './passeport'
 
 interface Referentiels {
   saison: Saison
@@ -48,6 +48,8 @@ interface Proprietes {
     confirme: boolean,
     /** R-35 — image de l'instrument, rattachée à l'enregistrement seulement. */
     image: { contenu: Blob; nomOrigine: string } | null,
+    /** R-90 — images du passeport, rattachées elles aussi à l'enregistrement. */
+    passeport: { originale: Blob; portrait: Blob } | null,
   ) => Promise<Resultat<{ recuId: string; numero: number }>>
   /** R-38 — aperçus des images déjà portées par les opérations partagées. */
   imagesOperations: Record<string, string>
@@ -89,6 +91,8 @@ export function ModaleNouveauRecu({
   const [envoi, setEnvoi] = useState(false)
   // R-35 — l'image reste un brouillon local jusqu'à l'enregistrement du reçu.
   const image = useBrouillonImage()
+  // R-90 — de même pour les deux images du passeport.
+  const [imagesPasseport, setImagesPasseport] = useState<ImagesPasseport | null>(null)
 
   const modifier = (patch: Partial<SaisieNouveauRecu>) => setSaisie({ ...saisie, ...patch })
 
@@ -105,6 +109,9 @@ export function ModaleNouveauRecu({
       saisie,
       confirme,
       image.brouillon ? { contenu: image.brouillon.contenu, nomOrigine: image.brouillon.nomOrigine } : null,
+      imagesPasseport
+        ? { originale: imagesPasseport.originale, portrait: imagesPasseport.portrait }
+        : null,
     )
     setEnvoi(false)
 
@@ -128,8 +135,9 @@ export function ModaleNouveauRecu({
     return (
       <ModalePasseport
         initial={saisie.passeport}
+        apercuInitial={imagesPasseport?.apercu}
         onFermer={() => setPasseportOuvert(false)}
-        onValider={(passeport: Passeport) => {
+        onValider={(passeport: Passeport, images: ImagesPasseport | null) => {
           modifier({
             passeport,
             // Le fichier de référence reporte le nom et le prénom lus dans le
@@ -137,6 +145,7 @@ export function ModaleNouveauRecu({
             prenom: passeport.prenom || saisie.prenom,
             nom: passeport.nom || saisie.nom,
           })
+          if (images) setImagesPasseport(images)
           setPasseportOuvert(false)
         }}
       />
@@ -173,12 +182,32 @@ export function ModaleNouveauRecu({
       <ListeErreurs erreurs={erreurs} />
 
       <div className="omra-panel" style={{ marginTop: 0 }}>
-        <h3>{T.nouveau.sectionVoyageur}</h3>
-        {saisie.passeport ? (
-          <p className="omra-hint" style={{ marginBottom: 10 }}>
-            {T.nouveau.passeportLie}{saisie.passeport.numero ? ` — ${saisie.passeport.numero}` : ''}
-          </p>
-        ) : null}
+        <div className="voyageur-entete">
+          <h3>{T.nouveau.sectionVoyageur}</h3>
+          <div className="voyageur-actions">
+            {saisie.passeport ? (
+              <span className="passeport-chip ok">{T.passeportLie.chip}</span>
+            ) : null}
+            <button className="passeport-scan" type="button" onClick={() => setPasseportOuvert(true)}>
+              <svg
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+                width="14"
+                aria-hidden="true"
+              >
+                <rect x="4" y="3" width="16" height="18" rx="2" />
+                <circle cx="12" cy="9" r="2.4" />
+                <path d="M8 16c1.2-2 2.6-3 4-3s2.8 1 4 3" />
+              </svg>
+              {T.nouveau.scannerPasseport}
+            </button>
+          </div>
+        </div>
         <div className="omra-fields">
           <Champ label={T.nouveau.prenom}>
             <Saisie
@@ -205,12 +234,43 @@ export function ModaleNouveauRecu({
               inputMode="tel"
             />
           </Champ>
-          <Champ label=" ">
-            <button className="omra-btn" type="button" onClick={() => setPasseportOuvert(true)}>
-              {T.nouveau.scannerPasseport}
-            </button>
-          </Champ>
         </div>
+
+        {/* R-90 — bande de liaison, avec le portrait tiré de l'image choisie. */}
+        {saisie.passeport ? (
+          <div className="passeport-bande">
+            {imagesPasseport ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="passeport-portrait"
+                src={imagesPasseport.apercu}
+                alt={T.passeport.alternativePortrait}
+              />
+            ) : (
+              <div className="passeport-portrait vide" aria-hidden="true" />
+            )}
+            <div>
+              <div className="nom">{`${saisie.passeport.prenom} ${saisie.passeport.nom}`.trim()}</div>
+              <div className="numero">
+                {T.passeportLie.numero}{' '}
+                <span dir="ltr" className="mono">
+                  {saisie.passeport.numero || '—'}
+                </span>
+              </div>
+              <div className="aide">{T.passeport.sauvegardeInfo}</div>
+            </div>
+            <button
+              className="passeport-detacher"
+              type="button"
+              onClick={() => {
+                modifier({ passeport: null })
+                setImagesPasseport(null)
+              }}
+            >
+              {T.passeportLie.detacher}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="omra-panel">
@@ -264,7 +324,7 @@ export function ModaleNouveauRecu({
 
         {saisie.hotel && saisie.vol && saisie.chambre && tarif === null ? (
           <p className="omra-hint" style={{ marginTop: 10, color: 'var(--danger)' }}>
-            Aucun prix n’est défini pour ce choix dans cette saison.
+            {T.prixIndefini}
           </p>
         ) : null}
 

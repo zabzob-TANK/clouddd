@@ -315,6 +315,12 @@ export function creerSourceDemonstration(
       recu.impressions += 1
       return recu.impressions
     },
+    async definirImagesPasseport(recuId, originale, portrait) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu || !recu.passeport) return
+      recu.passeport.imageOriginale = originale
+      recu.passeport.imagePortrait = portrait
+    },
     async definirImageVersement(recuId, versementId, image) {
       const recu = recus.find((r) => r.id === recuId)
       if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
