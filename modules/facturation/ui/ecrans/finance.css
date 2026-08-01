@@ -570,6 +570,15 @@
     font-size: 12px;
   }
 
+  /*
+   * Le fichier force le symbole d'état en noir à l'impression : la couleur
+   * d'état ne sert qu'à l'écran. L'état lui-même est inchangé.
+   */
+  body.finance-impression .finance-bloc.etat .tick {
+    color: #000 !important;
+    font-size: 16pt !important;
+  }
+
   body.finance-impression .finance-bloc.total .valeur,
   body.finance-impression .finance-bloc.meta .grand {
     font-size: 16px;

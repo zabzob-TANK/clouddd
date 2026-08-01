@@ -93,12 +93,26 @@ function versement(id: string, o: OptionsVersement): Versement {
 }
 
 /**
+ * Scénarios de démonstration.
+ *
+ *  - `standard` — les six reçus caractéristiques. C'est le mode normal.
+ *  - `pagination` — le même jeu, augmenté d'une journée chargée servant
+ *    uniquement à vérifier l'impression sur plusieurs pages. Il ne s'active
+ *    jamais tout seul.
+ */
+export type ScenarioDemonstration = 'standard' | 'pagination'
+
+/**
  * Construit le jeu de démonstration.
  *
  * @param reference Date servant d'« aujourd'hui ». Injectée pour que les tests
  *   soient déterministes et pour que la démonstration reste toujours actuelle.
+ * @param scenario  Voir `ScenarioDemonstration`. Vaut `standard` par défaut.
  */
-export function construireJeuDemonstration(reference: Date = new Date()): JeuDemonstration {
+export function construireJeuDemonstration(
+  reference: Date = new Date(),
+  scenario: ScenarioDemonstration = 'standard',
+): JeuDemonstration {
   const avantHier = jour(-2, reference)
   const hier = jour(-1, reference)
   const aujourdhui = jour(0, reference)
@@ -490,24 +504,28 @@ export function construireJeuDemonstration(reference: Date = new Date()): JeuDem
     },
   ]
 
-  // --- Journée volumineuse : vérification de la pagination imprimée --------
-  // Retirable en supprimant ce bloc et le fichier `dataset-volume.ts`.
-  const volume = construireJourneeVolumineuse(avantHier.fr, EMPLOYE, 300)
-  recus.push(...volume.recus)
-  clients.push(...volume.clients)
-  for (const recu of volume.recus) {
-    if (recu.modeRemboursement !== 'cash') continue
-    mouvementsCaisse.push({
-      id: `refund-volume-${recu.numero}`,
-      type: 'refund_cash',
-      jour: avantHier.cle,
-      date: avantHier.fr,
-      heure: recu.annuleLe?.split(' ')[1] ?? '18:00',
-      montantCentimes: recu.montantRembourseCentimes ?? 0,
-      recuNumero: recu.numero,
-      client: `${recu.prenom} ${recu.nom}`,
-      employe: EMPLOYE,
-    })
+  // --- Scénario de pagination, jamais actif par défaut ---------------------
+  // Le mode de démonstration normal s'arrête aux six reçus ci-dessus.
+  let dernierNumero = 268
+  if (scenario === 'pagination') {
+    const volume = construireJourneeVolumineuse(avantHier.fr, EMPLOYE, 300)
+    recus.push(...volume.recus)
+    clients.push(...volume.clients)
+    dernierNumero = volume.prochainNumero
+    for (const recu of volume.recus) {
+      if (recu.modeRemboursement !== 'cash') continue
+      mouvementsCaisse.push({
+        id: `refund-volume-${recu.numero}`,
+        type: 'refund_cash',
+        jour: avantHier.cle,
+        date: avantHier.fr,
+        heure: recu.annuleLe?.split(' ')[1] ?? '18:00',
+        montantCentimes: recu.montantRembourseCentimes ?? 0,
+        recuNumero: recu.numero,
+        client: `${recu.prenom} ${recu.nom}`,
+        employe: EMPLOYE,
+      })
+    }
   }
 
   const audit: EntreeAudit[] = [
@@ -515,13 +533,16 @@ export function construireJeuDemonstration(reference: Date = new Date()): JeuDem
       id: 'audit-demo-1',
       horodatage: `${aujourdhui.fr} 08:00`,
       action: 'Données de démonstration',
-      detail: '6 reçus couvrant les cas métier caractéristiques, plus une journée de volume',
+      detail:
+        scenario === 'pagination'
+          ? '6 reçus caractéristiques, plus une journée chargée pour la pagination'
+          : '6 reçus couvrant les cas métier caractéristiques',
       utilisateur: 'Système',
     },
   ]
 
   return {
-    prochainNumero: volume.prochainNumero,
+    prochainNumero: dernierNumero,
     recus,
     clients,
     operationsPartagees: [operationPartagee],

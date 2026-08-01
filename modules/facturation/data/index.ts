@@ -49,7 +49,11 @@ export function sourceDonnees(): SourceDonnees {
     )
   }
 
-  instance = creerSourceDemonstration()
+  // Scénario de démonstration. Le jeu volumineux servant à vérifier
+  // l'impression sur plusieurs pages ne s'active que sur demande explicite,
+  // par `FACTURATION_DEMO_SCENARIO=pagination`.
+  const scenario = process.env.FACTURATION_DEMO_SCENARIO === 'pagination' ? 'pagination' : 'standard'
+  instance = creerSourceDemonstration({ scenario })
   return instance
 }
 

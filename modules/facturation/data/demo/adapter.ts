@@ -63,7 +63,7 @@ import type {
   SourceDonnees,
   StockageFichiersPort,
 } from '../ports'
-import { construireJeuDemonstration } from './dataset'
+import { construireJeuDemonstration, type ScenarioDemonstration } from './dataset'
 
 /** Copie défensive : l'appelant ne doit jamais muter le contenu du dépôt. */
 function copier<T>(valeur: T): T {
@@ -77,6 +77,12 @@ export interface OptionsAdaptateurDemonstration {
   utilisateur?: Utilisateur
   /** Compteur d'identifiants de départ, pour rendre les tests déterministes. */
   compteurInitial?: number
+  /**
+   * Scénario de démonstration. `standard` par défaut : le scénario
+   * `pagination`, plus volumineux, ne sert qu'à vérifier l'impression sur
+   * plusieurs pages et doit toujours être demandé explicitement.
+   */
+  scenario?: ScenarioDemonstration
 }
 
 const UTILISATEUR_DEMONSTRATION: Utilisateur = {
@@ -112,7 +118,7 @@ export function creerSourceDemonstration(
   options: OptionsAdaptateurDemonstration = {},
 ): SourceDonnees {
   const reference = options.reference ?? new Date()
-  const jeu = construireJeuDemonstration(reference)
+  const jeu = construireJeuDemonstration(reference, options.scenario ?? 'standard')
 
   const recus: Recu[] = jeu.recus
   const clients: Client[] = jeu.clients

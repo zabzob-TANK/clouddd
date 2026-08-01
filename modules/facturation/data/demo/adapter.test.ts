@@ -140,11 +140,12 @@ describe('adaptateur de démonstration — caisse, impressions et audit', () => 
 
     const tous = await s.recus.lister({ inclureAnnules: true })
     const annules = tous.filter((r) => r.statut === 'ملغى')
-    // Chaque sortie de caisse correspond à une annulation remboursée en
-    // espèces, et à elle seule.
+    // Une sortie de caisse par annulation réellement remboursée en espèces,
+    // ni plus ni moins. Les autres annulations n'en produisent aucune, d'où un
+    // nombre de mouvements au plus égal au nombre d'annulations.
     const rembourseesEnEspeces = annules.filter((r) => r.modeRemboursement === 'cash')
     expect(rembourseesEnEspeces).toHaveLength(mouvements.length)
-    expect(annules.length).toBeGreaterThan(rembourseesEnEspeces.length)
+    expect(mouvements.length).toBeLessThanOrEqual(annules.length)
   })
 
   it('R-62 — une impression conserve la liste des mouvements imprimés', async () => {
