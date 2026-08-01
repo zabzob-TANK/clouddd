@@ -135,14 +135,16 @@ describe('adaptateur de démonstration — caisse, impressions et audit', () => 
   it('R-48 — seuls les remboursements réellement sortis en espèces sont des mouvements', async () => {
     const s = source()
     const mouvements = await s.mouvementsCaisse.lister()
-    expect(mouvements).toHaveLength(1)
-    expect(mouvements[0].type).toBe('refund_cash')
+    expect(mouvements.length).toBeGreaterThan(0)
+    expect(mouvements.every((m) => m.type === 'refund_cash')).toBe(true)
 
     const tous = await s.recus.lister({ inclureAnnules: true })
     const annules = tous.filter((r) => r.statut === 'ملغى')
-    // Deux annulations, dont une seule avec sortie de caisse.
-    expect(annules).toHaveLength(2)
-    expect(annules.filter((r) => r.modeRemboursement === 'cash')).toHaveLength(1)
+    // Chaque sortie de caisse correspond à une annulation remboursée en
+    // espèces, et à elle seule.
+    const rembourseesEnEspeces = annules.filter((r) => r.modeRemboursement === 'cash')
+    expect(rembourseesEnEspeces).toHaveLength(mouvements.length)
+    expect(annules.length).toBeGreaterThan(rembourseesEnEspeces.length)
   })
 
   it('R-62 — une impression conserve la liste des mouvements imprimés', async () => {

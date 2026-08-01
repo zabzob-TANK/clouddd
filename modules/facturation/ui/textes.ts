@@ -101,6 +101,11 @@ export const T = {
     hier: 'أمس',
     tout: 'الكل',
     videTableau: 'لا توجد دفعات في هذه الفترة.',
+    /**
+     * Bandeau supérieur de l'impression. Le fichier de référence y écrit
+     * littéralement « 1 sur N », en français et de gauche à droite.
+     */
+    pagesImprimees: (total: number) => `1 sur ${total}`,
     anomalieTexte: (n: number) => `${n} عملية مالية غير مراجعة بعد الطباعة`,
     chequesSansImage: 'شيكات بدون صورة',
     modifications: 'التعديلات',

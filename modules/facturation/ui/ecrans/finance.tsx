@@ -18,6 +18,7 @@
 import type { JournalFinancier } from '../../data/service'
 import type { PeriodeFinance } from '../../domain/rules/finance-day'
 import { centimesEnTexte } from '../../domain/money'
+import { badgeSansCadreALImpression } from '../../domain/rules/finance-day'
 import { DateValeur, Reference, TexteArabe } from '../bidi'
 import { T } from '../textes'
 import './finance.css'
@@ -60,7 +61,7 @@ export function EcranFinance({
         </button>
       </div>
 
-      <main className="finance-rapport">
+      <main className={`finance-rapport${journal.nombrePages === 1 ? ' finance-une-page' : ''}`}>
         <div className="finance-outils omra-no-print">
           <span className="finance-code mono" dir="ltr">
             {journal.codeImpression}
@@ -119,6 +120,21 @@ export function EcranFinance({
               {F.tout}
             </button>
           </div>
+        </div>
+
+        {/*
+          R-62, R-66, R-67 — bandeau supérieur visible uniquement à
+          l'impression : code d'impression, état de la veille, compteur de
+          pages. De gauche à droite, comme dans le fichier de référence.
+        */}
+        <div className="finance-bandeau-impression">
+          <span className="mono" dir="ltr">
+            {journal.codeImpressionBandeau}
+          </span>
+          <span className="veille">{journal.etatVeille}</span>
+          <span className="pages mono" dir="ltr">
+            {F.pagesImprimees(journal.nombrePages)}
+          </span>
         </div>
 
         {/* R-65 — le bandeau n'apparaît que pour l'administrateur. */}
@@ -267,7 +283,11 @@ export function EcranFinance({
                       </td>
                       <td className="centre">
                         <span
-                          className={`finance-badge${ligne.premierVersement ? ' gris' : ' simple'}`}
+                          className={`finance-badge${ligne.premierVersement ? ' gris' : ' simple'}${
+                            badgeSansCadreALImpression('versement', ligne.badge)
+                              ? ' sans-cadre'
+                              : ''
+                          }`}
                         >
                           {ligne.badge}
                         </span>
@@ -287,7 +307,13 @@ export function EcranFinance({
                         </span>
                       </td>
                       <td className="centre">
-                        <span className="finance-badge simple micro">{ligne.codeMode}</span>
+                        <span
+                          className={`finance-badge simple micro${
+                            badgeSansCadreALImpression('mode', ligne.codeMode) ? ' sans-cadre' : ''
+                          }`}
+                        >
+                          {ligne.codeMode}
+                        </span>
                       </td>
                       <td className="gauche mono" dir="ltr">
                         {ligne.valeurReelle}
@@ -316,7 +342,9 @@ export function EcranFinance({
                       </td>
                       <td className="centre">
                         <span
-                          className={`finance-badge${ligne.statut === '✓' ? ' gris' : ' simple'}`}
+                          className={`finance-badge${ligne.statut === '✓' ? ' gris' : ' simple'}${
+                            badgeSansCadreALImpression('statut', ligne.statut) ? ' sans-cadre' : ''
+                          }`}
                         >
                           {ligne.statut}
                         </span>
@@ -359,7 +387,13 @@ export function EcranFinance({
                         </span>
                       </td>
                       <td className="centre">
-                        <span className="finance-badge simple micro">{ligne.codeMode}</span>
+                        <span
+                          className={`finance-badge simple micro${
+                            badgeSansCadreALImpression('mode', ligne.codeMode) ? ' sans-cadre' : ''
+                          }`}
+                        >
+                          {ligne.codeMode}
+                        </span>
                       </td>
                       <td className="gauche mono" dir="ltr">
                         {ligne.valeurReelle}

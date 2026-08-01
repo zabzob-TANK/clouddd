@@ -8,7 +8,9 @@ import {
   annulationsDeLaPeriode,
   badgeVersement,
   bornesWeekEnd,
+  badgeSansCadreALImpression,
   codeImpression,
+  codeImpressionBandeau,
   codeMode,
   collecterMouvements,
   dansLaPeriode,
@@ -373,5 +375,28 @@ describe('R-62, R-66, R-67 — impression et état', () => {
     expect(etatImpression({ anomalieEnAttente: true, estAujourdhui: true }).symbole).toBe('?')
     expect(etatImpression({ anomalieEnAttente: false, estAujourdhui: true }).symbole).toBe('✓')
     expect(etatImpression({ anomalieEnAttente: false, estAujourdhui: false }).symbole).toBe('●')
+  })
+})
+
+describe('R-62, R-67 — bandeau et cadres de l’impression', () => {
+  it('R-62 — le bandeau porte toujours deux chiffres, même sans impression', () => {
+    expect(codeImpressionBandeau(0)).toBe('01')
+    expect(codeImpressionBandeau(1)).toBe('01')
+    expect(codeImpressionBandeau(12)).toBe('12')
+  })
+
+  it('R-67 — retire le cadre des seuls codes visés par le fichier', () => {
+    // Sans cadre : versements suivants, méthode « E », point d’état.
+    expect(badgeSansCadreALImpression('versement', '2')).toBe(true)
+    expect(badgeSansCadreALImpression('mode', 'E')).toBe(true)
+    expect(badgeSansCadreALImpression('statut', '\u2022')).toBe(true)
+  })
+
+  it('R-67 — conserve le cadre des autres codes', () => {
+    expect(badgeSansCadreALImpression('versement', 'N')).toBe(false)
+    expect(badgeSansCadreALImpression('mode', 'CH')).toBe(false)
+    expect(badgeSansCadreALImpression('mode', 'V-P')).toBe(false)
+    expect(badgeSansCadreALImpression('mode', 'CH-P')).toBe(false)
+    expect(badgeSansCadreALImpression('statut', '\u2713')).toBe(false)
   })
 })

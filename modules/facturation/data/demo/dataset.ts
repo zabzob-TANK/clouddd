@@ -19,6 +19,7 @@
  *  - reçu comportant plusieurs versements.
  */
 
+import { construireJourneeVolumineuse } from './dataset-volume'
 import type {
   Client,
   EntreeAudit,
@@ -489,18 +490,38 @@ export function construireJeuDemonstration(reference: Date = new Date()): JeuDem
     },
   ]
 
+  // --- Journée volumineuse : vérification de la pagination imprimée --------
+  // Retirable en supprimant ce bloc et le fichier `dataset-volume.ts`.
+  const volume = construireJourneeVolumineuse(avantHier.fr, EMPLOYE, 300)
+  recus.push(...volume.recus)
+  clients.push(...volume.clients)
+  for (const recu of volume.recus) {
+    if (recu.modeRemboursement !== 'cash') continue
+    mouvementsCaisse.push({
+      id: `refund-volume-${recu.numero}`,
+      type: 'refund_cash',
+      jour: avantHier.cle,
+      date: avantHier.fr,
+      heure: recu.annuleLe?.split(' ')[1] ?? '18:00',
+      montantCentimes: recu.montantRembourseCentimes ?? 0,
+      recuNumero: recu.numero,
+      client: `${recu.prenom} ${recu.nom}`,
+      employe: EMPLOYE,
+    })
+  }
+
   const audit: EntreeAudit[] = [
     {
       id: 'audit-demo-1',
       horodatage: `${aujourdhui.fr} 08:00`,
       action: 'Données de démonstration',
-      detail: '6 reçus couvrant les cas métier caractéristiques',
+      detail: '6 reçus couvrant les cas métier caractéristiques, plus une journée de volume',
       utilisateur: 'Système',
     },
   ]
 
   return {
-    prochainNumero: 268,
+    prochainNumero: volume.prochainNumero,
     recus,
     clients,
     operationsPartagees: [operationPartagee],

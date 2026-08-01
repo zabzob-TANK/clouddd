@@ -23,23 +23,34 @@
 
 /* -------------------------------------------------------- Sous-navigation */
 
+/*
+ * Barre reprise du fichier : collante sous l'en-tête, centrée, de gauche à
+ * droite, deux boutons de largeur fixe.
+ */
 .finance-sousnav {
+  position: sticky;
+  top: 64px;
+  z-index: 88;
+  min-height: 46px;
   display: flex;
-  gap: 6px;
-  padding: 8px 20px 0;
-  max-width: 1540px;
-  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 5px 14px;
+  background: rgba(249, 247, 242, 0.98);
+  border-bottom: 1px solid #e7e3d6;
+  direction: ltr;
 }
 
 .finance-sousnav button {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid #e2ded1;
+  height: 34px;
+  min-width: 132px;
+  padding: 0 14px;
+  border: 1px solid #d9d5c8;
   background: #fff;
-  color: #35422f;
+  color: #47593c;
   font-size: 11.5px;
-  font-weight: 700;
-  direction: ltr;
+  font-weight: 750;
 }
 
 .finance-sousnav button:disabled {
@@ -55,12 +66,15 @@
 
 /* --------------------------------------------------------- Barre d'outils */
 
+/* Le fichier dispose la barre d'outils de gauche à droite, et seul le groupe
+ * de filtres repasse de droite à gauche. */
 .finance-outils {
   display: flex;
   align-items: center;
   gap: 7px;
   flex-wrap: wrap;
   margin-bottom: 10px;
+  direction: ltr;
 }
 
 .finance-code {
@@ -129,6 +143,7 @@
 .finance-filtres {
   display: flex;
   gap: 5px;
+  direction: rtl;
 }
 
 .finance-filtre {
@@ -147,6 +162,13 @@
   border-color: #47593c;
 }
 
+/* --------------------------------------------- Bandeau d'impression */
+
+/* Invisible à l'écran ; le bloc d'impression le fait apparaître. */
+.finance-bandeau-impression {
+  display: none;
+}
+
 /* ------------------------------------------------------------- Anomalie */
 
 .finance-anomalie {
@@ -163,11 +185,18 @@
 
 /* -------------------------------------------------------------- Synthèse */
 
+/* Largeurs et sens de lecture du fichier : la grille se remplit de gauche à
+ * droite, chaque bloc restant de droite à gauche. */
 .finance-synthese {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: 1.22fr 1.42fr 0.82fr 1.08fr 1.18fr 1.55fr;
   gap: 7px;
   margin-bottom: 9px;
+  direction: ltr;
+}
+
+.finance-synthese > .finance-bloc {
+  direction: rtl;
 }
 
 .finance-bloc {
@@ -439,8 +468,54 @@
   body.finance-impression .finance-outils,
   body.finance-impression .finance-sousnav,
   body.finance-impression .finance-anomalie,
+  body.finance-impression .finance-pied,
   body.finance-impression .omra-no-print {
     display: none !important;
+  }
+
+  /*
+   * Bandeau supérieur : code d'impression, état de la veille, compteur de
+   * pages. Cotes reprises du fichier de référence.
+   */
+  body.finance-impression .finance-bandeau-impression {
+    display: flex !important;
+    justify-content: flex-start;
+    align-items: center;
+    direction: ltr;
+    gap: 3.2mm;
+    margin: 0 0 1.2mm;
+    font-size: 6.3pt;
+    font-weight: 600;
+    color: #1f241b;
+  }
+
+  body.finance-impression .finance-bandeau-impression .veille {
+    font-size: 7.2pt;
+    font-weight: 800;
+  }
+
+  body.finance-impression .finance-bandeau-impression .pages {
+    font-weight: 500;
+  }
+
+  /* R-67 — codes explicitement sans cadre à l'impression. */
+  body.finance-impression .finance-badge.sans-cadre {
+    min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    line-height: 1 !important;
+  }
+
+  /* Une seule page : le fichier borne la hauteur pour éviter une page vide. */
+  body.finance-impression .finance-rapport.finance-une-page {
+    max-height: 199mm !important;
+    overflow: hidden !important;
   }
 
   body.finance-impression .finance-ecran,
@@ -472,6 +547,11 @@
   }
 
   body.finance-impression .finance-tableau tr {
+    break-inside: avoid;
+  }
+
+  /* Le fichier garde le tableau des annulations d'un seul tenant. */
+  body.finance-impression .finance-annulations {
     break-inside: avoid;
   }
 

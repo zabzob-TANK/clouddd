@@ -30,6 +30,7 @@ import {
   badgeVersement,
   bornesWeekEnd,
   codeImpression,
+  codeImpressionBandeau,
   codeMode,
   collecterMouvements,
   dansLaPeriode,
@@ -444,6 +445,8 @@ export interface JournalFinancier {
   /** R-62 */
   nombreImpressions: number
   codeImpression: string
+  /** R-62 — code repris dans le bandeau supérieur de l'impression. */
+  codeImpressionBandeau: string
   /** R-63, R-65 */
   anomaliesEnAttente: string[]
   /** R-66 */
@@ -644,6 +647,7 @@ export async function journalFinancier(periode: PeriodeFinance): Promise<Journal
     totalAnnule: centimesEnTexte(totalAnnuleCentimes(annulees)),
     nombreImpressions,
     codeImpression: codeImpression(nombreImpressions),
+    codeImpressionBandeau: codeImpressionBandeau(nombreImpressions),
     anomaliesEnAttente: anomalies,
     etatVeille: etatDeLaVeille,
     symboleEtat: etat.symbole,

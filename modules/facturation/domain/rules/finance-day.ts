@@ -397,6 +397,38 @@ export function codeImpression(nombreImpressions: number): string {
 }
 
 /**
+ * R-62 — Code repris dans le bandeau supérieur de l'impression.
+ *
+ * Le fichier de référence y met `printCode`, c'est-à-dire toujours deux
+ * chiffres, sans le symbole de duplication et sans jamais être vide : une
+ * journée encore jamais imprimée y affiche `01`.
+ */
+export function codeImpressionBandeau(nombreImpressions: number): string {
+  return String(nombreImpressions || 1).padStart(2, '0')
+}
+
+/**
+ * R-67 — Codes qui perdent leur cadre à l'impression (`print-no-box` dans le
+ * fichier de référence).
+ *
+ * Le fichier ne l'applique qu'à trois endroits, et jamais de façon générale :
+ *  - le badge de versement, sauf le premier versement (`N`) ;
+ *  - le code de méthode lorsqu'il vaut exactement `E` ;
+ *  - le point d'état `•`, mais pas la coche `✓`.
+ *
+ * Les autres codes — `N`, `CH`, `V`, `CH-P`, `V-P`, `✓` et les `×` du tableau
+ * des annulations — restent encadrés.
+ */
+export function badgeSansCadreALImpression(
+  genre: 'versement' | 'mode' | 'statut',
+  valeur: string,
+): boolean {
+  if (genre === 'versement') return valeur !== 'N'
+  if (genre === 'mode') return valeur === 'E'
+  return valeur === '•'
+}
+
+/**
  * Symbole et couleur de l'état d'impression, repris du fichier :
  * « ? » ambre en cas d'anomalie, « ✓ » vert pour la journée courante,
  * « ● » bleu sinon.

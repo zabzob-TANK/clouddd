@@ -236,6 +236,7 @@ le commanditaire n'a pas explicitement décidé de les modifier.
 | O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
 | O-09 | Les libellés sont mélangés français et arabe selon les écrans | conservé — chaque écran garde la langue et l'orientation du fichier |
 | O-10 | Le blocage d'impression au-delà de six paiements ne figurait pas dans l'inventaire initial. Le fichier interrompt l'impression et affiche « Ce reçu contient plus de six paiements. L'impression est bloquée jusqu'à définition de la règle métier. » | conservé, intégré à R-81 |
+| O-11 | Le compteur de pages du bandeau d'impression du journal financier est **fixe** dans le fichier : le gabarit écrit littéralement `1 sur {{ financePageTotal }}`, et le bandeau, placé dans le flux, n'apparaît que sur la première page. Une impression de deux pages affiche donc « 1 sur 2 » en tête de la première page et rien en tête de la seconde. | reproduit tel quel, non corrigé |
 
 ---
 
@@ -251,6 +252,7 @@ référence. Aucun ne touche à une règle métier.
 | L2 | Onglet « المالية » désactivé | Lot L4. |
 | L4 | Filtres « week-end » et « période personnalisée » présents dans la logique mais sans bouton | Le fichier calcule `financeWeekend`, `financeCustom` et leurs champs, mais son gabarit n'affiche que اليوم, أمس et الكل. Les règles sont reproduites et testées ; l'affichage suit le fichier. |
 | L4 | Sous-navigation « Paiements » et « Suivi journalier » désactivée | Ces deux écrans sont l'objet du lot L5. Les boutons sont présents, à leur place, en français comme dans le fichier. |
+| L4 | Le compteur de pages n'est pas répété page par page | Voir O-11 : le fichier n'imprime le bandeau qu'une fois, avec un « 1 » figé. Reproduire une numérotation réelle serait une modification du fichier ; elle n'a pas été faite. |
 | L3 | Papier à en-tête `fond-facture.png` absent | Le fichier n'a pas été fourni avec le prototype : seul son chemin y figure. L'aperçu affiche un papier blanc ; le calage reste utilisable. À déposer dans `public/facturation/`. |
 | L3 | Reçu rendu en composants React plutôt qu'en document isolé | Le fichier place le reçu dans une iframe avec un document complet en base64. Les dimensions, la structure et le comportement d'impression sont identiques ; la règle `@page` n'est posée que pendant l'affichage de l'écran, comme le fait le fichier pour le journal financier. |
 | L2 | Fenêtre du dossier : pas de bandeau photo en dégradé | Le fichier affiche une bande verte avec photo du voyageur. La structure et les informations sont présentes, l'habillage viendra au lot L7. |
