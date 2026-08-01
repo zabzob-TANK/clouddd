@@ -22,7 +22,7 @@ séparées par `|`).
 | Lot | Contenu | État |
 | --- | --- | --- |
 | L0 | Socle : structure, types, argent, formatage, bidi, ports, adaptateur de démonstration, registre, tests | livré |
-| L1 | Noyau métier pur, entièrement testé, sans interface | prévu |
+| L1 | Noyau métier pur, entièrement testé, sans interface | livré |
 | L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | prévu |
 | L3 | Reçu imprimable A4 sur `fond-facture.png` | prévu |
 | L4 | Journal financier, impression, anomalies | prévu |
@@ -54,8 +54,8 @@ séparées par `|`).
 | U-02 | Montant avec devise, isolé en lecture gauche-à-droite | L0 | livré |
 | U-03 | Date du jour, heure courante, horodatage complet | L0 | livré |
 | U-04 | Conversions date française ↔ clé de journée | L0 | livré |
-| U-05 | Total payé et restant dû d'un reçu | L1 | prévu |
-| U-06 | Statut affiché : annulé, soldé, incomplet | L1 | prévu |
+| U-05 | Total payé et restant dû d'un reçu | L1 | livré |
+| U-06 | Statut affiché : annulé, soldé, incomplet | L1 | livré |
 | U-07 | Validation de forme d'une date saisie | L0 | livré |
 | U-08 | Masque du numéro de téléphone | L0 | livré |
 | U-09 | Masque de date à la frappe | L0 | livré |
@@ -69,54 +69,54 @@ séparées par `|`).
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-01 | Prénom, nom et téléphone obligatoires | L1 | prévu |
-| R-02 | Téléphone d'exactement dix chiffres | L1 | prévu |
-| R-03 | Hôtel, vol, chambre, rabatteur et premier versement obligatoires | L1 | prévu |
-| R-04 | Code de groupe obligatoire si la case est cochée | L1 | prévu |
-| R-05 | Combinaison sans tarif défini : blocage | L1 | prévu |
-| R-06 | Réduction inférieure ou égale au plafond de la saison | L1 | prévu |
-| R-07 | Réduction strictement inférieure au tarif | L1 | prévu |
-| R-08 | Montant convenu = tarif − réduction | L1 | prévu |
-| R-09 | Premier versement strictement positif | L1 | prévu |
-| R-10 | Premier versement au plus égal au convenu, surpaiement interdit | L1 | prévu |
-| R-11 | Numéro pris sur la séquence et incrémenté | L1 | prévu |
-| R-12 | Statut initial actif, compteur d'impressions à zéro | L1 | prévu |
-| R-13 | Client créé et passeport rattaché s'il a été saisi | L1 | prévu |
-| R-14 | Instantané figé sur le premier versement | L1 | prévu |
+| R-01 | Prénom, nom et téléphone obligatoires | L1 | livré |
+| R-02 | Téléphone d'exactement dix chiffres | L1 | livré |
+| R-03 | Hôtel, vol, chambre, rabatteur et premier versement obligatoires | L1 | livré |
+| R-04 | Code de groupe obligatoire si la case est cochée | L1 | livré |
+| R-05 | Combinaison sans tarif défini : blocage | L1 | livré |
+| R-06 | Réduction inférieure ou égale au plafond de la saison | L1 | livré |
+| R-07 | Réduction strictement inférieure au tarif | L1 | livré |
+| R-08 | Montant convenu = tarif − réduction | L1 | livré |
+| R-09 | Premier versement strictement positif | L1 | livré |
+| R-10 | Premier versement au plus égal au convenu, surpaiement interdit | L1 | livré |
+| R-11 | Numéro pris sur la séquence et incrémenté | L1 | livré |
+| R-12 | Statut initial actif, compteur d'impressions à zéro | L1 | livré |
+| R-13 | Client créé et passeport rattaché s'il a été saisi | L1 | livré |
+| R-14 | Instantané figé sur le premier versement | L1 | livré |
 
 ## Règles — versements
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-15 | Numéro de reçu obligatoire et existant | L1 | prévu |
-| R-16 | Reçu annulé : ajout refusé | L1 | prévu |
-| R-17 | Reçu soldé : ajout refusé | L1 | prévu |
-| R-18 | Six versements atteints : ajout refusé | L1 | prévu |
-| R-19 | Montant strictement positif | L1 | prévu |
-| R-20 | Sixième versement exactement égal au restant | L1 | prévu |
-| R-21 | Montant au plus égal au restant | L1 | prévu |
-| R-22 | Instantané figé à chaque versement | L1 | prévu |
+| R-15 | Numéro de reçu obligatoire et existant | L1 | livré |
+| R-16 | Reçu annulé : ajout refusé | L1 | livré |
+| R-17 | Reçu soldé : ajout refusé | L1 | livré |
+| R-18 | Six versements atteints : ajout refusé | L1 | livré |
+| R-19 | Montant strictement positif | L1 | livré |
+| R-20 | Sixième versement exactement égal au restant | L1 | livré |
+| R-21 | Montant au plus égal au restant | L1 | livré |
+| R-22 | Instantané figé à chaque versement | L1 | livré |
 
 ## Règles — instrument bancaire
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-23 | Espèces : aucun champ d'instrument | L1 | prévu |
-| R-24 | Opération partagée existante : seul l'identifiant est requis | L1 | prévu |
-| R-25 | Référence, date et banque obligatoires | L1 | prévu |
-| R-26 | Opération partagée : payeur et montant total obligatoires, total positif | L1 | prévu |
-| R-27 | Opération existante : disponible = restant de l'opération | L1 | prévu |
-| R-28 | Opération nouvelle : création et disponible = total | L1 | prévu |
+| R-23 | Espèces : aucun champ d'instrument | L1 | livré |
+| R-24 | Opération partagée existante : seul l'identifiant est requis | L1 | livré |
+| R-25 | Référence, date et banque obligatoires | L1 | livré |
+| R-26 | Opération partagée : payeur et montant total obligatoires, total positif | L1 | livré |
+| R-27 | Opération existante : disponible = restant de l'opération | L1 | livré |
+| R-28 | Opération nouvelle : création et disponible = total | L1 | livré |
 
 ## Règles — opérations partagées
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-29 | Attribué = somme des versements portant l'identifiant | L1 | prévu |
-| R-30 | Restant = total − attribué | L1 | prévu |
-| R-31 | Options : même nature, non archivée, restant positif, tri par création décroissante | L1 | prévu |
-| R-32 | Dépassement autorisé après confirmation explicite, écart conservé | L1 | prévu |
-| R-33 | Aucune surveillance automatique des doublons | L1 | prévu |
+| R-29 | Attribué = somme des versements portant l'identifiant | L1 | livré |
+| R-30 | Restant = total − attribué | L1 | livré |
+| R-31 | Options : même nature, non archivée, restant positif, tri par création décroissante | L1 | livré |
+| R-32 | Dépassement autorisé après confirmation explicite, écart conservé | L1 | livré |
+| R-33 | Aucune surveillance automatique des doublons | L1 | livré |
 | R-34 | Totaux : une seule opération financière, sans double comptage | L4 | prévu |
 
 ## Règles — images de chèques et virements
@@ -136,24 +136,24 @@ séparées par `|`).
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-43 | Motif, mode de remboursement et mot de passe obligatoires | L2 | prévu |
-| R-44 | Mot de passe vérifié contre l'utilisateur connecté | L2 | prévu |
-| R-45 | Statut annulé, aucune suppression, numéro jamais réutilisé | L2 | prévu |
-| R-46 | Montant remboursé = total payé | L2 | prévu |
-| R-47 | Remboursement espèces : mouvement de caisse ; hors caisse : aucun mouvement | L2 | prévu |
+| R-43 | Motif, mode de remboursement et mot de passe obligatoires | L1 | livré |
+| R-44 | Mot de passe vérifié contre l'utilisateur connecté | L1 | livré |
+| R-45 | Statut annulé, aucune suppression, numéro jamais réutilisé | L1 | livré |
+| R-46 | Montant remboursé = total payé | L1 | livré |
+| R-47 | Remboursement espèces : mouvement de caisse ; hors caisse : aucun mouvement | L1 | livré |
 | R-48 | Trois mesures distinctes : personnes, montant total annulé, sortie de caisse | L4 | prévu |
 
 ## Règles — modification
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-49 | Une seule section modifiable à la fois | L2 | prévu |
-| R-50 | Motif obligatoire | L2 | prévu |
-| R-51 | Différence champ par champ, empilée | L2 | prévu |
-| R-52 | Section programme : recalcul du tarif et du convenu, blocage si sans prix | L2 | prévu |
-| R-53 | Section premier versement : méthode et instrument seulement, montant inchangé | L2 | prévu |
-| R-54 | Rabatteur et montants non modifiables | L2 | prévu |
-| R-55 | Versements de rang deux et suivants jamais modifiables | L2 | prévu |
+| R-49 | Une seule section modifiable à la fois | L1 | livré |
+| R-50 | Motif obligatoire | L1 | livré |
+| R-51 | Différence champ par champ, empilée | L1 | livré |
+| R-52 | Section programme : recalcul du tarif et du convenu, blocage si sans prix, et refus d'un convenu inférieur au montant déjà payé | L1 | livré |
+| R-53 | Section premier versement : méthode et instrument seulement, montant inchangé | L1 | livré |
+| R-54 | Rabatteur et montants non modifiables | L1 | livré |
+| R-55 | Versements de rang deux et suivants jamais modifiables | L1 | livré |
 
 ## Règles — journal financier
 
@@ -232,6 +232,6 @@ le commanditaire n'a pas explicitement décidé de les modifier.
 | O-04 | L'identité d'opération partagée fusionne deux instruments de même banque, numéro et date | conservé |
 | O-05 | Les totaux retiennent le plus grand montant déclaré et non la somme des parts | conservé |
 | O-06 | Le montant annulé se calcule différemment dans le journal financier et dans le suivi journalier | conservé |
-| O-07 | La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu | conservé |
+| O-07 | ~~La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu~~ — **observation erronée, retirée**. Le fichier de référence contient bien ce contrôle (`if(newConv<this.paye(r))`). Il est intégré à R-52. L'identifiant reste réservé pour ne pas décaler les suivants. | retirée |
 | O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
 | O-09 | Les libellés sont mélangés français et arabe selon les écrans | traduit en français, exception validée |

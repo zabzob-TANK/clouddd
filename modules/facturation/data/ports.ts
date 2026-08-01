@@ -20,6 +20,7 @@
  */
 
 import type { CleJour } from '../domain/dates'
+import type { DonneesCreationRecu } from '../domain/rules/create-receipt'
 import type {
   AcquittementAnomalie,
   Chambre,
@@ -107,26 +108,13 @@ export interface FiltreRecus {
   inclureAnnules?: boolean
 }
 
-/** Données nécessaires à la création d'un reçu (R-01 à R-14). */
-export interface CreationRecu {
-  numero: number
-  clientId: string
-  prenom: string
-  nom: string
-  telephone: string
-  hotel: string
-  vol: string
-  chambre: string
-  tarifCentimes: number
-  reductionCentimes: number
-  convenuCentimes: number
-  rabatteur: string
-  groupe: string
-  note: string
-  passeport: Passeport | null
-  employe: string
-  premierVersement: Versement
-}
+/**
+ * Données nécessaires à la création d'un reçu (R-01 à R-14).
+ *
+ * Défini dans le domaine, où les règles le construisent. Réexporté ici pour que
+ * les implémentations n'aient qu'un seul type à connaître.
+ */
+export type CreationRecu = DonneesCreationRecu
 
 export interface RecusPort {
   lister(filtre?: FiltreRecus): Promise<Recu[]>
