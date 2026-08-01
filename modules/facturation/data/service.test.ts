@@ -13,6 +13,10 @@ import {
   enregistrerImpressionFinance,
   journalFinancier,
   modifierRecu,
+  registreBancaire,
+  suiviJournalier,
+  ajouterImageOperation,
+  supprimerImageOperation,
 } from './service'
 
 /**
@@ -334,5 +338,88 @@ describe('journal financier de bout en bout', () => {
     expect(resultat.statut).toBe('erreurs')
     if (resultat.statut !== 'erreurs') return
     expect(resultat.erreurs[0].code).toBe('acquittement-reserve-administrateur')
+  })
+})
+
+describe('lot L5 — suivi journalier et registre des paiements', () => {
+  it('R-68 — le mois courant s’arrête au jour du jour, sans trou', async () => {
+    const suivi = await suiviJournalier({})
+    expect(suivi.lignes.length).toBeGreaterThan(0)
+    expect(suivi.mois).toMatch(/^\d{4}-\d{2}$/)
+    // Les journées sans activité sont présentes par défaut.
+    expect(suivi.afficherVides).toBe(true)
+  })
+
+  it('R-70 — la sélection restreint le périmètre de calcul', async () => {
+    const complet = await suiviJournalier({})
+    const active = complet.lignes.find((ligne) => !ligne.vide)
+    expect(active).toBeDefined()
+
+    const restreint = await suiviJournalier({ selection: [active!.cle] })
+    expect(restreint.selection).toEqual([active!.cle])
+    expect(restreint.encaissements).toBe(active!.total)
+  })
+
+  it('R-70 — masquer les journées vides ne laisse que les journées actives', async () => {
+    const complet = await suiviJournalier({})
+    const vides = complet.lignes.filter((ligne) => ligne.vide).length
+
+    const suivi = await suiviJournalier({ afficherVides: false })
+    expect(suivi.lignes.every((ligne) => !ligne.vide)).toBe(true)
+    expect(suivi.nombreMasquees).toBe(vides)
+    expect(suivi.nombreAffichees).toBe(complet.lignes.length - vides)
+  })
+
+  it('R-73, R-77 — le registre regroupe par opération et calcule le restant', async () => {
+    const registre = await registreBancaire({})
+    expect(registre.lignes.length).toBeGreaterThan(0)
+    const partagee = registre.lignes.find((ligne) => ligne.classeType === 'shared')
+    expect(partagee).toBeDefined()
+    // Les deux reçus du partage figurent sur une seule ligne.
+    expect(partagee!.recus.split(' · ')).toHaveLength(2)
+  })
+
+  it('R-74 — les filtres du registre s’appliquent', async () => {
+    const tous = await registreBancaire({})
+    const cheques = await registreBancaire({ mode: 'cheque' })
+    const virements = await registreBancaire({ mode: 'transfer' })
+    expect(cheques.nombreAffiche + virements.nombreAffiche).toBe(tous.nombreAffiche)
+
+    const avecImage = await registreBancaire({ image: 'with' })
+    expect(avecImage.nombreAffiche).toBeGreaterThan(0)
+  })
+
+  it('R-36, R-41 — une deuxième image est refusée, l’ajout est tracé', async () => {
+    const registre = await registreBancaire({ image: 'without' })
+    const cible = registre.lignes[0]
+    expect(cible).toBeDefined()
+
+    const fichier = {
+      contenu: new ArrayBuffer(4),
+      nomOrigine: 'cheque.jpg',
+      typeMime: 'image/jpeg',
+    }
+    expect((await ajouterImageOperation(cible.cle, fichier)).statut).toBe('ok')
+
+    // R-41 — l'ajout laisse une trace au journal.
+    const etat = await chargerEtat()
+    expect(etat.audit[0].action).toBe('Image paiement')
+
+    // R-36 — la deuxième image est refusée.
+    const seconde = await ajouterImageOperation(cible.cle, fichier)
+    expect(seconde.statut).toBe('erreurs')
+    if (seconde.statut !== 'erreurs') return
+    expect(seconde.erreurs[0].code).toBe('image-deja-presente')
+  })
+
+  it('R-39, R-41 — un employé ne peut pas supprimer une image', async () => {
+    const registre = await registreBancaire({ image: 'with' })
+    const cible = registre.lignes[0]
+    expect(cible).toBeDefined()
+
+    const resultat = await supprimerImageOperation(cible.cle)
+    expect(resultat.statut).toBe('erreurs')
+    if (resultat.statut !== 'erreurs') return
+    expect(resultat.erreurs[0].code).toBe('suppression-image-reservee-administrateur')
   })
 })

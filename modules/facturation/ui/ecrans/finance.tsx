@@ -10,7 +10,8 @@
  *
  * Arabe, de droite à gauche, comme dans le fichier. Seule la sous-navigation
  * « Paiements » et « Suivi journalier » y est en français, le fichier la
- * marquant explicitement `lang="fr"`.
+ * marquant explicitement `lang="fr"` ; elle est partagée avec les deux écrans
+ * du lot L5 (voir `ui/sous-nav.tsx`).
  *
  * Couvre : R-56 à R-67.
  */
@@ -20,6 +21,7 @@ import type { PeriodeFinance } from '../../domain/rules/finance-day'
 import { centimesEnTexte } from '../../domain/money'
 import { badgeSansCadreALImpression } from '../../domain/rules/finance-day'
 import { DateValeur, Reference, TexteArabe } from '../bidi'
+import { SousNavFinance } from '../sous-nav'
 import { T } from '../textes'
 import './finance.css'
 
@@ -32,6 +34,8 @@ interface Proprietes {
   /** Journée courante et veille, pour l'état des boutons de filtre. */
   aujourdhui: string
   hier: string
+  onPaiements: () => void
+  onSuiviJournalier: () => void
 }
 
 export function EcranFinance({
@@ -42,6 +46,8 @@ export function EcranFinance({
   onOuvrirDetail,
   aujourdhui,
   hier,
+  onPaiements,
+  onSuiviJournalier,
 }: Proprietes) {
   const F = T.finance
   const C = F.colonnes
@@ -52,14 +58,11 @@ export function EcranFinance({
 
   return (
     <div className="finance-ecran">
-      <div className="finance-sousnav" aria-label="Sous-rubriques Finance">
-        <button lang="fr" disabled title="L5">
-          {F.sousNav.paiements}
-        </button>
-        <button lang="fr" disabled title="L5">
-          {F.sousNav.suiviJournalier}
-        </button>
-      </div>
+      <SousNavFinance
+        active="finance"
+        onPaiements={onPaiements}
+        onSuiviJournalier={onSuiviJournalier}
+      />
 
       <main className={`finance-rapport${journal.nombrePages === 1 ? ' finance-une-page' : ''}`}>
         <div className="finance-outils omra-no-print">

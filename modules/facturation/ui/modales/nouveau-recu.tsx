@@ -23,6 +23,9 @@ import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection } from '.
 import { T } from '../textes'
 import { Dialogue } from '../dialogue'
 import { BlocInstrument, instrumentVierge } from '../instrument-panel'
+import { CarteImageInstrument } from '../carte-image-instrument'
+import { cibleImageInstrument, useBrouillonImage } from '../image-instrument'
+import { ModalePaiementImage } from './paiement-image'
 import { ModaleDepassement } from './depassement'
 import { ModalePasseport } from './passeport'
 
@@ -43,7 +46,11 @@ interface Proprietes {
   onEnregistrer: (
     saisie: SaisieNouveauRecu,
     confirme: boolean,
+    /** R-35 — image de l'instrument, rattachée à l'enregistrement seulement. */
+    image: { contenu: Blob; nomOrigine: string } | null,
   ) => Promise<Resultat<{ recuId: string; numero: number }>>
+  /** R-38 — aperçus des images déjà portées par les opérations partagées. */
+  imagesOperations: Record<string, string>
 }
 
 function saisieVierge(): SaisieNouveauRecu {
@@ -71,6 +78,7 @@ export function ModaleNouveauRecu({
   recus,
   onFermer,
   onEnregistrer,
+  imagesOperations,
 }: Proprietes) {
   const [saisie, setSaisie] = useState<SaisieNouveauRecu>(saisieVierge())
   const [erreurs, setErreurs] = useState<ErreurValidation[]>([])
@@ -79,6 +87,8 @@ export function ModaleNouveauRecu({
   )
   const [passeportOuvert, setPasseportOuvert] = useState(false)
   const [envoi, setEnvoi] = useState(false)
+  // R-35 — l'image reste un brouillon local jusqu'à l'enregistrement du reçu.
+  const image = useBrouillonImage()
 
   const modifier = (patch: Partial<SaisieNouveauRecu>) => setSaisie({ ...saisie, ...patch })
 
@@ -91,7 +101,11 @@ export function ModaleNouveauRecu({
 
   const soumettre = async (confirme: boolean) => {
     setEnvoi(true)
-    const resultat = await onEnregistrer(saisie, confirme)
+    const resultat = await onEnregistrer(
+      saisie,
+      confirme,
+      image.brouillon ? { contenu: image.brouillon.contenu, nomOrigine: image.brouillon.nomOrigine } : null,
+    )
     setEnvoi(false)
 
     if (resultat.statut === 'erreurs') {
@@ -320,6 +334,22 @@ export function ModaleNouveauRecu({
         recus={recus}
         montantSaisi={saisie.premierVersement}
       />
+
+      <CarteImageInstrument
+        saisie={saisie.instrument}
+        contexte="recu"
+        apercuBrouillon={image.brouillon?.apercu ?? ''}
+        apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
+        onAjouter={image.ouvrir}
+      />
+
+      {image.ouverte ? (
+        <ModalePaiementImage
+          cible={cibleImageInstrument(saisie.instrument, saisie.premierVersement)}
+          onFermer={image.fermer}
+          onEnregistrer={(fichier) => image.retenir(fichier.contenu, fichier.nomOrigine)}
+        />
+      ) : null}
     </Dialogue>
   )
 }

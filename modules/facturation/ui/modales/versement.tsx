@@ -25,6 +25,9 @@ import type { OperationPartagee, Recu } from '../../domain/types'
 import { Champ, enErreur, ListeErreurs, Saisie } from '../champs'
 import { Dialogue } from '../dialogue'
 import { BlocInstrument, instrumentVierge } from '../instrument-panel'
+import { CarteImageInstrument } from '../carte-image-instrument'
+import { cibleImageInstrument, useBrouillonImage } from '../image-instrument'
+import { ModalePaiementImage } from './paiement-image'
 import { Montant, TexteArabe } from '../bidi'
 import { ModaleDepassement } from './depassement'
 import { T } from '../textes'
@@ -46,7 +49,11 @@ interface Proprietes {
   onEnregistrer: (
     saisie: SaisieVersement,
     confirme: boolean,
+    /** R-35 — image de l'instrument, rattachée à l'enregistrement seulement. */
+    image: { contenu: Blob; nomOrigine: string } | null,
   ) => Promise<Resultat<{ recuId: string }>>
+  /** R-38 — aperçus des images déjà portées par les opérations partagées. */
+  imagesOperations: Record<string, string>
 }
 
 export function ModaleVersement({
@@ -55,6 +62,7 @@ export function ModaleVersement({
   numeroInitial = '',
   onFermer,
   onEnregistrer,
+  imagesOperations,
 }: Proprietes) {
   const [saisie, setSaisie] = useState<SaisieVersement>({
     numeroRecu: numeroInitial,
@@ -66,6 +74,8 @@ export function ModaleVersement({
     null,
   )
   const [envoi, setEnvoi] = useState(false)
+  // R-35 — l'image reste un brouillon local jusqu'à l'enregistrement du versement.
+  const image = useBrouillonImage()
 
   const modifier = (patch: Partial<SaisieVersement>) => setSaisie({ ...saisie, ...patch })
 
@@ -81,7 +91,13 @@ export function ModaleVersement({
 
   const soumettre = async (confirme: boolean) => {
     setEnvoi(true)
-    const resultat = await onEnregistrer(saisie, confirme)
+    const resultat = await onEnregistrer(
+      saisie,
+      confirme,
+      image.brouillon
+        ? { contenu: image.brouillon.contenu, nomOrigine: image.brouillon.nomOrigine }
+        : null,
+    )
     setEnvoi(false)
 
     if (resultat.statut === 'erreurs') {
@@ -262,6 +278,22 @@ export function ModaleVersement({
             recus={recus}
             montantSaisi={saisie.montant}
           />
+
+          <CarteImageInstrument
+            saisie={saisie.instrument}
+            contexte="versement"
+            apercuBrouillon={image.brouillon?.apercu ?? ''}
+            apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
+            onAjouter={image.ouvrir}
+          />
+
+          {image.ouverte ? (
+            <ModalePaiementImage
+              cible={cibleImageInstrument(saisie.instrument, saisie.montant)}
+              onFermer={image.fermer}
+              onEnregistrer={(fichier) => image.retenir(fichier.contenu, fichier.nomOrigine)}
+            />
+          ) : null}
         </>
       ) : null}
     </Dialogue>

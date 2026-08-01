@@ -30,6 +30,23 @@ import type {
   Versement,
 } from '../../domain/types'
 
+/**
+ * Image de démonstration à déposer par l'adaptateur.
+ *
+ * Le jeu de données ne connaît pas le stockage de fichiers : il décrit ce qu'il
+ * faut déposer, et l'adaptateur s'en charge puis rattache la référence obtenue.
+ */
+export interface ImageAmorcee {
+  /** `operation:<id>` ou `versement:<recuId>:<versementId>`. */
+  cible: string
+  reference: string
+  banque: string
+  montantCentimes: number
+  payeur: string
+  date: string
+  virement: boolean
+}
+
 export interface JeuDemonstration {
   prochainNumero: number
   recus: Recu[]
@@ -38,6 +55,8 @@ export interface JeuDemonstration {
   mouvementsCaisse: MouvementCaisse[]
   impressionsFinance: ImpressionFinance[]
   audit: EntreeAudit[]
+  /** R-35 — images amorcées, une par opération au plus. */
+  imagesAmorcees: ImageAmorcee[]
 }
 
 /** Décale une date de `delta` jours et renvoie ses deux représentations. */
@@ -541,8 +560,32 @@ export function construireJeuDemonstration(
     },
   ]
 
+  // Deux images de démonstration, comme `seedDemoChequeImages()` du fichier :
+  // l'opération partagée, et un chèque unique.
+  const imagesAmorcees: ImageAmorcee[] = [
+    {
+      cible: `operation:${operationPartagee.id}`,
+      reference: operationPartagee.reference,
+      banque: operationPartagee.banque,
+      montantCentimes: operationPartagee.montantTotalCentimes,
+      payeur: operationPartagee.payeur,
+      date: operationPartagee.dateInstrument,
+      virement: true,
+    },
+    {
+      cible: 'versement:r-demo-263:p-demo-263-1',
+      reference: '4471182',
+      banque: 'البنك الشعبي',
+      montantCentimes: 2000000,
+      payeur: 'خديجة فهمي',
+      date: avantHier.fr,
+      virement: false,
+    },
+  ]
+
   return {
     prochainNumero: dernierNumero,
+    imagesAmorcees,
     recus,
     clients,
     operationsPartagees: [operationPartagee],

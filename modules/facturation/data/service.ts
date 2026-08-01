@@ -44,6 +44,31 @@ import {
   type PeriodeFinance,
   type TotauxFinance,
 } from '../domain/rules/finance-day'
+import {
+  NOMS_JOURS,
+  cleOperationBancaire,
+  etatControle,
+  journeesVisibles,
+  joursDuMois,
+  moisValide,
+  perimetreDeCalcul,
+  resumesDuMois,
+  selectionDuMois,
+  totalJournee,
+  totauxJournees,
+} from '../domain/rules/daily'
+import {
+  collecterOperationsBancaires,
+  couleurRestant,
+  filtrerOperations,
+  libellesInstrument,
+  migrationsImagesPartagees,
+  montantGlobalCentimes,
+  peutSupprimerImage,
+  restantNul,
+  type FiltresRegistre,
+  type OperationBancaire,
+} from '../domain/rules/cheque-register'
 import type {
   ContexteCreation,
   ResultatCreation,
@@ -59,10 +84,14 @@ import { preparerAnnulation } from '../domain/rules/cancellation'
 import type { SaisieModification } from '../domain/rules/edit-sections'
 import { preparerModification } from '../domain/rules/edit-sections'
 import { centimesEnTexteDevise } from '../domain/money'
+import { estWeekEnd } from '../domain/dates'
+import { instrumentEnFrancais } from '../domain/payment-method'
 import type {
   Chambre,
   EntreeAudit,
   Hotel,
+  ImpressionFinance,
+  ReferenceFichier,
   Modification,
   OperationPartagee,
   Rabatteur,
@@ -87,6 +116,12 @@ export interface EtatFacturation {
   tarifs: Tarif[]
   recus: Recu[]
   operations: OperationPartagee[]
+  /**
+   * R-38 — URL affichable de l'image de chaque opération partagée qui en porte
+   * une, indexée par identifiant d'opération. Le domaine et l'interface ne
+   * manipulent que des références ; c'est le stockage de fichiers qui résout.
+   */
+  imagesOperations: Record<string, string>
   audit: EntreeAudit[]
   modeDemonstration: boolean
 }
@@ -145,6 +180,21 @@ export async function chargerEtat(): Promise<EtatFacturation> {
     source.audit.lister(200),
   ])
 
+  // R-42 — migration au chargement, comme le fichier de référence la fait à
+  // l'ouverture : une image restée sur un versement partagé remonte vers son
+  // opération.
+  for (const migration of migrationsImagesPartagees(recus, operations)) {
+    await source.operationsPartagees.definirImage(migration.operationId, migration.image)
+    await source.recus.definirImageVersement(migration.recuId, migration.versementId, null)
+    const cible = operations.find((o) => o.id === migration.operationId)
+    if (cible) cible.image = migration.image
+  }
+
+  const imagesOperations: Record<string, string> = {}
+  for (const operation of operations) {
+    if (operation.image) imagesOperations[operation.id] = await source.fichiers.url(operation.image)
+  }
+
   return {
     utilisateur,
     estAdministrateur: utilisateur ? source.session.estAdministrateur(utilisateur) : false,
@@ -156,6 +206,7 @@ export async function chargerEtat(): Promise<EtatFacturation> {
     tarifs,
     recus,
     operations,
+    imagesOperations,
     audit,
     modeDemonstration: modeDemonstration(),
   }
@@ -748,6 +799,509 @@ export async function acquitterAnomalies(jour: string): Promise<Resultat<null>> 
     source,
     'مراجعة',
     `تأكيد مراجعة ${journal.anomaliesEnAttente.length} عملية — ${dateFrDepuisCleJour(jour)}`,
+    utilisateur,
+  )
+
+  return ok(null)
+}
+
+// ---------------------------------------------------------------------------
+// Lot L5 — Suivi journalier
+// ---------------------------------------------------------------------------
+
+/** Une ligne du suivi journalier, prête à afficher. */
+export interface LigneJournee {
+  cle: string
+  /** Nom du jour, en français. */
+  jour: string
+  /** Date `jj/mm/aaaa`. */
+  date: string
+  especes: string
+  total: string
+  /** `n │ montant`, ou « — ». */
+  cheques: string
+  virements: string
+  nouveauxClients: string
+  annulations: string
+  /** R-71 */
+  weekEnd: boolean
+  vide: boolean
+  prefixeControle: string
+  etatControle: string
+  classeControle: string
+}
+
+export interface SuiviJournalier {
+  mois: string
+  /** R-68 — le fichier n'autorise pas d'aller au-delà du mois courant. */
+  moisSuivantPossible: boolean
+  lignes: LigneJournee[]
+  /** R-70 — journées cochées, limitées au mois affiché. */
+  selection: string[]
+  toutesVisiblesSelectionnees: boolean
+  afficherVides: boolean
+  nombreAffichees: number
+  nombreMasquees: number
+  /** R-72 — totaux du périmètre retenu. */
+  encaissements: string
+  especes: string
+  cheques: string
+  virements: string
+  nouveauxClients: number
+  annulationsResume: string
+  totalBancaire: string
+  nombreOperationsBancaires: number
+}
+
+export interface OptionsSuiviJournalier {
+  mois?: string
+  selection?: readonly string[]
+  afficherVides?: boolean
+}
+
+/** R-68 à R-72 — Construit le suivi journalier d'un mois. */
+export async function suiviJournalier(
+  options: OptionsSuiviJournalier = {},
+): Promise<SuiviJournalier> {
+  const source = sourceDonnees()
+  const maintenant = source.horloge.maintenant()
+  const mois = moisValide(options.mois, maintenant)
+  const afficherVides = options.afficherVides !== false
+
+  const recus = await source.recus.lister({ inclureAnnules: true })
+  const operations = await source.operationsPartagees.lister()
+  const mouvementsCaisse = await source.mouvementsCaisse.lister()
+
+  // Les anomalies restantes sont précalculées : le domaine n'attend qu'une
+  // lecture synchrone.
+  const cles = joursDuMois(mois, maintenant)
+  const impressionsParJour: ImpressionFinance[] = []
+  const anomaliesParJour = new Map<string, number>()
+  const tousMouvements = collecterMouvements(recus)
+
+  for (const cle of cles) {
+    const impressions = await source.impressionsFinance.listerParJour(cle)
+    if (!impressions.length) continue
+    impressionsParJour.push(...impressions)
+    const ids = [
+      ...tousMouvements.filter((m) => m.jour === cle).map((m) => m.id),
+      ...mouvementsCaisse.filter((m) => m.jour === cle).map((m) => m.id),
+    ].sort()
+    const acquittement = await source.acquittementsAnomalie.parJour(cle)
+    anomaliesParJour.set(
+      cle,
+      anomaliesEnAttente(anomaliesCandidates(impressions, ids), acquittement).length,
+    )
+  }
+
+  const resumes = resumesDuMois(mois, maintenant, {
+    recus,
+    operations,
+    mouvementsCaisse,
+    impressions: impressionsParJour,
+    anomaliesEnAttente: (cle) => anomaliesParJour.get(cle) ?? 0,
+  })
+
+  const selection = selectionDuMois(options.selection ?? [], mois)
+  const visibles = journeesVisibles(resumes, afficherVides)
+  const perimetre = perimetreDeCalcul(resumes, selection)
+  const totaux = totauxJournees(perimetre)
+
+  const lignes: LigneJournee[] = visibles.map((resume) => {
+    const controle = etatControle(resume)
+    const date = new Date(`${resume.cle}T12:00:00`)
+    return {
+      cle: resume.cle,
+      jour: NOMS_JOURS[date.getDay()],
+      date: dateFrDepuisCleJour(resume.cle),
+      especes: centimesEnTexteDevise(resume.especesCentimes),
+      total: centimesEnTexteDevise(totalJournee(resume)),
+      cheques: resume.nombreCheques
+        ? `${resume.nombreCheques} │ ${centimesEnTexteDevise(resume.chequesCentimes)}`
+        : '—',
+      virements: resume.nombreVirements
+        ? `${resume.nombreVirements} │ ${centimesEnTexteDevise(resume.virementsCentimes)}`
+        : '—',
+      nouveauxClients: resume.nouveauxClients ? String(resume.nouveauxClients) : '—',
+      annulations: resume.nombreAnnulations
+        ? `${resume.nombreAnnulations} │ ${centimesEnTexteDevise(resume.annulationsCentimes)}`
+        : '—',
+      weekEnd: estWeekEnd(resume.cle),
+      vide: !resume.active,
+      prefixeControle: controle.prefixe,
+      etatControle: controle.etat,
+      classeControle: controle.classe,
+    }
+  })
+
+  return {
+    mois,
+    moisSuivantPossible: mois < cleJour(maintenant).slice(0, 7),
+    lignes,
+    selection: [...selection],
+    toutesVisiblesSelectionnees:
+      visibles.length > 0 && visibles.every((resume) => selection.has(resume.cle)),
+    afficherVides,
+    nombreAffichees: visibles.length,
+    nombreMasquees: resumes.length - visibles.length,
+    encaissements: centimesEnTexteDevise(totaux.totalCentimes),
+    especes: centimesEnTexteDevise(totaux.especesCentimes),
+    cheques: `${totaux.nombreCheques} │ ${centimesEnTexteDevise(totaux.chequesCentimes)}`,
+    virements: `${totaux.nombreVirements} │ ${centimesEnTexteDevise(totaux.virementsCentimes)}`,
+    nouveauxClients: totaux.nouveauxClients,
+    annulationsResume: `${totaux.nombreAnnulations} │ ${centimesEnTexteDevise(totaux.annulationsCentimes)}`,
+    totalBancaire: centimesEnTexteDevise(totaux.bancaireCentimes),
+    nombreOperationsBancaires: totaux.nombreOperationsBancaires,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lot L5 — Registre des chèques et virements, et images
+// ---------------------------------------------------------------------------
+
+/** Une ligne du registre, prête à afficher. */
+export interface LigneRegistre {
+  cle: string
+  /** URL affichable de l'image, résolue par le stockage de fichiers. */
+  image: string
+  alternativeImage: string
+  titreAjoutImage: string
+  dateEnregistrement: string
+  montant: string
+  /** `Chèque` ou `Virement`. */
+  mode: string
+  classeMode: 'cheque' | 'transfer'
+  numero: string
+  banque: string
+  dateInstrument: string
+  /** `Partagé` ou `Unique`. */
+  type: string
+  classeType: 'shared' | 'unique'
+  /** R-73 — Le payeur n'est affiché que pour une opération partagée. */
+  payeur: string
+  payeurComplet: string
+  clients: string
+  clientsComplet: string
+  recus: string
+  recusComplet: string
+  attribue: string
+  restant: string
+  couleurRestant: string
+  employe: string
+}
+
+export interface AttributionAffichee {
+  numeroRecu: number
+  client: string
+  montant: string
+  situation: string
+  annule: boolean
+}
+
+/** Contenu de la fenêtre de détail d'une opération. */
+export interface DetailOperationBancaire {
+  cle: string
+  entete: string
+  dateEnregistrement: string
+  mode: string
+  montant: string
+  libelleReference: string
+  numero: string
+  banque: string
+  libelleDate: string
+  dateInstrument: string
+  type: string
+  payeur: string
+  attribue: string
+  restant: string
+  couleurRestant: string
+  employe: string
+  clients: string
+  recus: string
+  image: string
+  alternativeImage: string
+  texteSansImage: string
+  imageDeposeeLe: string
+  imageDeposeePar: string
+  /** R-39 */
+  suppressionPossible: boolean
+  /** R-36 — l'ajout n'est proposé que si aucune image n'est présente. */
+  ajoutPossible: boolean
+  attributions: AttributionAffichee[]
+}
+
+export interface RegistreBancaire {
+  filtres: FiltresRegistre
+  lignes: LigneRegistre[]
+  /** Montant global des opérations affichées. */
+  montantGlobal: string
+  nombreAffiche: number
+  /** Libellé du pied de tableau. */
+  libellePortee: string
+  estAdministrateur: boolean
+  detail: DetailOperationBancaire | null
+}
+
+async function operationsBancaires(source: SourceDonnees): Promise<OperationBancaire[]> {
+  const recus = await source.recus.lister({ inclureAnnules: true })
+  const operations = await source.operationsPartagees.lister()
+  return collecterOperationsBancaires(recus, operations)
+}
+
+async function urlImage(
+  source: SourceDonnees,
+  image: ReferenceFichier | null,
+): Promise<string> {
+  if (!image) return ''
+  return source.fichiers.url(image)
+}
+
+/** R-73 à R-77 — Construit le registre des chèques et virements. */
+export async function registreBancaire(
+  filtresDemandes: Partial<FiltresRegistre> = {},
+  cleSelectionnee: string | null = null,
+): Promise<RegistreBancaire> {
+  const source = sourceDonnees()
+  const utilisateur = await source.session.utilisateurCourant()
+  const estAdministrateur = utilisateur ? source.session.estAdministrateur(utilisateur) : false
+
+  const filtres: FiltresRegistre = {
+    date: filtresDemandes.date ?? '',
+    recherche: filtresDemandes.recherche ?? '',
+    mode: filtresDemandes.mode ?? 'all',
+    type: filtresDemandes.type ?? 'all',
+    image: filtresDemandes.image ?? 'all',
+  }
+
+  const toutes = await operationsBancaires(source)
+  const retenues = filtrerOperations(toutes, filtres)
+
+  const lignes: LigneRegistre[] = []
+  for (const operation of retenues) {
+    const libelles = libellesInstrument(operation.nature)
+    lignes.push({
+      cle: operation.cle,
+      image: await urlImage(source, operation.image),
+      alternativeImage: libelles.alternativeImage,
+      titreAjoutImage: libelles.titreAjout,
+      dateEnregistrement: operation.dateEnregistrement,
+      montant: centimesEnTexteDevise(operation.montantCentimes),
+      mode: instrumentEnFrancais(operation.nature),
+      classeMode: operation.nature === NATURE_VIREMENT ? 'transfer' : 'cheque',
+      numero: operation.numero,
+      banque: operation.banque,
+      dateInstrument: operation.dateInstrument,
+      type: operation.type,
+      classeType: operation.partagee ? 'shared' : 'unique',
+      payeur: operation.partagee ? operation.payeur || '—' : '—',
+      payeurComplet: operation.partagee ? operation.payeur || '—' : '',
+      clients:
+        operation.clients.length > 1
+          ? `${operation.clients.length} clients`
+          : operation.clients[0] || '—',
+      clientsComplet: operation.clients.join(' · ') || '—',
+      recus:
+        operation.recus.length > 3
+          ? `${operation.recus.slice(0, 3).join(' · ')}…`
+          : operation.recus.join(' · '),
+      recusComplet: operation.recus.join(' · '),
+      attribue: centimesEnTexteDevise(operation.attribueCentimes),
+      restant: restantNul(operation.restantCentimes)
+        ? '—'
+        : centimesEnTexteDevise(operation.restantCentimes),
+      couleurRestant: couleurRestant(operation.restantCentimes),
+      employe: operation.employe,
+    })
+  }
+
+  const selectionnee = cleSelectionnee ? (toutes.find((x) => x.cle === cleSelectionnee) ?? null) : null
+
+  return {
+    filtres,
+    lignes,
+    montantGlobal: centimesEnTexteDevise(montantGlobalCentimes(retenues)),
+    nombreAffiche: retenues.length,
+    libellePortee: filtres.date
+      ? `Paiements enregistrés le ${dateFrDepuisCleJour(filtres.date)}`
+      : `Tous les paiements bancaires · ${toutes.length} opérations`,
+    estAdministrateur,
+    detail: selectionnee ? await construireDetail(source, selectionnee, estAdministrateur) : null,
+  }
+}
+
+async function construireDetail(
+  source: SourceDonnees,
+  operation: OperationBancaire,
+  estAdministrateur: boolean,
+): Promise<DetailOperationBancaire> {
+  const libelles = libellesInstrument(operation.nature)
+  return {
+    cle: operation.cle,
+    entete: libelles.entete(operation.numero),
+    dateEnregistrement: operation.dateEnregistrement,
+    mode: instrumentEnFrancais(operation.nature),
+    montant: centimesEnTexteDevise(operation.montantCentimes),
+    libelleReference: libelles.libelleReference,
+    numero: operation.numero,
+    banque: operation.banque,
+    libelleDate: libelles.libelleDate,
+    dateInstrument: operation.dateInstrument,
+    type: operation.type,
+    payeur: operation.partagee ? operation.payeur || '—' : '—',
+    attribue: centimesEnTexteDevise(operation.attribueCentimes),
+    restant: restantNul(operation.restantCentimes)
+      ? '—'
+      : centimesEnTexteDevise(operation.restantCentimes),
+    couleurRestant: couleurRestant(operation.restantCentimes),
+    employe: operation.employe,
+    clients: operation.clients.join(' · ') || '—',
+    recus: operation.recus.join(' · ') || '—',
+    image: await urlImage(source, operation.image),
+    alternativeImage: libelles.alternativeImage,
+    texteSansImage: libelles.sansImage,
+    imageDeposeeLe: operation.image?.deposeLe || '—',
+    imageDeposeePar: operation.image?.deposePar || '—',
+    suppressionPossible: peutSupprimerImage(operation, estAdministrateur),
+    ajoutPossible: !operation.image,
+    // R-76 — répartition entre les reçus, avec la situation de chacun.
+    attributions: operation.attributions.map((attribution) => ({
+      numeroRecu: attribution.numeroRecu,
+      client: attribution.client,
+      montant: centimesEnTexteDevise(attribution.montantCentimes),
+      situation: attribution.annule ? 'Reçu annulé' : 'Enregistré',
+      annule: attribution.annule,
+    })),
+  }
+}
+
+/**
+ * R-35, R-36, R-38, R-41 — Attache une image à une opération bancaire.
+ *
+ * L'image est déposée dans le stockage de fichiers ; seule sa référence est
+ * conservée. Une opération partagée porte l'image sur l'opération, jamais sur
+ * l'un de ses versements.
+ */
+export async function ajouterImageOperation(
+  cle: string,
+  fichier: { contenu: ArrayBuffer; nomOrigine: string; typeMime: string; origine?: string } | null,
+): Promise<Resultat<null>> {
+  const source = sourceDonnees()
+  const utilisateur = await source.session.utilisateurCourant()
+
+  if (!fichier) {
+    return { statut: 'erreurs', erreurs: [{ champ: 'image', code: 'aucune-image-importee' }] }
+  }
+
+  const operation = (await operationsBancaires(source)).find((x) => x.cle === cle)
+  if (!operation) {
+    return {
+      statut: 'erreurs',
+      erreurs: [{ champ: 'operation', code: 'operation-bancaire-introuvable' }],
+    }
+  }
+
+  // R-36 — une deuxième image est impossible.
+  if (operation.image) {
+    return { statut: 'erreurs', erreurs: [{ champ: 'image', code: 'image-deja-presente' }] }
+  }
+
+  const reference = await source.fichiers.deposer({
+    contenu: fichier.contenu,
+    nomOrigine: fichier.nomOrigine,
+    typeMime: fichier.typeMime,
+    origine: fichier.origine ?? 'upload',
+  })
+  const referenceSignee: ReferenceFichier = {
+    ...reference,
+    deposePar: utilisateur?.nom ?? '—',
+  }
+
+  if (operation.partagee && operation.operation) {
+    await source.operationsPartagees.definirImage(operation.operation.id, referenceSignee)
+  } else {
+    await source.recus.definirImageVersement(
+      operation.premierRecu.id,
+      operation.premierVersement.id,
+      referenceSignee,
+    )
+  }
+
+  // R-41 — l'ajout est tracé au journal.
+  await tracer(
+    source,
+    'Image paiement',
+    `Ajout de l’image à ${instrumentEnFrancais(operation.nature).toLowerCase()} ${operation.numero}`,
+    utilisateur,
+  )
+
+  return ok(null)
+}
+
+/**
+ * R-38, R-42 — Attache une image au **dernier versement** d'un reçu.
+ *
+ * Utilisé par les formulaires de création et de versement : le fichier de
+ * référence y garde l'image en brouillon et ne la rattache qu'à
+ * l'enregistrement. L'opération visée est calculée comme dans le registre, si
+ * bien qu'un versement partagé dépose l'image sur l'opération et non sur lui.
+ */
+export async function ajouterImageDernierVersement(
+  recuId: string,
+  fichier: { contenu: ArrayBuffer; nomOrigine: string; typeMime: string } | null,
+): Promise<Resultat<null>> {
+  const source = sourceDonnees()
+  const recu = await source.recus.parId(recuId)
+  if (!recu || !recu.versements.length) {
+    return {
+      statut: 'erreurs',
+      erreurs: [{ champ: 'operation', code: 'operation-bancaire-introuvable' }],
+    }
+  }
+  const cle = cleOperationBancaire(recu, recu.versements.length - 1)
+  return ajouterImageOperation(cle, fichier)
+}
+
+/**
+ * R-39, R-40, R-41 — Supprime l'image d'une opération.
+ * Réservé à l'administrateur ; l'opération redevient ensuite sans image.
+ */
+export async function supprimerImageOperation(cle: string): Promise<Resultat<null>> {
+  const source = sourceDonnees()
+  const utilisateur = await source.session.utilisateurCourant()
+  const estAdministrateur = utilisateur ? source.session.estAdministrateur(utilisateur) : false
+
+  if (!estAdministrateur) {
+    return {
+      statut: 'erreurs',
+      erreurs: [{ champ: 'image', code: 'suppression-image-reservee-administrateur' }],
+    }
+  }
+
+  const operation = (await operationsBancaires(source)).find((x) => x.cle === cle)
+  if (!operation) {
+    return {
+      statut: 'erreurs',
+      erreurs: [{ champ: 'operation', code: 'operation-bancaire-introuvable' }],
+    }
+  }
+  if (!operation.image) return ok(null)
+
+  const reference = operation.image
+  if (operation.partagee && operation.operation) {
+    await source.operationsPartagees.definirImage(operation.operation.id, null)
+  } else {
+    await source.recus.definirImageVersement(
+      operation.premierRecu.id,
+      operation.premierVersement.id,
+      null,
+    )
+  }
+  await source.fichiers.supprimer(reference)
+
+  await tracer(
+    source,
+    'Suppression image paiement',
+    `Image retirée de ${instrumentEnFrancais(operation.nature).toLowerCase()} ${operation.numero}`,
     utilisateur,
   )
 

@@ -20,8 +20,9 @@
  * | Chèques et virements   | français | LTR       | (lot L5)
  *
  * Les écrans français du fichier — suivi journalier, registre des chèques et
- * les fenêtres qui en dépendent — restent en français lorsqu'ils seront
- * construits. Ils ne sont pas concernés par ce lot.
+ * les fenêtres qui en dépendent — sont en français de gauche à droite, avec les
+ * seules valeurs arabes (banques, noms, employés) isolées en lecture inverse,
+ * comme le fait le fichier avec sa classe `cheque-rtl`.
  */
 
 export const T = {
@@ -140,6 +141,158 @@ export const T = {
       restant: 'الباقي',
       statut: 'الحالة',
     },
+  },
+
+  /** Écran « Suivi journalier » — français, de gauche à droite. */
+  suiviJournalier: {
+    titre: 'Suivi journalier',
+    sousTitre: 'Une ligne compacte par journée, y compris les journées sans activité.',
+    moisPrecedent: 'Mois précédent',
+    moisSuivant: 'Mois suivant',
+    moisActuel: 'Mois actuel',
+    encaissements: 'Encaissements',
+    especes: 'Espèces',
+    cheques: 'Chèques',
+    virements: 'Virements',
+    nouveauxClients: 'Nouveaux clients',
+    annulations: 'Annulations',
+    totalBancaire: 'Chèques + virements',
+    operationsBancaires: (n: number) => `${n} opérations bancaires`,
+    selectionnerToutes: 'Sélectionner toutes les journées affichées',
+    inclureJournee: 'Inclure cette journée dans le calcul',
+    effacerSelection: 'Effacer la sélection',
+    moisComplet: 'Calcul du mois complet',
+    selection: (n: number) => `${n} jour${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}`,
+    videsAffichees: '✓ Journées sans activité affichées',
+    videsMasquees: 'Journées sans activité masquées',
+    joursAffiches: (affiches: number, masques: number) =>
+      `${affiches} jours affichés${masques ? ` · ${masques} masqués` : ''}`,
+    noteWeekEnd: 'Samedi et dimanche signalés par une teinte légère.',
+    colonnes: {
+      jour: 'Jour',
+      date: 'Date',
+      especes: 'Espèces',
+      total: 'Total',
+      cheques: 'Chèques',
+      virements: 'Virements',
+      nouveaux: 'Nouveaux',
+      annulations: 'Annulations',
+      controle: 'Contrôle',
+    },
+  },
+
+  /** Écran « Paiements — chèques et virements » — français, de gauche à droite. */
+  paiements: {
+    titre: 'Paiements — chèques et virements',
+    montantGlobal: 'Montant global affiché',
+    nombreAffiche: 'Nombre de paiements affichés',
+    dateEnregistrement: 'Date d’enregistrement à l’agence',
+    jourPrecedent: 'Jour précédent',
+    jourSuivant: 'Jour suivant',
+    aujourdhui: 'Aujourd’hui',
+    toutesLesDates: 'Toutes les dates',
+    recherche: 'Recherche',
+    rechercheAide: 'N° / référence, banque, payeur, client ou reçu…',
+    mode: 'Mode',
+    type: 'Type',
+    image: 'Image',
+    optionsMode: [
+      { valeur: 'all', libelle: 'Tous' },
+      { valeur: 'cheque', libelle: 'Chèques' },
+      { valeur: 'transfer', libelle: 'Virements' },
+    ],
+    optionsType: [
+      { valeur: 'all', libelle: 'Tous' },
+      { valeur: 'unique', libelle: 'Uniques' },
+      { valeur: 'shared', libelle: 'Partagés' },
+    ],
+    optionsImage: [
+      { valeur: 'all', libelle: 'Toutes' },
+      { valeur: 'with', libelle: 'Avec image' },
+      { valeur: 'without', libelle: 'Sans image' },
+    ],
+    ouvrirPaiement: 'Double-cliquez pour ouvrir le paiement',
+    voirImage: 'Voir l’image',
+    vide: 'Aucun paiement ne correspond aux filtres sélectionnés.',
+    triInterne: 'Tri interne : date et heure d’enregistrement · heure non affichée',
+    colonnes: {
+      image: 'Image',
+      dateEnregistrement: 'Date d’enregistrement',
+      montant: 'Montant',
+      mode: 'Mode',
+      numero: 'N° / Référence',
+      banque: 'Banque',
+      datePaiement: 'Date du paiement',
+      type: 'Type',
+      payeur: 'Payeur',
+      clients: 'Client(s)',
+      recus: 'Reçu(s)',
+      attribue: 'Attribué',
+      restant: 'Restant',
+      employe: 'Employé',
+    },
+  },
+
+  /** Fenêtres du registre des paiements — français, de gauche à droite. */
+  paiementDetail: {
+    sousTitre: (date: string) =>
+      `Enregistré à l’agence le ${date} · l’heure reste utilisée uniquement pour le classement`,
+    sansImage: 'Aucune image associée',
+    ajouterImage: '+ Ajouter une image',
+    imageAjoutee: (date: string, auteur: string) => `Image ajoutée le ${date} par ${auteur}`,
+    supprimerImage: 'Supprimer l’image',
+    modePaiement: 'Mode de paiement',
+    montantReel: 'Montant réel',
+    banque: 'Banque',
+    type: 'Type',
+    payeur: 'Payeur',
+    montantAttribue: 'Montant attribué',
+    montantRestant: 'Montant restant',
+    employe: 'Employé',
+    clientsLies: 'Clients liés',
+    recusLies: 'Reçus liés',
+    repartition: 'Répartition entre les reçus',
+    colonnes: {
+      recu: 'Reçu',
+      client: 'Client',
+      montant: 'Montant attribué',
+      situation: 'Situation du reçu',
+    },
+  },
+
+  /**
+   * Carte « image de l'instrument » des formulaires de création et de
+   * versement. Arabe, comme les fenêtres du lot L2 dans le fichier.
+   */
+  imageInstrument: {
+    titreCheque: 'صورة الشيك',
+    titreVirement: 'صورة / إثبات التحويل',
+    uneSeuleParOperation: 'صورة واحدة فقط لكل عملية',
+    uneSeule: 'صورة واحدة فقط',
+    disponible: 'الصورة متوفرة',
+    absente: 'لا توجد صورة',
+    absenteSurPrincipale: 'لا توجد صورة على العملية الرئيسية',
+    ajouter: 'إضافة صورة',
+    texteDisponibleOperationExistante:
+      'الصورة محفوظة على العملية الرئيسية ولا يمكن تغييرها من هذا الوصل.',
+    texteDisponible: 'سترتبط بعملية الدفع عند حفظ الوصل.',
+    texteAbsentCheque: 'يمكن إضافتها الآن أو لاحقًا من سجل المدفوعات.',
+    texteAbsentVirement: 'إضافة إثبات التحويل اختيارية ويمكن القيام بها الآن أو لاحقًا.',
+    texteVerrouilleRecu:
+      'هذه العملية مسجلة مسبقًا. تضاف الصورة لاحقًا من سجل المدفوعات، وليس من وصل هذا العميل.',
+    texteVerrouilleVersement: 'هذه العملية مسجلة مسبقًا. تضاف الصورة لاحقًا من سجل المدفوعات.',
+  },
+
+  paiementImage: {
+    sousTitre: 'Préparation fonctionnelle du futur module d’ajout d’image',
+    note: 'Démonstration uniquement :',
+    noteSuite:
+      ' aucune IA, aucun OCR et aucune recherche automatique de correspondance ne sont développés dans cette version. Cette fenêtre sert seulement à tester l’ajout d’une image unique à l’opération ciblée.',
+    banque: 'Banque',
+    montant: 'Montant',
+    apresConfirmation: 'L’image sera enregistrée seulement après confirmation.',
+    importer: 'Importer une image',
+    enregistrer: 'Enregistrer l’image',
   },
 
   anomalie: {

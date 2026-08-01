@@ -63,6 +63,8 @@ import type {
   SourceDonnees,
   StockageFichiersPort,
 } from '../ports'
+import { imageExemplePaiement } from '../../media/exemple-paiement'
+import { centimesEnTexteDevise } from '../../domain/money'
 import { construireJeuDemonstration, type ScenarioDemonstration } from './dataset'
 
 /** Copie défensive : l'appelant ne doit jamais muter le contenu du dépôt. */
@@ -313,6 +315,13 @@ export function creerSourceDemonstration(
       recu.impressions += 1
       return recu.impressions
     },
+    async definirImageVersement(recuId, versementId, image) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      const versement = recu.versements.find((v) => v.id === versementId)
+      if (!versement) throw new Error(`Versement introuvable : ${versementId}`)
+      versement.image = image
+    },
   }
 
   const depotClients: ClientsPort = {
@@ -411,9 +420,19 @@ export function creerSourceDemonstration(
       }
     },
     async url(reference: ReferenceFichier) {
-      // En démonstration, l'URL est un identifiant opaque. L'implémentation
-      // Supabase Storage renverra une URL signée.
-      return `demo-fichier:${reference.chemin}`
+      // En démonstration, le contenu déposé est restitué sous forme de `data:`
+      // URL pour être affichable. C'est un détail de cet adaptateur : le
+      // domaine et l'interface ne manipulent que `ReferenceFichier`, et
+      // l'implémentation Supabase Storage renverra une URL signée.
+      const fichier = fichiers.get(reference.chemin)
+      if (!fichier) return ''
+      const octets =
+        fichier.contenu instanceof ArrayBuffer
+          ? new Uint8Array(fichier.contenu)
+          : new Uint8Array(await fichier.contenu.arrayBuffer())
+      let binaire = ''
+      for (const octet of octets) binaire += String.fromCharCode(octet)
+      return `data:${fichier.typeMime};base64,${Buffer.from(binaire, 'binary').toString('base64')}`
     },
     async supprimer(reference) {
       fichiers.delete(reference.chemin)
@@ -426,6 +445,41 @@ export function creerSourceDemonstration(
     async lire(): Promise<Partial<Passeport> | null> {
       return null
     },
+  }
+
+  // Images de démonstration : déposées comme n'importe quel fichier, puis
+  // rattachées par référence. Aucune image n'est stockée en base.
+  for (const amorce of jeu.imagesAmorcees) {
+    const chemin = `demo/${identifiants.nouvelId('fichier')}`
+    fichiers.set(chemin, {
+      contenu: imageExemplePaiement({
+        reference: amorce.reference,
+        banque: amorce.banque,
+        montant: centimesEnTexteDevise(amorce.montantCentimes),
+        payeur: amorce.payeur,
+        date: amorce.date,
+        virement: amorce.virement,
+      }),
+      typeMime: 'image/svg+xml',
+    })
+    const reference = {
+      chemin,
+      nomOrigine: 'document-demonstration.svg',
+      origine: 'demo',
+      deposeLe: horloge.maintenant().toLocaleString('fr-FR'),
+      deposePar: 'النظام',
+    }
+    const [genre, ...reste] = amorce.cible.split(':')
+    if (genre === 'operation') {
+      const operation = operations.find((o) => o.id === reste.join(':'))
+      if (operation) operation.image = reference
+    } else {
+      const [recuId, versementId] = reste
+      const versement = recus
+        .find((r) => r.id === recuId)
+        ?.versements.find((v) => v.id === versementId)
+      if (versement) versement.image = reference
+    }
   }
 
   return {

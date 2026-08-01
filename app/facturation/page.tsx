@@ -10,10 +10,15 @@ import {
   creerRecu,
   deconnecter,
   acquitterAnomalies,
+  ajouterImageDernierVersement,
+  ajouterImageOperation,
   enregistrerImpression,
   enregistrerImpressionFinance,
   journalFinancier,
   modifierRecu,
+  registreBancaire,
+  suiviJournalier,
+  supprimerImageOperation,
 } from './actions'
 
 export const metadata: Metadata = {
@@ -44,6 +49,11 @@ export default async function PageFacturation() {
         journalFinancier,
         enregistrerImpressionFinance,
         acquitterAnomalies,
+        suiviJournalier,
+        registreBancaire,
+        ajouterImageOperation,
+        ajouterImageDernierVersement,
+        supprimerImageOperation,
       }}
     />
   )

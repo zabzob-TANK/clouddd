@@ -21,43 +21,6 @@
   border-radius: 4px;
 }
 
-/* -------------------------------------------------------- Sous-navigation */
-
-/*
- * Barre reprise du fichier : collante sous l'en-tête, centrée, de gauche à
- * droite, deux boutons de largeur fixe.
- */
-.finance-sousnav {
-  position: sticky;
-  top: 64px;
-  z-index: 88;
-  min-height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 5px 14px;
-  background: rgba(249, 247, 242, 0.98);
-  border-bottom: 1px solid #e7e3d6;
-  direction: ltr;
-}
-
-.finance-sousnav button {
-  height: 34px;
-  min-width: 132px;
-  padding: 0 14px;
-  border: 1px solid #d9d5c8;
-  background: #fff;
-  color: #47593c;
-  font-size: 11.5px;
-  font-weight: 750;
-}
-
-.finance-sousnav button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .finance-rapport {
   max-width: 1540px;
   margin: 0 auto;
@@ -466,7 +429,6 @@
 @media print {
   body.finance-impression .omra-header,
   body.finance-impression .finance-outils,
-  body.finance-impression .finance-sousnav,
   body.finance-impression .finance-anomalie,
   body.finance-impression .finance-pied,
   body.finance-impression .omra-no-print {

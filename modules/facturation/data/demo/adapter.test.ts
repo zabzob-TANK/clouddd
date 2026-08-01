@@ -219,6 +219,13 @@ describe('adaptateur de démonstration — isolation', () => {
     })
     expect(reference.chemin).toMatch(/^demo\//)
     expect(reference).not.toHaveProperty('contenu')
-    expect(await s.fichiers.url(reference)).toContain(reference.chemin)
+
+    // La référence seule est manipulée par le domaine et l'interface ; c'est
+    // l'adaptateur qui sait la résoudre en URL affichable.
+    expect(await s.fichiers.url(reference)).toMatch(/^data:image\/jpeg;base64,/)
+    expect(await s.fichiers.url({ ...reference, chemin: 'demo/inconnu' })).toBe('')
+
+    await s.fichiers.supprimer(reference)
+    expect(await s.fichiers.url(reference)).toBe('')
   })
 })

@@ -65,6 +65,12 @@ export type CodeErreur =
   | 'impression-hors-periode-autorisee'
   | 'acquittement-reserve-administrateur'
   | 'jour-unique-requis-pour-impression'
+  // Images des chèques et virements — messages en français, comme les écrans
+  // correspondants du fichier de référence.
+  | 'operation-bancaire-introuvable'
+  | 'image-deja-presente'
+  | 'aucune-image-importee'
+  | 'suppression-image-reservee-administrateur'
 
 export interface ErreurValidation {
   /** Champ concerné, tel qu'identifié dans le formulaire. */
@@ -173,6 +179,11 @@ export const MESSAGES: Record<CodeErreur, (p?: Record<string, string | number>) 
   'impression-hors-periode-autorisee': () => 'يمكن للموظف طباعة اليوم أو أمس فقط.',
   'acquittement-reserve-administrateur': () => 'تأكيد مراجعة التنبيه متاح للمدير فقط.',
   'jour-unique-requis-pour-impression': () => 'اختر يوماً واحداً للطباعة.',
+  'operation-bancaire-introuvable': () => 'Paiement introuvable.',
+  'image-deja-presente': () => 'Une image existe déjà pour cette opération.',
+  'aucune-image-importee': () => 'Importez une image avant de l’enregistrer.',
+  'suppression-image-reservee-administrateur': () =>
+    'Seul l’administrateur peut supprimer l’image.',
 }
 
 /** Rend le message d'une erreur, dans la langue du fichier de référence. */

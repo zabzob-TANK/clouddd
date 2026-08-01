@@ -21,7 +21,7 @@ import { Champ, CaseACocher, enErreur, Saisie, Selection } from './champs'
 import { Montant } from './bidi'
 import { T } from './textes'
 
-/** Libellés français des natures. L'interface ne montre aucun libellé arabe. */
+/** Natures proposées, avec les libellés arabes du fichier de référence. */
 const NATURES = [
   { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
   { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },

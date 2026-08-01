@@ -156,6 +156,16 @@ export interface RecusPort {
   ): Promise<Recu>
   /** R-84 — Incrémente le compteur d'impressions et renvoie sa nouvelle valeur. */
   incrementerImpressions(recuId: string): Promise<number>
+  /**
+   * R-35, R-38, R-40 — Image d'un instrument **unique**, portée par le
+   * versement lui-même. Les instruments partagés passent par
+   * `OperationsPartageesPort.definirImage`, jamais par ici.
+   */
+  definirImageVersement(
+    recuId: string,
+    versementId: string,
+    image: ReferenceFichier | null,
+  ): Promise<void>
 }
 
 export interface ClientsPort {

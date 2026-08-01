@@ -161,6 +161,11 @@ export interface ReferenceFichier {
   origine: string
   /** Horodatage de dépôt. */
   deposeLe: string
+  /**
+   * Auteur du dépôt. Le fichier de référence l'affiche dans la fenêtre de
+   * détail d'un paiement : « Image ajoutée le … par … ».
+   */
+  deposePar?: string
 }
 
 /** Statut d'un reçu. Prototype : `r.statut` puis `stat()`. */

@@ -1153,3 +1153,72 @@
   color: #b3bcc7;
   margin-bottom: 8px;
 }
+
+/* ---- Carte « image de l'instrument » des formulaires (lot L5) -------------
+ * Cotes du fichier de référence (`.cheque-form-card`).
+ */
+
+.carte-image-instrument {
+  margin: 10px 0 13px;
+  border: 1px solid #d9d5c8;
+  border-radius: 11px;
+  background: #fdfcf9;
+  padding: 11px 12px;
+}
+
+.carte-image-instrument .entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.carte-image-instrument .entete strong {
+  font-size: 12px;
+  color: #47593c;
+}
+
+.carte-image-instrument .entete span {
+  margin-inline-start: auto;
+  font-size: 10px;
+  color: #8c9185;
+}
+
+.carte-image-instrument .contenu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carte-image-instrument .apercu {
+  width: 112px;
+  height: 48px;
+  border: 1px solid #d8d4c7;
+  border-radius: 7px;
+  object-fit: cover;
+  background: #f3f3ee;
+}
+
+.carte-image-instrument .etat {
+  font-size: 11px;
+  color: #6e7565;
+  line-height: 1.55;
+}
+
+.carte-image-instrument .etat b {
+  display: block;
+  color: #47593c;
+  font-size: 12px;
+}
+
+.carte-image-instrument .ajouter {
+  margin-inline-start: auto;
+  width: 34px;
+  height: 34px;
+  border: 1px dashed #8b987f;
+  border-radius: 8px;
+  background: #f3f6ee;
+  color: #47593c;
+  font-size: 22px;
+  cursor: pointer;
+}

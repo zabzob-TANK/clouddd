@@ -25,15 +25,37 @@ import type { SaisieAnnulation } from '../domain/rules/cancellation'
 import type { SaisieNouveauRecu } from '../domain/rules/create-receipt'
 import type { SaisieModification } from '../domain/rules/edit-sections'
 import type { Resultat } from '../domain/rules/errors'
+import { messageErreur } from '../domain/rules/errors'
 import type { SaisieVersement } from '../domain/rules/payment'
 import { restantDu } from '../domain/rules/receipt'
 import { centimesEnTexteDevise } from '../domain/money'
 import type { Recu, Utilisateur } from '../domain/types'
 import { cleJour, decalerCleJour } from '../domain/dates'
-import type { JournalFinancier } from '../data/service'
+import type {
+  JournalFinancier,
+  RegistreBancaire,
+  SuiviJournalier,
+} from '../data/service'
 import type { PeriodeFinance } from '../domain/rules/finance-day'
+import type { FiltresRegistre } from '../domain/rules/cheque-register'
+import {
+  basculerSelection,
+  basculerToutesVisibles,
+  selectionApresMasquage,
+} from '../domain/rules/daily'
+import {
+  CONFIRMATION_SUPPRESSION_IMAGE,
+  MESSAGE_IMAGE_ENREGISTREE,
+  MESSAGE_IMAGE_SUPPRIMEE,
+  libellesInstrument,
+} from '../domain/rules/cheque-register'
 import { EcranConnexion } from './ecrans/connexion'
 import { EcranFinance } from './ecrans/finance'
+import { EcranPaiements } from './ecrans/paiements'
+import { EcranSuiviJournalier } from './ecrans/suivi-journalier'
+import { ModalePaiementDetail } from './modales/paiement-detail'
+import { ModalePaiementImage, type CiblePaiement } from './modales/paiement-image'
+import { SousNavFinance } from './sous-nav'
 import { EcranRecu } from './ecrans/recu'
 import { EcranRegistre } from './ecrans/registre'
 import { EcranStatistiques } from './ecrans/statistiques'
@@ -54,6 +76,8 @@ type Ecran =
   | { nom: 'recu'; recuId: string }
   | { nom: 'statistiques' }
   | { nom: 'finance' }
+  | { nom: 'suivi' }
+  | { nom: 'paiements' }
 
 type Fenetre =
   | { type: 'aucune' }
@@ -64,6 +88,8 @@ type Fenetre =
   | { type: 'detail'; recuId: string }
   | { type: 'journal' }
   | { type: 'anomalieFinance' }
+  | { type: 'paiementDetail'; cle: string }
+  | { type: 'paiementImage'; cible: CiblePaiement }
 
 export interface ActionsFacturation {
   connecter: (identifiant: string, motDePasse: string) => Promise<Utilisateur | null>
@@ -83,6 +109,18 @@ export interface ActionsFacturation {
   journalFinancier: (periode: PeriodeFinance) => Promise<JournalFinancier>
   enregistrerImpressionFinance: (jour: string) => Promise<Resultat<{ numeroImpression: number }>>
   acquitterAnomalies: (jour: string) => Promise<Resultat<null>>
+  suiviJournalier: (options: {
+    mois?: string
+    selection?: readonly string[]
+    afficherVides?: boolean
+  }) => Promise<SuiviJournalier>
+  registreBancaire: (
+    filtres: Partial<FiltresRegistre>,
+    cleSelectionnee: string | null,
+  ) => Promise<RegistreBancaire>
+  ajouterImageOperation: (donnees: FormData) => Promise<Resultat<null>>
+  supprimerImageOperation: (cle: string) => Promise<Resultat<null>>
+  ajouterImageDernierVersement: (donnees: FormData) => Promise<Resultat<null>>
 }
 
 export function ApplicationFacturation({
@@ -103,6 +141,12 @@ export function ApplicationFacturation({
   // ensuite, le fichier de référence le marque « نسخة ».
   const [recuOriginal, setRecuOriginal] = useState<string | null>(null)
   const [journal, setJournal] = useState<JournalFinancier | null>(null)
+  const [suivi, setSuivi] = useState<SuiviJournalier | null>(null)
+  const [moisSuivi, setMoisSuivi] = useState<string | undefined>(undefined)
+  const [selectionJournees, setSelectionJournees] = useState<string[]>([])
+  const [afficherJourneesVides, setAfficherJourneesVides] = useState(true)
+  const [registre, setRegistre] = useState<RegistreBancaire | null>(null)
+  const [filtresRegistre, setFiltresRegistre] = useState<Partial<FiltresRegistre>>({})
   const [periodeFinance, setPeriodeFinance] = useState<PeriodeFinance>({ filtre: 'day' })
   const [notification, setNotification] = useState<{ texte: string; erreur: boolean } | null>(null)
 
@@ -147,6 +191,81 @@ export function ApplicationFacturation({
     },
     [actions, aujourdhui],
   )
+
+  const chargerSuivi = useCallback(
+    async (options: {
+      mois?: string
+      selection?: readonly string[]
+      afficherVides?: boolean
+    }) => {
+      setSuivi(await actions.suiviJournalier(options))
+    },
+    [actions],
+  )
+
+  const chargerRegistre = useCallback(
+    async (filtres: Partial<FiltresRegistre>, cle: string | null = null) => {
+      setRegistre(await actions.registreBancaire(filtres, cle))
+    },
+    [actions],
+  )
+
+  /**
+   * R-35, R-38 — Dépose l'image tenue en brouillon par le formulaire, une fois
+   * le reçu ou le versement enregistré. Un versement partagé la porte sur son
+   * opération, jamais sur lui-même : c'est le service qui en décide.
+   */
+  const envoyerImageInstrument = async (
+    recuId: string,
+    image: { contenu: Blob; nomOrigine: string } | null,
+  ) => {
+    if (!image) return
+    const donnees = new FormData()
+    donnees.set('recuId', recuId)
+    donnees.set('fichier', image.contenu, image.nomOrigine)
+    const resultat = await actions.ajouterImageDernierVersement(donnees)
+    if (resultat.statut === 'erreurs') notifier(messageErreur(resultat.erreurs[0]), true)
+  }
+
+  const ouvrirSuivi = () => {
+    setEcran({ nom: 'suivi' })
+    void chargerSuivi({
+      mois: moisSuivi,
+      selection: selectionJournees,
+      afficherVides: afficherJourneesVides,
+    })
+  }
+
+  const ouvrirPaiements = () => {
+    setEcran({ nom: 'paiements' })
+    void chargerRegistre(filtresRegistre)
+  }
+
+  /**
+   * R-36 — l'ajout d'image n'est proposé que pour une opération qui n'en a pas.
+   * La cible est décrite à partir de la ligne affichée : le brouillon reste
+   * local à la fenêtre jusqu'à confirmation.
+   */
+  const ouvrirAjoutImage = (cle: string) => {
+    const ligne = registre?.lignes.find((x) => x.cle === cle)
+    if (!ligne) return
+    const libelles = libellesInstrument(ligne.classeMode === 'transfer' ? 'تحويل بنكي' : 'شيك')
+    setFenetre({
+      type: 'paiementImage',
+      cible: {
+        cle,
+        titre: libelles.titreAjout,
+        libelleReference: libelles.libelleReference,
+        libelleImport: libelles.libelleImport,
+        numero: ligne.numero,
+        banque: ligne.banque,
+        montant: ligne.montant,
+        payeur: ligne.payeurComplet || ligne.payeur,
+        date: ligne.dateInstrument,
+        virement: ligne.classeMode === 'transfer',
+      },
+    })
+  }
 
   const recuParId = (id: string): Recu | undefined => etat.recus.find((recu) => recu.id === id)
   const fermer = () => setFenetre({ type: 'aucune' })
@@ -326,7 +445,110 @@ export function ApplicationFacturation({
           }}
           onAcquitter={() => setFenetre({ type: 'anomalieFinance' })}
           onOuvrirDetail={(recuId) => setFenetre({ type: 'detail', recuId })}
+          onPaiements={ouvrirPaiements}
+          onSuiviJournalier={ouvrirSuivi}
         />
+      ) : null}
+
+      {ecran.nom === 'suivi' && suivi ? (
+        <>
+          <SousNavFinance
+            active="suivi"
+            onPaiements={ouvrirPaiements}
+            onSuiviJournalier={ouvrirSuivi}
+          />
+          <EcranSuiviJournalier
+            suivi={suivi}
+            onMois={(mois) => {
+              setMoisSuivi(mois)
+              void chargerSuivi({
+                mois,
+                selection: selectionJournees,
+                afficherVides: afficherJourneesVides,
+              })
+            }}
+            onMoisActuel={() => {
+              setMoisSuivi(undefined)
+              void chargerSuivi({
+                selection: selectionJournees,
+                afficherVides: afficherJourneesVides,
+              })
+            }}
+            onBasculerJournee={(cle) => {
+              const suivante = basculerSelection(selectionJournees, cle)
+              setSelectionJournees(suivante)
+              void chargerSuivi({
+                mois: moisSuivi,
+                selection: suivante,
+                afficherVides: afficherJourneesVides,
+              })
+            }}
+            onBasculerToutes={() => {
+              // R-70 — la bascule ne porte que sur les journées affichées.
+              const visibles = suivi.lignes.map((ligne) => ({ cle: ligne.cle }))
+              const suivante = basculerToutesVisibles(
+                selectionJournees,
+                visibles as never,
+              )
+              setSelectionJournees(suivante)
+              void chargerSuivi({
+                mois: moisSuivi,
+                selection: suivante,
+                afficherVides: afficherJourneesVides,
+              })
+            }}
+            onEffacerSelection={() => {
+              setSelectionJournees([])
+              void chargerSuivi({
+                mois: moisSuivi,
+                selection: [],
+                afficherVides: afficherJourneesVides,
+              })
+            }}
+            onBasculerVides={() => {
+              const afficher = !afficherJourneesVides
+              setAfficherJourneesVides(afficher)
+              // R-70 — masquer les journées vides retire de la sélection celles
+              // qui disparaissent.
+              const selection = afficher
+                ? selectionJournees
+                : selectionApresMasquage(
+                    selectionJournees,
+                    suivi.lignes.map((ligne) => ({
+                      cle: ligne.cle,
+                      active: !ligne.vide,
+                    })) as never,
+                  )
+              setSelectionJournees(selection)
+              void chargerSuivi({ mois: moisSuivi, selection, afficherVides: afficher })
+            }}
+          />
+        </>
+      ) : null}
+
+      {ecran.nom === 'paiements' && registre ? (
+        <>
+          <SousNavFinance
+            active="paiements"
+            onPaiements={ouvrirPaiements}
+            onSuiviJournalier={ouvrirSuivi}
+          />
+          <EcranPaiements
+            registre={registre}
+            aujourdhui={aujourdhui}
+            onFiltres={(modification) => {
+              const suivants = { ...filtresRegistre, ...modification }
+              setFiltresRegistre(suivants)
+              void chargerRegistre(suivants)
+            }}
+            onOuvrirDetail={(cle) => {
+              void chargerRegistre(filtresRegistre, cle).then(() =>
+                setFenetre({ type: 'paiementDetail', cle }),
+              )
+            }}
+            onAjouterImage={(cle) => ouvrirAjoutImage(cle)}
+          />
+        </>
       ) : null}
 
       {fenetre.type === 'nouveau' ? (
@@ -341,10 +563,12 @@ export function ApplicationFacturation({
           }}
           operations={etat.operations}
           recus={etat.recus}
+          imagesOperations={etat.imagesOperations}
           onFermer={fermer}
-          onEnregistrer={async (saisie, confirme) => {
+          onEnregistrer={async (saisie, confirme, image) => {
             const resultat = await actions.creerRecu(saisie, confirme)
             if (resultat.statut === 'ok') {
+              await envoyerImageInstrument(resultat.valeur.recuId, image)
               await rafraichir()
               notifier(`تم حفظ الوصل رقم ${resultat.valeur.numero}`)
               setRecuOriginal(resultat.valeur.recuId)
@@ -359,11 +583,13 @@ export function ApplicationFacturation({
         <ModaleVersement
           recus={etat.recus}
           operations={etat.operations}
+          imagesOperations={etat.imagesOperations}
           numeroInitial={fenetre.numero}
           onFermer={fermer}
-          onEnregistrer={async (saisie, confirme) => {
+          onEnregistrer={async (saisie, confirme, image) => {
             const resultat = await actions.ajouterVersement(saisie, confirme)
             if (resultat.statut === 'ok') {
+              await envoyerImageInstrument(resultat.valeur.recuId, image)
               const suivant = await actions.recharger()
               setEtat(suivant)
               const cible = suivant.recus.find((r) => r.id === resultat.valeur.recuId)
@@ -460,6 +686,46 @@ export function ApplicationFacturation({
               await rafraichir()
             }
             fermer()
+          }}
+        />
+      ) : null}
+
+      {fenetre.type === 'paiementDetail' && registre?.detail ? (
+        <ModalePaiementDetail
+          detail={registre.detail}
+          onFermer={fermer}
+          onAjouterImage={() => ouvrirAjoutImage(registre.detail!.cle)}
+          onSupprimerImage={async () => {
+            // R-39 — confirmation explicite, texte du fichier de référence.
+            if (!window.confirm(CONFIRMATION_SUPPRESSION_IMAGE)) return
+            const resultat = await actions.supprimerImageOperation(registre.detail!.cle)
+            if (resultat.statut === 'ok') {
+              await chargerRegistre(filtresRegistre, registre.detail!.cle)
+              notifier(MESSAGE_IMAGE_SUPPRIMEE)
+            } else if (resultat.statut === 'erreurs') {
+              notifier(messageErreur(resultat.erreurs[0]), true)
+            }
+          }}
+        />
+      ) : null}
+
+      {fenetre.type === 'paiementImage' ? (
+        <ModalePaiementImage
+          cible={fenetre.cible}
+          onFermer={fermer}
+          onEnregistrer={async (fichier) => {
+            const donnees = new FormData()
+            donnees.set('cle', (fenetre as { cible: CiblePaiement }).cible.cle)
+            donnees.set('fichier', fichier.contenu, fichier.nomOrigine)
+            const resultat = await actions.ajouterImageOperation(donnees)
+            if (resultat.statut === 'ok') {
+              await chargerRegistre(filtresRegistre, registre?.detail?.cle ?? null)
+              await rafraichir()
+              notifier(MESSAGE_IMAGE_ENREGISTREE)
+              fermer()
+            } else if (resultat.statut === 'erreurs') {
+              notifier(messageErreur(resultat.erreurs[0]), true)
+            }
           }}
         />
       ) : null}
