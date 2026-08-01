@@ -23,7 +23,7 @@ séparées par `|`).
 | --- | --- | --- |
 | L0 | Socle : structure, types, argent, formatage, bidi, ports, adaptateur de démonstration, registre, tests | livré |
 | L1 | Noyau métier pur, entièrement testé, sans interface | livré |
-| L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | prévu |
+| L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | livré |
 | L3 | Reçu imprimable A4 sur `fond-facture.png` | prévu |
 | L4 | Journal financier, impression, anomalies | prévu |
 | L5 | Suivi journalier, registre chèques et virements, images | prévu |
@@ -209,11 +209,11 @@ séparées par `|`).
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-86 | Journal d'audit, entrée la plus récente en tête | L2 | prévu |
-| R-87 | Mode sombre persistant | L2 | prévu |
-| R-88 | Notification transitoire de 2 800 ms | L2 | prévu |
-| R-89 | Touche d'échappement fermant toute fenêtre | L2 | prévu |
-| R-90 | Passeport : onze champs, images, remplissage manuel | L2 | prévu |
+| R-86 | Journal d'audit, entrée la plus récente en tête | L2 | livré |
+| R-87 | Mode sombre persistant | L2 | livré |
+| R-88 | Notification transitoire de 2 800 ms | L2 | livré |
+| R-89 | Touche d'échappement fermant toute fenêtre | L2 | livré |
+| R-90 | Passeport : onze champs et remplissage manuel — la capture d'image relève du lot L5, avec le stockage de fichiers | L2 | livré |
 | R-91 | Statistiques : quatre cartes de phase ultérieure | L6 | prévu |
 
 ---
@@ -235,3 +235,18 @@ le commanditaire n'a pas explicitement décidé de les modifier.
 | O-07 | ~~La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu~~ — **observation erronée, retirée**. Le fichier de référence contient bien ce contrôle (`if(newConv<this.paye(r))`). Il est intégré à R-52. L'identifiant reste réservé pour ne pas décaler les suivants. | retirée |
 | O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
 | O-09 | Les libellés sont mélangés français et arabe selon les écrans | traduit en français, exception validée |
+
+---
+
+## Écarts connus par rapport à la référence
+
+Points où la reconstruction diffère volontairement, à ce stade, du fichier de
+référence. Aucun ne touche à une règle métier.
+
+| Lot | Écart | Raison |
+| --- | --- | --- |
+| L2 | Capture d'image du passeport absente | Le stockage de fichiers est traité au lot L5. Les onze champs et la saisie manuelle sont opérationnels. |
+| L2 | Aperçu imprimable du reçu absent de la fiche | Objet du lot L3. L'emplacement est en place et le compteur d'impressions est affiché. |
+| L2 | Onglets « Finances » et « Statistiques » désactivés | Lots L4 et L6. |
+| L2 | Interface passée de droite-à-gauche à gauche-à-droite | Exception validée : interface en français, valeurs arabes isolées en RTL. |
+| L2 | Marque de l'en-tête : lettre arabe « ز » conservée | Élément graphique de la marque, pas un libellé d'interface. |

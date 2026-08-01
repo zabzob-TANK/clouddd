@@ -1,22 +1,31 @@
 import type { Metadata } from 'next'
 
-import { ZemzemApp } from '@/components/facturation/ZemzemApp'
+import { ApplicationFacturation } from '@/modules/facturation/ui/application'
+
+import { ajouterVersement, annulerRecu, chargerEtat, creerRecu, modifierRecu } from './actions'
 
 export const metadata: Metadata = {
-  title: 'زمزم أسفار — الفوترة وربط جواز السفر',
-  description: 'Réplique du prototype de facturation Zemzem Asfar : reçus, caisse et scan du passeport.',
+  title: 'Zemzem Asfar — Facturation et registre des paiements',
+  description:
+    'Reçus, versements, opérations partagées et journal des paiements pour la gestion de la Omra.',
 }
 
-export default function FacturationPage() {
+/** Les données de démonstration vivent en mémoire : rien ne doit être mis en cache. */
+export const dynamic = 'force-dynamic'
+
+export default async function PageFacturation() {
+  const etatInitial = await chargerEtat()
+
   return (
-    <>
-      {/* Polices du prototype ; en cas d'indisponibilité, les polices système
-          arabes prennent le relais comme dans le fichier d'origine. */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-      <ZemzemApp />
-    </>
+    <ApplicationFacturation
+      etatInitial={etatInitial}
+      actions={{
+        recharger: chargerEtat,
+        creerRecu,
+        ajouterVersement,
+        annulerRecu,
+        modifierRecu,
+      }}
+    />
   )
 }

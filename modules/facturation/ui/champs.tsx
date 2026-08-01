@@ -1,0 +1,132 @@
+'use client'
+
+/**
+ * Champs de formulaire partagés.
+ *
+ * Les masques de saisie appliqués sont ceux du domaine (U-08 à U-11), afin que
+ * l’interface ne redéfinisse aucune règle.
+ */
+
+import type { ReactNode } from 'react'
+
+import type { ErreurValidation } from '../domain/rules/errors'
+import { messageFr } from '../domain/rules/errors'
+
+/** Vrai si le champ porte une erreur — pilote l'état visuel « invalide ». */
+export function enErreur(erreurs: ErreurValidation[], champ: string): boolean {
+  return erreurs.some((e) => e.champ === champ)
+}
+
+export function ListeErreurs({ erreurs }: { erreurs: ErreurValidation[] }) {
+  if (!erreurs.length) return null
+  return (
+    <div className="omra-errors" role="alert">
+      <strong>Corrigez les points suivants :</strong>
+      <ul>
+        {erreurs.map((erreur, index) => (
+          <li key={`${erreur.champ}-${erreur.code}-${index}`}>{messageFr(erreur)}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+interface ProprietesChamp {
+  label: string
+  children: ReactNode
+  pleine?: boolean
+  aide?: string
+}
+
+export function Champ({ label, children, pleine, aide }: ProprietesChamp) {
+  return (
+    <div className={`omra-field${pleine ? ' pleine' : ''}`}>
+      <label>{label}</label>
+      {children}
+      {aide ? <span className="omra-hint">{aide}</span> : null}
+    </div>
+  )
+}
+
+interface ProprietesSaisie {
+  valeur: string
+  onChange: (valeur: string) => void
+  invalide?: boolean
+  placeholder?: string
+  /** Direction du contenu : les valeurs arabes se saisissent de droite à gauche. */
+  arabe?: boolean
+  mono?: boolean
+  type?: 'text' | 'password'
+  inputMode?: 'text' | 'numeric' | 'tel'
+}
+
+export function Saisie({
+  valeur,
+  onChange,
+  invalide,
+  placeholder,
+  arabe,
+  mono,
+  type = 'text',
+  inputMode,
+}: ProprietesSaisie) {
+  return (
+    <input
+      type={type}
+      className={`omra-input${invalide ? ' invalide' : ''}${mono ? ' mono' : ''}`}
+      dir={arabe ? 'rtl' : 'ltr'}
+      style={arabe ? { unicodeBidi: 'plaintext', textAlign: 'right' } : undefined}
+      value={valeur}
+      placeholder={placeholder}
+      inputMode={inputMode}
+      onChange={(evenement) => onChange(evenement.target.value)}
+    />
+  )
+}
+
+interface ProprietesSelection {
+  valeur: string
+  onChange: (valeur: string) => void
+  options: { valeur: string; libelle: string; arabe?: boolean }[]
+  invalide?: boolean
+  vide?: string
+}
+
+export function Selection({ valeur, onChange, options, invalide, vide = 'Choisir…' }: ProprietesSelection) {
+  return (
+    <select
+      className={`omra-input${invalide ? ' invalide' : ''}`}
+      value={valeur}
+      onChange={(evenement) => onChange(evenement.target.value)}
+    >
+      <option value="">{vide}</option>
+      {options.map((option) => (
+        <option key={option.valeur} value={option.valeur}>
+          {option.libelle}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+export function CaseACocher({
+  coche,
+  onChange,
+  label,
+}: {
+  coche: boolean
+  onChange: (coche: boolean) => void
+  label: string
+}) {
+  return (
+    <label className="omra-check">
+      <input
+        type="checkbox"
+        className="omra-input"
+        checked={coche}
+        onChange={(evenement) => onChange(evenement.target.checked)}
+      />
+      {label}
+    </label>
+  )
+}
