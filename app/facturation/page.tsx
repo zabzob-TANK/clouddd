@@ -9,6 +9,7 @@ import {
   connecter,
   creerRecu,
   deconnecter,
+  enregistrerImpression,
   modifierRecu,
 } from './actions'
 
@@ -36,6 +37,7 @@ export default async function PageFacturation() {
         ajouterVersement,
         annulerRecu,
         modifierRecu,
+        enregistrerImpression,
       }}
     />
   )

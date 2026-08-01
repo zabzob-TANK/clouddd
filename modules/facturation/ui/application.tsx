@@ -69,6 +69,7 @@ export interface ActionsFacturation {
   ) => Promise<Resultat<{ recuId: string }>>
   annulerRecu: (recuId: string, saisie: SaisieAnnulation) => Promise<Resultat<null>>
   modifierRecu: (recuId: string, saisie: SaisieModification) => Promise<Resultat<null>>
+  enregistrerImpression: (recuId: string) => Promise<Resultat<null>>
 }
 
 export function ApplicationFacturation({
@@ -85,6 +86,9 @@ export function ApplicationFacturation({
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null)
   const [ecran, setEcran] = useState<Ecran>({ nom: 'registre' })
   const [fenetre, setFenetre] = useState<Fenetre>({ type: 'aucune' })
+  // R-85 — un reçu ouvert juste après sa création est l'original ; rouvert
+  // ensuite, le fichier de référence le marque « نسخة ».
+  const [recuOriginal, setRecuOriginal] = useState<string | null>(null)
   const [notification, setNotification] = useState<{ texte: string; erreur: boolean } | null>(null)
 
   const [rechercheNom, setRechercheNom] = useState('')
@@ -142,6 +146,26 @@ export function ApplicationFacturation({
   }
 
   const estAdministrateur = etat.estAdministrateur
+
+  // Le fichier de référence n'affiche pas l'en-tête global sur l'écran du reçu :
+  // celui-ci occupe toute la page, avec sa propre barre d'outils.
+  if (ecran.nom === 'recu') {
+    const recuAffiche = recuParId(ecran.recuId)
+    if (recuAffiche) {
+      return (
+        <div className={classeRacine}>
+          <EcranRecu
+            recu={recuAffiche}
+            original={recuOriginal === recuAffiche.id}
+            onRetour={() => setEcran({ nom: 'registre' })}
+            onImpression={() => {
+              void actions.enregistrerImpression(recuAffiche.id).then(rafraichir)
+            }}
+          />
+        </div>
+      )
+    }
+  }
 
   return (
     <div className={classeRacine}>
@@ -241,14 +265,6 @@ export function ApplicationFacturation({
 
       {ecran.nom === 'statistiques' ? <EcranStatistiques /> : null}
 
-      {ecran.nom === 'recu'
-        ? (() => {
-            const recu = recuParId(ecran.recuId)
-            if (!recu) return null
-            return <EcranRecu recu={recu} onRetour={() => setEcran({ nom: 'registre' })} />
-          })()
-        : null}
-
       {fenetre.type === 'nouveau' ? (
         <ModaleNouveauRecu
           referentiels={{
@@ -267,6 +283,7 @@ export function ApplicationFacturation({
             if (resultat.statut === 'ok') {
               await rafraichir()
               notifier(`تم حفظ الوصل رقم ${resultat.valeur.numero}`)
+              setRecuOriginal(resultat.valeur.recuId)
               setEcran({ nom: 'recu', recuId: resultat.valeur.recuId })
             }
             return resultat

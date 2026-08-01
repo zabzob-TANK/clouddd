@@ -21,7 +21,7 @@ const REGISTRE = join(RACINE, 'docs/facturation/inventaire.md')
 const MODULE = join(RACINE, 'modules/facturation')
 
 /** Lots dont la livraison est terminée. À compléter au fil des lots. */
-const LOTS_LIVRES = new Set(['L0', 'L1', 'L2'])
+const LOTS_LIVRES = new Set(['L0', 'L1', 'L2', 'L3'])
 
 const ID_VALIDE = /^[CUR]-\d{2}$/
 

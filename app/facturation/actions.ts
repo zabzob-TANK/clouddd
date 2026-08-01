@@ -19,6 +19,7 @@ import {
 import {
   connecter as connecterService,
   deconnecter as deconnecterService,
+  enregistrerImpressionRecu as enregistrerImpressionService,
 } from '@/modules/facturation/data/service'
 import type { Utilisateur } from '@/modules/facturation/domain/types'
 import type { SaisieAnnulation } from '@/modules/facturation/domain/rules/cancellation'
@@ -36,6 +37,10 @@ export async function connecter(
 
 export async function deconnecter(): Promise<void> {
   return deconnecterService()
+}
+
+export async function enregistrerImpression(recuId: string): Promise<Resultat<null>> {
+  return enregistrerImpressionService(recuId)
 }
 
 export async function chargerEtat(): Promise<EtatFacturation> {

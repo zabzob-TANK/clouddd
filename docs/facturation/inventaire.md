@@ -24,7 +24,7 @@ séparées par `|`).
 | L0 | Socle : structure, types, argent, formatage, bidi, ports, adaptateur de démonstration, registre, tests | livré |
 | L1 | Noyau métier pur, entièrement testé, sans interface | livré |
 | L2 | Registre des reçus, fiche, création, versement, détail, modification, annulation, journal | livré |
-| L3 | Reçu imprimable A4 sur `fond-facture.png` | prévu |
+| L3 | Reçu imprimable A4 sur `fond-facture.png` | livré |
 | L4 | Journal financier, impression, anomalies | prévu |
 | L5 | Suivi journalier, registre chèques et virements, images | prévu |
 | L6 | Statistiques | prévu |
@@ -196,14 +196,14 @@ séparées par `|`).
 
 | ID | Élément | Lot | Statut |
 | --- | --- | --- | --- |
-| R-78 | A4, deux parties détachables : partie client et talon | L3 | prévu |
-| R-79 | Toujours six lignes, les vides masquées et retirées de l'accessibilité | L3 | prévu |
-| R-80 | Champs d'instrument manquants remplacés par le motif de remplissage | L3 | prévu |
-| R-81 | Message d'anomalie si les paiements dépassent six | L3 | prévu |
-| R-82 | Fond `fond-facture.png` en référence écran, masquable | L3 | prévu |
-| R-83 | Réglage de calage horizontal et vertical, guides affichables | L3 | prévu |
-| R-84 | Compteur d'impressions incrémenté et tracé | L3 | prévu |
-| R-85 | Mode original et copie, libellé du numéro d'impression | L3 | prévu |
+| R-78 | A4, deux parties détachables : partie client et talon | L3 | livré |
+| R-79 | Toujours six lignes, les vides masquées et retirées de l'accessibilité | L3 | livré |
+| R-80 | Champs d'instrument manquants remplacés par le motif de remplissage | L3 | livré |
+| R-81 | Message d'anomalie si les paiements dépassent six, **et blocage de l'impression** | L3 | livré |
+| R-82 | Fond `fond-facture.png` en référence écran, masquable | L3 | livré |
+| R-83 | Réglage de calage horizontal et vertical, guides affichables | L3 | livré |
+| R-84 | Compteur d'impressions incrémenté et tracé | L3 | livré |
+| R-85 | Mode original et copie, libellé du numéro d'impression — calculé mais non affiché, le gabarit du fichier ne le rend nulle part | L3 | livré |
 
 ## Règles — divers
 
@@ -235,6 +235,7 @@ le commanditaire n'a pas explicitement décidé de les modifier.
 | O-07 | ~~La modification du programme ne revérifie pas que le payé ne dépasse pas le nouveau convenu~~ — **observation erronée, retirée**. Le fichier de référence contient bien ce contrôle (`if(newConv<this.paye(r))`). Il est intégré à R-52. L'identifiant reste réservé pour ne pas décaler les suivants. | retirée |
 | O-08 | La grille tarifaire ne couvre que quatre des six combinaisons hôtel × vol | conservé |
 | O-09 | Les libellés sont mélangés français et arabe selon les écrans | conservé — chaque écran garde la langue et l'orientation du fichier |
+| O-10 | Le blocage d'impression au-delà de six paiements ne figurait pas dans l'inventaire initial. Le fichier interrompt l'impression et affiche « Ce reçu contient plus de six paiements. L'impression est bloquée jusqu'à définition de la règle métier. » | conservé, intégré à R-81 |
 
 ---
 
@@ -248,6 +249,7 @@ référence. Aucun ne touche à une règle métier.
 | L2 | Capture d'image du passeport absente | Le stockage de fichiers est traité au lot L5. Les onze champs et la saisie manuelle sont opérationnels. |
 | L2 | Aperçu imprimable du reçu absent de la fiche | Objet du lot L3. L'emplacement est en place et le compteur d'impressions est affiché. |
 | L2 | Onglet « المالية » désactivé | Lot L4. |
-| L2 | Écran du reçu sans aperçu imprimable | Objet du lot L3. La barre « رجوع » et la zone du reçu sont en place, à la même dimension. |
+| L3 | Papier à en-tête `fond-facture.png` absent | Le fichier n'a pas été fourni avec le prototype : seul son chemin y figure. L'aperçu affiche un papier blanc ; le calage reste utilisable. À déposer dans `public/facturation/`. |
+| L3 | Reçu rendu en composants React plutôt qu'en document isolé | Le fichier place le reçu dans une iframe avec un document complet en base64. Les dimensions, la structure et le comportement d'impression sont identiques ; la règle `@page` n'est posée que pendant l'affichage de l'écran, comme le fait le fichier pour le journal financier. |
 | L2 | Fenêtre du dossier : pas de bandeau photo en dégradé | Le fichier affiche une bande verte avec photo du voyageur. La structure et les informations sont présentes, l'habillage viendra au lot L7. |
 | L2 | Fenêtres : icônes en caractères plutôt qu'en SVG | Les pictogrammes du fichier sont des SVG. Détail visuel, repris au lot L7. |
