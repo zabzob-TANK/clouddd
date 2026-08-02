@@ -401,7 +401,7 @@ input[type='number'] {
 }
 
 .omra-search.name input {
-  width: 190px;
+  width: 170px;
 }
 
 .omra-search.receipt input {
@@ -574,10 +574,16 @@ input[type='number'] {
   margin: 0 auto;
 }
 
+/*
+ * Les quatre actions de ligne reposent sur une pastille grise dans le
+ * fichier de référence, avec une bordure transparente qui réserve sa place.
+ */
 .omra-row-btn {
   width: 28px;
   height: 28px;
+  border: 1px solid transparent;
   border-radius: 7px;
+  background: #efefef;
   display: grid;
   place-items: center;
   color: var(--muted);
