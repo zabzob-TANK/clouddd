@@ -303,10 +303,20 @@ export function restantNul(centimes: number): boolean {
   return Math.abs(centimes || 0) < 0.0001
 }
 
-/** Couleur du restant : rouge si négatif, gris si nul, vert sinon. */
+/**
+ * Couleur du restant : rouge si négatif, bleu si nul, vert sinon.
+ *
+ * Le bleu du restant nul est celui employé dans toute l'interface pour dire
+ * « il ne reste plus rien » — ici, plus rien à répartir sur l'opération. Il
+ * remplace le gris du fichier de référence, qui ne distinguait pas cet état.
+ *
+ * Les trois valeurs sont des jetons de thème et non des codes hexadécimaux :
+ * en clair, elles rendent exactement les couleurs du fichier de référence ; en
+ * sombre, elles suivent la palette dédiée au lieu de rester illisibles.
+ */
 export function couleurRestant(centimes: number): string {
-  if (centimes < 0) return '#9C3B32'
-  return restantNul(centimes) ? '#9CA28F' : '#47593C'
+  if (centimes < 0) return 'var(--danger)'
+  return restantNul(centimes) ? 'var(--solde)' : 'var(--accent)'
 }
 
 /* ------------------------------------------------------------------ Images */

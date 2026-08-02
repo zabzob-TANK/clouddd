@@ -270,9 +270,10 @@ export function EcranRegistre({
                         <Montant centimes={paye} avecDevise={false} />
                       </td>
                       <td className="centre">
+                        {/* Restant nul : bleu, comme partout ailleurs. */}
                         <span
                           style={{
-                            color: restant === 0 ? '#6E7565' : 'var(--danger)',
+                            color: restant === 0 ? 'var(--solde)' : 'var(--danger)',
                             fontWeight: restant === 0 ? 400 : 600,
                           }}
                         >

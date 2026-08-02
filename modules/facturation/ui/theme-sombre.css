@@ -50,6 +50,11 @@
   --danger: #e08c82;
   --danger-soft: #38221f;
 
+  /* Restant nul : le même bleu, éclairci pour rester lisible sur fond sombre
+     et toujours distinct de `--info` et de `--mode-virement`. */
+  --solde: #7fb6e6;
+  --solde-soft: #1c2a38;
+
   /* Modes de paiement : mêmes familles, portées sur fond sombre. */
   --mode-especes: #9ccc86;
   --mode-especes-fond: #24301f;
@@ -289,6 +294,10 @@
   color: #e79c92;
 }
 
+.omra.sombre .recu-encadre.totaux .ligne.totale b.solde {
+  color: var(--solde);
+}
+
 .omra.sombre .versement-resume {
   background: var(--accent-soft);
 }
@@ -311,6 +320,15 @@
 
 .omra.sombre .versement-resume-ligne.finale b {
   color: #c9d9b4;
+}
+
+.omra.sombre .versement-resume-ligne.finale b.solde {
+  color: var(--solde);
+}
+
+/* Aperçu en direct : même teinte ambrée que le thème clair, en version sombre. */
+.omra.sombre .omra-mini-table tr.apercu td {
+  background: var(--warn-soft);
 }
 
 .omra.sombre .instrument-panneau {
@@ -943,9 +961,12 @@
   color: var(--accent);
 }
 
-.omra.sombre .detail-finance-cellule.paye,
-.omra.sombre .detail-finance-cellule.restant.solde {
+.omra.sombre .detail-finance-cellule.paye {
   background: var(--accent-soft);
+}
+
+.omra.sombre .detail-finance-cellule.restant.solde {
+  background: var(--solde-soft);
 }
 
 .omra.sombre .detail-finance-cellule.restant {
@@ -959,7 +980,7 @@
 
 .omra.sombre .detail-finance-cellule.restant.solde .etiquette,
 .omra.sombre .detail-finance-cellule.restant.solde .valeur {
-  color: var(--accent);
+  color: var(--solde);
 }
 
 .omra.sombre .detail-carte h3,

@@ -27,6 +27,16 @@
   --info-soft: #e6eef2;
 
   /*
+   * Restant nul : un reçu soldé n'a plus rien à payer, et cet état mérite sa
+   * propre couleur. C'est un troisième bleu, volontairement distinct des deux
+   * autres : plus clair et plus saturé que l'ardoise `--info` des états, moins
+   * violacé que l'indigo `--mode-virement` des virements. Les trois peuvent se
+   * croiser dans une même ligne de tableau sans se confondre.
+   */
+  --solde: #1668b3;
+  --solde-soft: #e6eff9;
+
+  /*
    * Modes de paiement : vert pour les espèces, jaune pour le chèque, bleu
    * pour le virement. Ce bleu est volontairement plus franc et plus violacé
    * que le bleu d'état `--info`, qui reste un ardoise désaturé : les deux ne
@@ -1090,6 +1100,14 @@ input[type='number'] {
   color: var(--muted-2);
 }
 
+/*
+ * Aperçu en direct : la dfp en cours de saisie, pas encore enregistrée. Le
+ * fond ambré la sépare des lignes réelles sans changer la structure du tableau.
+ */
+.omra-mini-table tr.apercu td {
+  background: var(--warn-soft);
+}
+
 /* --------------------------------------------------------------- Journal */
 
 .omra-log-entry {
@@ -1727,13 +1745,20 @@ input[type='number'] {
   font-size: 17px;
 }
 
-/* Le montant convenu se lit en vert ; le reste à payer en rouge. */
+/*
+ * Le montant convenu se lit en vert ; le reste à payer en rouge, et en bleu
+ * lorsqu'il tombe à zéro — il ne reste alors plus rien à payer.
+ */
 .recu-encadre.prix .ligne.totale b {
   color: var(--accent);
 }
 
 .recu-encadre.totaux .ligne.totale b {
   color: var(--danger);
+}
+
+.recu-encadre.totaux .ligne.totale b.solde {
+  color: var(--solde);
 }
 
 @media (max-width: 760px) {
@@ -1971,14 +1996,14 @@ input[type='number'] {
   color: var(--danger);
 }
 
-/* Restant nul : le fichier bascule sur le vert. */
+/* Restant nul : bleu, pour marquer qu'il ne reste plus rien à payer. */
 .detail-finance-cellule.restant.solde {
-  background: var(--accent-soft);
+  background: var(--solde-soft);
 }
 
 .detail-finance-cellule.restant.solde .etiquette,
 .detail-finance-cellule.restant.solde .valeur {
-  color: var(--accent);
+  color: var(--solde);
 }
 
 /* Corps : identité à droite, programme et enregistrement empilés à gauche. */
@@ -2705,6 +2730,11 @@ input[type='number'] {
 .versement-resume-ligne.finale b {
   font-size: 17px;
   color: var(--accent);
+}
+
+/* Plus rien à payer après cette dfp : le bleu du soldé, comme ailleurs. */
+.versement-resume-ligne.finale b.solde {
+  color: var(--solde);
 }
 
 /* La mention de lecture seule passe en tête de carte, face au titre. */

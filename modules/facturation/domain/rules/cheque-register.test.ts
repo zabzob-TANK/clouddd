@@ -155,10 +155,10 @@ describe('R-77 — attribué et restant', () => {
     expect(restantNul(-100)).toBe(false)
   })
 
-  it('colore le restant : rouge si négatif, gris si nul, vert sinon', () => {
-    expect(couleurRestant(-100)).toBe('#9C3B32')
-    expect(couleurRestant(0)).toBe('#9CA28F')
-    expect(couleurRestant(100000)).toBe('#47593C')
+  it('colore le restant : rouge si négatif, bleu si nul, vert sinon', () => {
+    expect(couleurRestant(-100)).toBe('var(--danger)')
+    expect(couleurRestant(0)).toBe('var(--solde)')
+    expect(couleurRestant(100000)).toBe('var(--accent)')
   })
 
   it('additionne le montant global des opérations affichées', () => {

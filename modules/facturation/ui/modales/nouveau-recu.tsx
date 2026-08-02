@@ -320,7 +320,6 @@ export function ModaleNouveauRecu({
               onChange={(v) => modifier({ hotel: v })}
               options={referentiels.hotels.map((h) => ({ valeur: h.id, libelle: h.nom }))}
               invalide={enErreur(erreurs, 'hotel')}
-              obligatoire
             />
           </Champ>
           <Champ label={T.nouveau.vol}>
@@ -329,7 +328,6 @@ export function ModaleNouveauRecu({
               onChange={(v) => modifier({ vol: v })}
               options={referentiels.vols.map((v) => ({ valeur: v.id, libelle: v.nom }))}
               invalide={enErreur(erreurs, 'vol')}
-              obligatoire
             />
           </Champ>
           <Champ label={T.nouveau.chambre}>
@@ -338,7 +336,6 @@ export function ModaleNouveauRecu({
               onChange={(v) => modifier({ chambre: v })}
               options={referentiels.chambres.map((c) => ({ valeur: c.id, libelle: c.code }))}
               invalide={enErreur(erreurs, 'chambre')}
-              obligatoire
             />
           </Champ>
         </div>
@@ -352,7 +349,6 @@ export function ModaleNouveauRecu({
               onChange={(v) => modifier({ rabatteur: v })}
               options={referentiels.rabatteurs.map((r) => ({ valeur: r.id, libelle: r.nom }))}
               invalide={enErreur(erreurs, 'rabatteur')}
-              obligatoire
             />
           </Champ>
           {/* Le fichier de référence n'affiche aucun indice sous ce champ : le
@@ -380,7 +376,28 @@ export function ModaleNouveauRecu({
           y gagne la hauteur d'un bloc entier. Sous 760 px, ils repassent l'un
           sous l'autre.
         */}
+        {/*
+          L'encadré vert « payé / reste » occupe la première position, donc la
+          droite en lecture arabe ; l'encadré des prix passe à gauche. Seul
+          l'ordre change : contenu, couleurs et dimensions sont conservés.
+        */}
         <div className="recu-encadres-paire">
+          <div className="recu-encadre totaux">
+            <div className="ligne">
+              <span>{T.nouveau.totalPaye}</span>
+              <b className="mono" dir="ltr">
+                {centimesEnTexteDevise(paye)}
+              </b>
+            </div>
+            <div className="ligne totale">
+              <span>{T.nouveau.totalReste}</span>
+              {/* Restant nul : bleu, comme partout ailleurs dans l'interface. */}
+              <b className={`mono${reste === 0 ? ' solde' : ''}`} dir="ltr">
+                {reste === null ? sansMontant : centimesEnTexteDevise(reste)}
+              </b>
+            </div>
+          </div>
+
           <div className="recu-encadre prix">
             <div className="ligne">
               <span>{T.detail.prixOrigine}</span>
@@ -398,21 +415,6 @@ export function ModaleNouveauRecu({
               <span>{T.registre.colonnes.convenu}</span>
               <b className="mono" dir="ltr">
                 {convenu === null ? sansMontant : centimesEnTexteDevise(convenu)}
-              </b>
-            </div>
-          </div>
-
-          <div className="recu-encadre totaux">
-            <div className="ligne">
-              <span>{T.nouveau.totalPaye}</span>
-              <b className="mono" dir="ltr">
-                {centimesEnTexteDevise(paye)}
-              </b>
-            </div>
-            <div className="ligne totale">
-              <span>{T.nouveau.totalReste}</span>
-              <b className="mono" dir="ltr">
-                {reste === null ? sansMontant : centimesEnTexteDevise(reste)}
               </b>
             </div>
           </div>

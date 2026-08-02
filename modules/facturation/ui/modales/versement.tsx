@@ -223,7 +223,8 @@ export function ModaleVersement({
             </div>
             <div className="versement-resume-ligne finale">
               <span>{T.versement.restantApres}</span>
-              <b className="mono">
+              {/* Restant nul après cette dfp : bleu, comme partout ailleurs. */}
+              <b className={`mono${restant - montantCentimes <= 0 ? ' solde' : ''}`}>
                 <Montant centimes={Math.max(0, restant - montantCentimes)} />
               </b>
             </div>
@@ -254,6 +255,44 @@ export function ModaleVersement({
                 {Array.from({ length: MAX_VERSEMENTS }, (_, index) => {
                   const versement = recu.versements[index]
                   if (!versement) {
+                    // Aperçu en direct : la première ligne libre reflète la
+                    // saisie en cours dès qu'un montant est entré, pour que
+                    // l'employé voie sa dfp prendre sa place avant de
+                    // l'enregistrer. Rien n'est encore écrit : la ligne est
+                    // teintée pour qu'on ne la confonde pas avec une dfp
+                    // enregistrée, et les champs non renseignés restent à « — ».
+                    if (index === recu.versements.length && montantCentimes > 0) {
+                      const detailsApercu = [
+                        saisie.instrument.reference,
+                        saisie.instrument.dateInstrument,
+                        saisie.instrument.banque,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
+                      return (
+                        <tr key={index} className="apercu">
+                          <td className="mono">{index + 1}</td>
+                          <td className="mono">{dateDuJour()}</td>
+                          <td>
+                            <Montant centimes={montantCentimes} />
+                          </td>
+                          <td>
+                            {natureCourante ? (
+                              <span
+                                className={`omra-method ${codeCouleurNature(natureCourante)}`}
+                              >
+                                {libelleNature(natureCourante)}
+                              </span>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                          <td>
+                            {detailsApercu ? <TexteArabe>{detailsApercu}</TexteArabe> : '—'}
+                          </td>
+                        </tr>
+                      )
+                    }
                     return (
                       <tr key={index} className="vide">
                         <td className="mono">{index + 1}</td>

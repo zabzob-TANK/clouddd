@@ -239,7 +239,6 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                       onChange={(v) => modifier({ hotel: v })}
                       options={referentiels.hotels.map((h) => ({ valeur: h.id, libelle: h.nom }))}
                       invalide={enErreur(erreurs, 'hotel')}
-                      obligatoire
                     />
                   </Champ>
                   <Champ label={T.nouveau.vol}>
@@ -248,7 +247,6 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                       onChange={(v) => modifier({ vol: v })}
                       options={referentiels.vols.map((v) => ({ valeur: v.id, libelle: v.nom }))}
                       invalide={enErreur(erreurs, 'vol')}
-                      obligatoire
                     />
                   </Champ>
                   <Champ label={T.nouveau.chambre}>
@@ -257,7 +255,6 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
                       onChange={(v) => modifier({ chambre: v })}
                       options={referentiels.chambres.map((c) => ({ valeur: c.id, libelle: c.code }))}
                       invalide={enErreur(erreurs, 'chambre')}
-                      obligatoire
                     />
                   </Champ>
                 </div>
