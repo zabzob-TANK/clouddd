@@ -67,6 +67,34 @@
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/*
+ * Rendu du texte et des chiffres, repris du fichier de référence.
+ *
+ * `optimizeLegibility` sur l'en-tête et les trois écrans financiers ; chiffres
+ * à chasse fixe partout où des montants s'empilent en colonne, faute de quoi
+ * les colonnes de montants ne s'alignent pas d'une ligne à l'autre.
+ */
+.omra-header,
+.finance-ecran,
+.daily-ecran,
+.cheque-ecran {
+  text-rendering: optimizeLegibility;
+}
+
+.mono,
+.finance-montant,
+.finance-tableau td,
+.finance-tableau th,
+.daily-tableau td,
+.daily-carte-tableau td,
+.cheque-tableau td,
+.cheque-carte-tableau td,
+input[inputmode='numeric'],
+input[type='number'] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
 /* ---------------------------------------------------------------- En-tête */
 
 .omra-header {

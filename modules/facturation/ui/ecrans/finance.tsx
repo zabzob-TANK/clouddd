@@ -18,7 +18,7 @@
 
 import type { JournalFinancier } from '../../data/service'
 import type { PeriodeFinance } from '../../domain/rules/finance-day'
-import { centimesEnTexte } from '../../domain/money'
+import { centimesEnTexteDevise } from '../../domain/money'
 import { badgeSansCadreALImpression } from '../../domain/rules/finance-day'
 import { DateValeur, Reference, TexteArabe } from '../bidi'
 import { SousNavFinance } from '../sous-nav'
@@ -175,13 +175,13 @@ export function EcranFinance({
               <div className="cellule">
                 <div className="etiquette">{F.caisse(journal.totaux.nombreRemboursements)}</div>
                 <div className="valeur mono" dir="ltr">
-                  {centimesEnTexte(journal.totaux.remboursementsCentimes)}
+                  {centimesEnTexteDevise(journal.totaux.remboursementsCentimes)}
                 </div>
               </div>
             </div>
             <div className="bas">
               <div className="valeur mono" dir="ltr">
-                {centimesEnTexte(journal.totaux.especesNettesCentimes)}
+                {centimesEnTexteDevise(journal.totaux.especesNettesCentimes)}
               </div>
               <div className="etiquette">{F.caisseNette}</div>
             </div>
@@ -201,20 +201,20 @@ export function EcranFinance({
           <div className="finance-bloc total">
             <div className="etiquette">{F.totalGeneral}</div>
             <div className="valeur mono" dir="ltr">
-              {centimesEnTexte(journal.totaux.totalGeneralCentimes)}
+              {centimesEnTexteDevise(journal.totaux.totalGeneralCentimes)}
             </div>
           </div>
 
           <div className="finance-bloc pile">
             <div className="ligne">
               <div className="valeur mono" dir="ltr">
-                {centimesEnTexte(journal.totaux.chequesCentimes)}
+                {centimesEnTexteDevise(journal.totaux.chequesCentimes)}
               </div>
               <div className="etiquette">{F.cheque(journal.totaux.nombreOperationsCheque)}</div>
             </div>
             <div className="ligne">
               <div className="valeur mono" dir="ltr">
-                {centimesEnTexte(journal.totaux.virementsCentimes)}
+                {centimesEnTexteDevise(journal.totaux.virementsCentimes)}
               </div>
               <div className="etiquette">{F.virement(journal.totaux.nombreOperationsVirement)}</div>
             </div>
@@ -231,7 +231,7 @@ export function EcranFinance({
               </span>
             </div>
             <div className="grand mono" dir="ltr">
-              {centimesEnTexte(journal.totaux.especesBrutCentimes)}
+              {centimesEnTexteDevise(journal.totaux.especesBrutCentimes)}
             </div>
           </div>
         </div>

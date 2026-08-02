@@ -704,7 +704,9 @@ export async function journalFinancier(periode: PeriodeFinance): Promise<Journal
     chequesSansImage,
     modifications,
     nombreAnnulations: annulees.length,
-    totalAnnule: centimesEnTexte(totalAnnuleCentimes(annulees)),
+    // Bloc de synthèse : le fichier de référence y emploie `dhs()`, donc avec
+    // la devise. Seules les cellules du tableau emploient `dh()`, sans devise.
+    totalAnnule: centimesEnTexteDevise(totalAnnuleCentimes(annulees)),
     nombreImpressions,
     codeImpression: codeImpression(nombreImpressions),
     codeImpressionBandeau: codeImpressionBandeau(nombreImpressions),
