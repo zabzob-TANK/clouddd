@@ -70,6 +70,8 @@ import { TexteArabe } from './bidi'
 import { creerStoreModeSombre, DUREE_NOTIFICATION } from './preferences'
 import { T } from './textes'
 import './styles.css'
+// Couche additive : le mode clair reste intact, le sombre s'y superpose.
+import './theme-sombre.css'
 
 type Ecran =
   | { nom: 'registre' }

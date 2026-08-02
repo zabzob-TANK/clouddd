@@ -1147,62 +1147,7 @@ input[type='number'] {
   background: var(--danger);
 }
 
-/* ----------------------------------------------------------- Mode sombre */
-
-.omra.sombre {
-  --page: #191c17;
-  --surface: #22261f;
-  --border: #343a2e;
-  --border-strong: #3d4436;
-  --ink: #eceee7;
-  --ink-2: #dfe2d9;
-  --muted: #9aa291;
-  --muted-2: #7c8374;
-  --accent-soft: #2b3325;
-  --info-soft: #22323a;
-  --warn-soft: #38311d;
-  --danger-soft: #3a2422;
-}
-
-.omra.sombre .omra-header,
-.omra.sombre .omra-card,
-.omra.sombre .omra-section,
-.omra.sombre .omra-stat,
-.omra.sombre .omra-panel,
-.omra.sombre .omra-modal-head,
-.omra.sombre .omra-modal-foot,
-.omra.sombre .omra-log-entry,
-.omra.sombre .omra-nav-item,
-.omra.sombre .omra-action,
-.omra.sombre .omra-icon-btn,
-.omra.sombre .omra-search input,
-.omra.sombre .omra-btn,
-.omra.sombre .omra-back,
-.omra.sombre .omra-choice button {
-  background: var(--surface);
-  color: var(--ink);
-  border-color: var(--border);
-}
-
-.omra.sombre .omra-table th {
-  background: var(--accent-soft);
-  color: #cdd6c2;
-}
-
-.omra.sombre .omra-input {
-  background: #1e221b;
-  border-color: var(--border);
-  color: var(--ink);
-}
-
-.omra.sombre .omra-nav-item.active,
-.omra.sombre .omra-action.primary,
-.omra.sombre .omra-btn.primary,
-.omra.sombre .omra-choice button.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
+/* Le thème sombre vit dans `theme-sombre.css`. */
 
 @media print {
   .omra-no-print {
