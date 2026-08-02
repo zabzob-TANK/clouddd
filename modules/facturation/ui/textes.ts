@@ -334,6 +334,8 @@ export const T = {
     numero: 'رقم',
     erreurs: 'يجب إكمال ما يلي:',
     sectionVoyageur: 'المسافر',
+    /** Titre de la section programme du formulaire de création. */
+    sectionProgramme: 'البرنامج',
     passeportLie: '✓ تم ربط جواز السفر',
     scannerPasseport: 'مسح جواز السفر',
     numeroPasseport: 'رقم الجواز:',
@@ -352,6 +354,13 @@ export const T = {
     montant: 'المبلغ المدفوع *',
     methode: 'طريقة الدفع *',
     note: 'ملاحظة',
+    /** Gabarit du champ téléphone, repris du fichier de référence. */
+    gabaritTelephone: '0661.__.__.__',
+    /** Encadré vert de la première dépense : payé puis reste. */
+    totalPaye: 'المدفوع',
+    totalReste: 'الباقي',
+    /** Marque des montants encore inconnus, comme « — DH » du fichier. */
+    montantInconnu: '—',
     annuler: 'إلغاء',
     enregistrer: 'حفظ الوصل',
     choisir: 'اختر…',

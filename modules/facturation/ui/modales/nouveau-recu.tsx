@@ -13,6 +13,7 @@
 
 import { useState } from 'react'
 
+import { dateDuJour } from '../../domain/dates'
 import { formaterMontant, formaterTelephone, nettoyerArabe } from '../../domain/format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../../domain/money'
 import type { ErreurValidation, Resultat } from '../../domain/rules/errors'
@@ -103,6 +104,17 @@ export function ModaleNouveauRecu({
   const reduction = dirhamsSaisisEnCentimes(saisie.reduction)
   const convenu = tarif === null ? null : montantConvenu(tarif, reduction)
 
+  // Bandeau du fichier de référence : numéro pressenti et date du jour. Le
+  // numéro définitif reste attribué par le service à l'enregistrement (R-11) ;
+  // cet aperçu ne fait que refléter la suite des reçus déjà chargés.
+  const numeroPressenti = recus.reduce((plusGrand, recu) => Math.max(plusGrand, recu.numero), 0) + 1
+  const dateAujourdhui = dateDuJour()
+
+  // R-14 — reflet immédiat du premier versement : payé puis reste.
+  const paye = dirhamsSaisisEnCentimes(saisie.premierVersement)
+  const reste = convenu === null ? null : convenu - paye
+  const sansMontant = `${T.nouveau.montantInconnu} DH`
+
   const soumettre = async (confirme: boolean) => {
     setEnvoi(true)
     const resultat = await onEnregistrer(
@@ -167,7 +179,17 @@ export function ModaleNouveauRecu({
     <Dialogue
       titre={T.nouveau.titre}
       taille="large"
+      classeCoque="recu-coque"
       onFermer={onFermer}
+      bandeau={
+        <div className="recu-bandeau">
+          <div className="recu-bandeau-label">{T.nouveau.numero}</div>
+          <div className="recu-bandeau-numero mono">{numeroPressenti}</div>
+          <div className="recu-bandeau-date mono" dir="ltr">
+            {dateAujourdhui}
+          </div>
+        </div>
+      }
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
@@ -181,7 +203,7 @@ export function ModaleNouveauRecu({
     >
       <ListeErreurs erreurs={erreurs} />
 
-      <div className="omra-panel" style={{ marginTop: 0 }}>
+      <section className="recu-section" style={{ marginTop: 0 }}>
         <div className="voyageur-entete">
           <h3>{T.nouveau.sectionVoyageur}</h3>
           <div className="voyageur-actions">
@@ -208,7 +230,7 @@ export function ModaleNouveauRecu({
             </button>
           </div>
         </div>
-        <div className="omra-fields">
+        <div className="omra-fields trio">
           <Champ label={T.nouveau.prenom}>
             <Saisie
               valeur={saisie.prenom}
@@ -230,6 +252,7 @@ export function ModaleNouveauRecu({
               valeur={saisie.telephone}
               onChange={(v) => modifier({ telephone: formaterTelephone(v) })}
               invalide={enErreur(erreurs, 'telephone')}
+              placeholder={T.nouveau.gabaritTelephone}
               mono
               inputMode="tel"
             />
@@ -271,11 +294,11 @@ export function ModaleNouveauRecu({
             </button>
           </div>
         ) : null}
-      </div>
+      </section>
 
-      <div className="omra-panel">
-        <h3>{T.modification.sections.program.titre}</h3>
-        <div className="omra-fields">
+      <section className="recu-section">
+        <h3>{T.nouveau.sectionProgramme}</h3>
+        <div className="omra-fields trio">
           <Champ label={T.nouveau.hotel}>
             <Selection
               valeur={saisie.hotel}
@@ -300,6 +323,11 @@ export function ModaleNouveauRecu({
               invalide={enErreur(erreurs, 'chambre')}
             />
           </Champ>
+        </div>
+
+        {/* Le fichier de référence place le vendeur et la réduction sur une
+            seconde rangée, sous les trois listes du programme. */}
+        <div className="omra-fields duo">
           <Champ label={T.nouveau.rabatteur}>
             <Selection
               valeur={saisie.rabatteur}
@@ -308,10 +336,9 @@ export function ModaleNouveauRecu({
               invalide={enErreur(erreurs, 'rabatteur')}
             />
           </Champ>
-          <Champ
-            label={T.nouveau.reduction}
-            aide={centimesEnTexteDevise(referentiels.saison.reductionMaxCentimes)}
-          >
+          {/* Le fichier de référence n'affiche aucun indice sous ce champ : le
+              plafond de réduction reste vérifié par le noyau métier. */}
+          <Champ label={T.nouveau.reduction}>
             <Saisie
               valeur={saisie.reduction}
               onChange={(v) => modifier({ reduction: formaterMontant(v) })}
@@ -328,22 +355,28 @@ export function ModaleNouveauRecu({
           </p>
         ) : null}
 
-        {tarif !== null ? (
-          <div className="omra-summary">
-            <div>
-              <span>{T.detail.prixOrigine}</span>
-              <span className="mono">{centimesEnTexteDevise(tarif)}</span>
-            </div>
-            <div>
-              <span>{T.registre.colonnes.reduction}</span>
-              <span className="mono">{centimesEnTexteDevise(reduction)}</span>
-            </div>
-            <div>
-              <span>{T.registre.colonnes.convenu}</span>
-              <span className="mono">{centimesEnTexteDevise(convenu ?? 0)}</span>
-            </div>
+        {/* Encadré de prix du fichier de référence : toujours présent, les
+            montants encore inconnus s'affichant « — DH ». */}
+        <div className="recu-encadre prix">
+          <div className="ligne">
+            <span>{T.detail.prixOrigine}</span>
+            <b className="mono" dir="ltr">
+              {tarif === null ? sansMontant : centimesEnTexteDevise(tarif)}
+            </b>
           </div>
-        ) : null}
+          <div className="ligne">
+            <span>{T.registre.colonnes.reduction}</span>
+            <b className="mono" dir="ltr">
+              {centimesEnTexteDevise(reduction)}
+            </b>
+          </div>
+          <div className="ligne totale">
+            <span>{T.registre.colonnes.convenu}</span>
+            <b className="mono" dir="ltr">
+              {convenu === null ? sansMontant : centimesEnTexteDevise(convenu)}
+            </b>
+          </div>
+        </div>
 
         <div style={{ marginTop: 12 }}>
           <CaseACocher
@@ -364,16 +397,11 @@ export function ModaleNouveauRecu({
           </div>
         ) : null}
 
-        <div className="omra-fields" style={{ marginTop: 12 }}>
-          <Champ label={T.nouveau.note} pleine>
-            <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
-          </Champ>
-        </div>
-      </div>
+      </section>
 
-      <div className="omra-panel">
+      <section className="recu-section">
         <h3>{T.nouveau.sectionPremiereDfp}</h3>
-        <div className="omra-fields">
+        <div className="omra-fields duo">
           <Champ label={T.nouveau.montant}>
             <Saisie
               valeur={saisie.premierVersement}
@@ -384,7 +412,7 @@ export function ModaleNouveauRecu({
             />
           </Champ>
         </div>
-      </div>
+      </section>
 
       <BlocInstrument
         saisie={saisie.instrument}
@@ -402,6 +430,29 @@ export function ModaleNouveauRecu({
         apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
         onAjouter={image.ouvrir}
       />
+
+      {/* Encadré vert du fichier de référence : payé puis reste. */}
+      <div className="recu-encadre totaux">
+        <div className="ligne">
+          <span>{T.nouveau.totalPaye}</span>
+          <b className="mono" dir="ltr">
+            {centimesEnTexteDevise(paye)}
+          </b>
+        </div>
+        <div className="ligne totale">
+          <span>{T.nouveau.totalReste}</span>
+          <b className="mono" dir="ltr">
+            {reste === null ? sansMontant : centimesEnTexteDevise(reste)}
+          </b>
+        </div>
+      </div>
+
+      {/* Le fichier de référence place la note en toute fin de formulaire. */}
+      <div className="omra-fields" style={{ marginTop: 14 }}>
+        <Champ label={T.nouveau.note} pleine>
+          <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
+        </Champ>
+      </div>
 
       {image.ouverte ? (
         <ModalePaiementImage

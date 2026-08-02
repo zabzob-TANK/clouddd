@@ -640,6 +640,12 @@
   max-width: 880px;
 }
 
+/* Le formulaire de création reprend la largeur du fichier de référence. */
+.omra-modal.recu-coque {
+  max-width: 760px;
+  transition: max-width 0.18s ease;
+}
+
 .omra-modal.small {
   max-width: 470px;
 }
@@ -1396,4 +1402,103 @@
   font-size: 11px;
   color: rgba(255, 255, 255, 0.35);
   direction: ltr;
+}
+
+/* ---------------------------------------- Formulaire de création d'un reçu */
+/* Reprend `.new-modal-receipt-head` et les sections plates du fichier de
+   référence : un filet fin sous le titre, sans carte ni bordure. */
+
+.recu-bandeau {
+  text-align: center;
+  padding: 14px 24px 8px;
+  border-bottom: 1px solid var(--border);
+  background: #fcfbf8;
+}
+
+.recu-bandeau-label {
+  font-size: 10.5px;
+  color: #9ca28f;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.recu-bandeau-numero {
+  font-size: 42px;
+  font-weight: 600;
+  color: #a3801f;
+  line-height: 1;
+}
+
+.recu-bandeau-date {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.recu-section {
+  margin-top: 16px;
+}
+
+.recu-section > h3 {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+
+.omra-fields.trio {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.omra-fields.duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recu-encadre {
+  margin-top: 12px;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.recu-encadre.prix {
+  background: #f6efdf;
+}
+
+.recu-encadre.totaux {
+  background: var(--accent-soft);
+}
+
+.recu-encadre .ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.recu-encadre .ligne b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.recu-encadre .ligne.totale {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.recu-encadre .ligne.totale b {
+  font-size: 17px;
+}
+
+@media (max-width: 760px) {
+  .omra-fields.trio,
+  .omra-fields.duo {
+    grid-template-columns: 1fr;
+  }
 }

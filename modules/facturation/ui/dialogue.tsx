@@ -20,6 +20,13 @@ interface ProprietesDialogue {
   pied?: ReactNode
   /** Élément placé à droite du titre (compteur, badge…). */
   entete?: ReactNode
+  /**
+   * Bandeau pleine largeur inséré entre l'en-tête et le corps, hors de la
+   * marge du corps — reprend `.new-modal-receipt-head` du fichier de référence.
+   */
+  bandeau?: ReactNode
+  /** Classe supplémentaire posée sur la coque, pour les largeurs variables. */
+  classeCoque?: string
 }
 
 export function Dialogue({
@@ -29,6 +36,8 @@ export function Dialogue({
   children,
   pied,
   entete,
+  bandeau,
+  classeCoque,
 }: ProprietesDialogue) {
   // R-89
   useEffect(() => {
@@ -49,7 +58,12 @@ export function Dialogue({
         if (evenement.target === evenement.currentTarget) onFermer()
       }}
     >
-      <div className={`omra-modal${classeTaille}`} role="dialog" aria-modal="true" aria-label={titre}>
+      <div
+        className={`omra-modal${classeTaille}${classeCoque ? ` ${classeCoque}` : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={titre}
+      >
         <div className="omra-modal-head">
           <h2>{titre}</h2>
           {entete}
@@ -57,6 +71,7 @@ export function Dialogue({
             ✕
           </button>
         </div>
+        {bandeau}
         <div className="omra-modal-body">{children}</div>
         {pied ? <div className="omra-modal-foot">{pied}</div> : null}
       </div>
