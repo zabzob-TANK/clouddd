@@ -23,6 +23,59 @@ import type { Recu } from '../../domain/types'
 import { DateValeur, Montant, Reference, Telephone, TexteArabe } from '../bidi'
 import { T } from '../textes'
 
+/* Icônes des actions de ligne, reprises trait pour trait du fichier. */
+const ICONE_CORBEILLE = ['M3 6h18', 'M8 6V4h8v2', 'M19 6l-1 14H6L5 6', 'M10 11v5M14 11v5']
+const ICONE_CRAYON = ['M12 20h9', 'M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z']
+const ICONE_IMPRIMANTE = [
+  'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2',
+  'M6 14h12v8H6z',
+]
+const ICONE_PLUS = ['M12 5v14M5 12h14']
+
+/* Icônes des deux actions de la barre d'outils. */
+const ICONE_RECU_NEUF = [
+  'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6',
+  'M14 3l5 5v3',
+  'M18 15v6M15 18h6',
+]
+const ICONE_CARTE = ['M19 15v-6']
+/** La carte bancaire ajoute un rectangle et un cercle au tracé. */
+const ICONE_CARTE_FORMES = (
+  <>
+    <rect height="12" rx="2" width="18" x="2" y="6" />
+    <circle cx="11" cy="12" r="2.4" />
+  </>
+)
+
+function IconeAction({
+  chemins,
+  taille = 14,
+  rondeurs,
+}: {
+  chemins: string[]
+  taille?: number
+  rondeurs?: React.ReactNode
+}) {
+  return (
+    <svg
+      fill="none"
+      height={taille}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      width={taille}
+      aria-hidden="true"
+    >
+      {rondeurs}
+      {chemins.map((d) => (
+        <path key={d} d={d} />
+      ))}
+    </svg>
+  )
+}
+
 /** Libellé abrégé de la méthode, comme `receiptMethodDisplay()`. */
 function libelleMethode(valeur: string): string {
   const nature = natureNormalisee(valeur)
@@ -88,11 +141,14 @@ export function EcranRegistre({
     <div className="omra-page">
       <div className="omra-tools">
         <div className="omra-actions">
+          {/* Le fichier place le libellé puis l'icône. */}
           <button className="omra-action primary" onClick={onNouveauRecu}>
-            {T.registre.nouveauRecu}
+            <span>{T.registre.nouveauRecu}</span>
+            <IconeAction chemins={ICONE_RECU_NEUF} taille={16} />
           </button>
           <button className="omra-action" onClick={() => onNouveauVersement()}>
-            {T.registre.ajouterDfp}
+            <span>{T.registre.ajouterDfp}</span>
+            <IconeAction chemins={ICONE_CARTE} taille={16} rondeurs={ICONE_CARTE_FORMES} />
           </button>
         </div>
 
@@ -120,14 +176,6 @@ export function EcranRegistre({
               }
             />
           </div>
-          <label className="omra-toggle">
-            <input
-              type="checkbox"
-              checked={afficherAnnules}
-              onChange={(evenement) => onAfficherAnnules(evenement.target.checked)}
-            />
-            {T.registre.afficherAnnules}
-          </label>
         </div>
 
         <div className="omra-title">
@@ -136,13 +184,7 @@ export function EcranRegistre({
       </div>
 
       <div className="omra-card">
-        {lignes.length === 0 ? (
-          <div className="omra-empty">
-            <strong>{T.registre.videTitre}</strong>
-            <span>{T.registre.videAide}</span>
-          </div>
-        ) : (
-          <div className="omra-scroll">
+        <div className="omra-scroll">
             <table className="omra-table">
               <thead>
                 <tr>
@@ -173,6 +215,31 @@ export function EcranRegistre({
                 </tr>
               </thead>
               <tbody>
+                {/* Le fichier garde les en-têtes et pose l'état vide dans le tableau. */}
+                {lignes.length === 0 ? (
+                  <tr>
+                    <td colSpan={20}>
+                      <div className="omra-empty">
+                        <svg
+                          fill="none"
+                          height="34"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          viewBox="0 0 24 24"
+                          width="34"
+                          aria-hidden="true"
+                        >
+                          <circle cx="11" cy="11" r="7" />
+                          <path d="M16.5 16.5L21 21" />
+                        </svg>
+                        <strong>{T.registre.videTitre}</strong>
+                        <span>{T.registre.videAide}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
                 {lignes.map((recu) => {
                   const annule = recu.statut === 'ملغى'
                   const paye = totalPaye(recu)
@@ -266,6 +333,7 @@ export function EcranRegistre({
                       </td>
                       <td className="omra-cell-muted">{recu.groupe || '—'}</td>
                       <td onDoubleClick={(evenement) => evenement.stopPropagation()}>
+                        {/* Ordre du fichier : annuler, modifier, imprimer, dépense. */}
                         <div className="omra-row-actions">
                           <button
                             className="omra-row-btn danger"
@@ -273,7 +341,7 @@ export function EcranRegistre({
                             disabled={annule}
                             onClick={() => onAnnuler(recu)}
                           >
-                            ⨯
+                            <IconeAction chemins={ICONE_CORBEILLE} />
                           </button>
                           <button
                             className="omra-row-btn warn"
@@ -281,7 +349,14 @@ export function EcranRegistre({
                             disabled={annule}
                             onClick={() => onModifier(recu)}
                           >
-                            ✎
+                            <IconeAction chemins={ICONE_CRAYON} />
+                          </button>
+                          <button
+                            className="omra-row-btn accent"
+                            title={T.registre.actionImprimer}
+                            onClick={() => onOuvrirRecu(recu)}
+                          >
+                            <IconeAction chemins={ICONE_IMPRIMANTE} />
                           </button>
                           <button
                             className="omra-row-btn accent"
@@ -289,14 +364,7 @@ export function EcranRegistre({
                             disabled={versementImpossible}
                             onClick={() => onNouveauVersement(String(recu.numero))}
                           >
-                            +
-                          </button>
-                          <button
-                            className="omra-row-btn accent"
-                            title={T.registre.actionVoir}
-                            onClick={() => onOuvrirRecu(recu)}
-                          >
-                            ↗
+                            <IconeAction chemins={ICONE_PLUS} />
                           </button>
                         </div>
                       </td>
@@ -305,8 +373,15 @@ export function EcranRegistre({
                 })}
               </tbody>
             </table>
-          </div>
-        )}
+        </div>
+
+        {/* Pied du tableau : compteur puis bascule des reçus annulés. */}
+        <div className="omra-table-pied">
+          <span>{T.registre.compte(lignes.length, actifs)}</span>
+          <button className="omra-lien" onClick={() => onAfficherAnnules(!afficherAnnules)}>
+            {afficherAnnules ? T.registre.masquerAnnules : T.registre.montrerAnnules(annules)}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -89,6 +89,11 @@ export const T = {
     actionModifier: 'تعديل',
     actionDfp: 'إضافة دفعة',
     actionVoir: 'عرض الوصل',
+    actionImprimer: 'طباعة',
+    /** Pied du tableau : nombre affiché sur nombre de reçus actifs. */
+    compte: (affiches: number, actifs: number) => `عرض ${affiches} من ${actifs}`,
+    masquerAnnules: 'إخفاء الملغاة',
+    montrerAnnules: (n: number) => `عرض الوصولات الملغاة (${n})`,
   },
 
   recu: {

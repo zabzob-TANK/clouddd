@@ -2352,3 +2352,42 @@
   color: var(--ink);
   font-weight: 700;
 }
+
+/* ------------------------------------------- Registre : pied et état vide */
+
+/* Pied du tableau : nombre affiché puis bascule des reçus annulés. */
+.omra-table-pied {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+/* Bascule présentée en lien souligné, comme dans le fichier. */
+.omra-lien {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.omra-lien:hover {
+  color: var(--accent-deep);
+}
+
+/* Les actions de ligne gardent l'ordre du fichier, de gauche à droite. */
+.omra-row-actions {
+  direction: ltr;
+  width: 120px;
+}
+
+/* État vide posé dans le tableau : les en-têtes restent visibles. */
+.omra-empty svg {
+  color: var(--muted-2);
+  margin-bottom: 10px;
+}
