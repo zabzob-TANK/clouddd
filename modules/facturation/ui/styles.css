@@ -58,12 +58,19 @@
 }
 
 /*
+ * Remise à zéro des commandes.
+ *
+ * `:where()` annule la spécificité du sélecteur : cette remise à zéro doit
+ * céder devant la moindre règle de classe. Écrite `.omra button`, elle pesait
+ * plus lourd que `.omra-nav-item` ou `.finance-bouton` et effaçait la bordure
+ * et le fond de la plupart des boutons de l'application.
+ *
  * Les commandes héritent de la police du texte, mais pas de sa hauteur de
  * ligne : le raccourci `font: inherit` leur imposait le 1,6 de l'application
  * là où le fichier de référence laisse le `normal` du navigateur. Les champs
  * de la connexion mesuraient 46,4 px au lieu de 40.
  */
-.omra button {
+:where(.omra) button {
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -74,9 +81,9 @@
   color: inherit;
 }
 
-.omra input,
-.omra select,
-.omra textarea {
+:where(.omra) input,
+:where(.omra) select,
+:where(.omra) textarea {
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -149,26 +156,42 @@ input[type='number'] {
   place-items: center;
   background: radial-gradient(circle at 35% 30%, #c9a24a, #a3801f);
   color: #fff;
-  box-shadow: inset 0 -2px 6px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    inset 0 -2px 6px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(28, 33, 23, 0.06);
 }
 
 .omra-brand-name {
   font-size: 14px;
   font-weight: 750;
   line-height: 1.2;
+  letter-spacing: -0.005em;
 }
 
 .omra-brand-sub {
   font-size: 10px;
-  color: #7a7f75;
+  color: #5f6557;
   margin-top: 2px;
 }
 
+/*
+ * Le fichier de référence détache la navigation du flux et la centre sur la
+ * largeur de l'en-tête. Placée dans le flux, elle se collait à la marque, à
+ * droite : c'est l'écart le plus visible de l'application, puisque cet
+ * en-tête est présent sur presque tous les écrans.
+ */
 .omra-nav {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 110;
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  direction: rtl;
 }
 
 .omra-nav-item {
@@ -184,6 +207,7 @@ input[type='number'] {
   color: #35422f;
   font-size: 12px;
   font-weight: 750;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   user-select: none;
 }
@@ -197,6 +221,7 @@ input[type='number'] {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+  box-shadow: 0 7px 16px -10px rgba(71, 89, 60, 0.85);
 }
 
 .omra-spacer {
@@ -223,9 +248,11 @@ input[type='number'] {
   border-radius: 50%;
   background: #6c8058;
   display: inline-block;
+  box-shadow: 0 0 0 3px rgba(108, 128, 88, 0.16);
 }
 
-.omra-icon-btn {
+/* Le reset des boutons effaçait le cadre blanc de ces trois commandes. */
+.omra .omra-icon-btn {
   width: 34px;
   height: 34px;
   display: grid;
@@ -235,11 +262,25 @@ input[type='number'] {
   background: #fff;
   color: var(--muted);
   flex: 0 0 auto;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
 }
 
-.omra-icon-btn:hover {
+.omra .omra-icon-btn:hover {
   background: var(--accent-soft);
-  color: var(--ink);
+  color: #2e3b27;
+}
+
+/* Bascule jour / nuit : liseré un peu plus marqué et léger retrait. */
+.omra .omra-bascule-theme {
+  margin-inline-start: 2px;
+  border-color: var(--border-strong);
+}
+
+.omra .omra-bascule-theme:hover {
+  border-color: #b9c3ac;
 }
 
 .omra-user {
@@ -262,6 +303,9 @@ input[type='number'] {
   place-items: center;
   font-size: 11px;
   font-weight: 800;
+  box-shadow:
+    inset 0 -2px 6px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(28, 33, 23, 0.06);
 }
 
 .omra-user-name {
@@ -272,7 +316,7 @@ input[type='number'] {
 
 .omra-user-role {
   font-size: 9.5px;
-  color: #7a7f75;
+  color: #5f6557;
   margin-top: 1px;
 }
 

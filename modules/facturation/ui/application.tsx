@@ -443,7 +443,7 @@ export function ApplicationFacturation({
             </svg>
           </button>
           <button
-            className="omra-icon-btn omra-no-print"
+            className="omra-icon-btn omra-bascule-theme omra-no-print"
             title={sombre ? T.navigation.modeJour : T.navigation.modeNuit}
             onClick={storeSombre.basculer}
           >
