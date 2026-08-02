@@ -25,6 +25,22 @@
   --warn-soft: #f6eeda;
   --info: #2e5870;
   --info-soft: #e6eef2;
+
+  /*
+   * Modes de paiement : vert pour les espèces, jaune pour le chèque, bleu
+   * pour le virement. Ce bleu est volontairement plus franc et plus violacé
+   * que le bleu d'état `--info`, qui reste un ardoise désaturé : les deux ne
+   * doivent pas se confondre dans une même ligne de tableau.
+   */
+  --mode-especes: #3f6336;
+  --mode-especes-fond: #eaf3e6;
+  --mode-especes-bord: #cadfbf;
+  --mode-cheque: #8a5c12;
+  --mode-cheque-fond: #fff0d8;
+  --mode-cheque-bord: #e8c98f;
+  --mode-virement: #3a4f9c;
+  --mode-virement-fond: #e7ecfb;
+  --mode-virement-bord: #c4cef0;
   --row-pad: 10px;
 
   min-height: 100vh;
@@ -541,24 +557,28 @@ input[type='number'] {
 .omra-method {
   display: inline-block;
   padding: 3px 9px;
+  border: 1px solid transparent;
   border-radius: 7px;
   font-size: 10.5px;
   font-weight: 650;
 }
 
 .omra-method.cash {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
+  background: var(--mode-especes-fond);
+  color: var(--mode-especes);
+  border-color: var(--mode-especes-bord);
 }
 
 .omra-method.cheque {
-  background: var(--warn-soft);
-  color: var(--warn);
+  background: var(--mode-cheque-fond);
+  color: var(--mode-cheque);
+  border-color: var(--mode-cheque-bord);
 }
 
 .omra-method.transfer {
-  background: var(--info-soft);
-  color: var(--info);
+  background: var(--mode-virement-fond);
+  color: var(--mode-virement);
+  border-color: var(--mode-virement-bord);
 }
 
 .omra-method.none {

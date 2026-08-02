@@ -9,7 +9,7 @@
  * tableau des versements, puis historique et annulation repliables.
  */
 
-import { natureNormalisee } from '../../domain/payment-method'
+import { codeCouleurNature, natureNormalisee } from '../../domain/payment-method'
 import { collecterOperationsBancaires } from '../../domain/rules/cheque-register'
 import { restantDu, statutAffiche, totalPaye } from '../../domain/rules/receipt'
 import type { OperationPartagee, Recu, Saison } from '../../domain/types'
@@ -335,7 +335,11 @@ export function ModaleDetail({
                     <td className="montant">
                       <Montant centimes={versement.montantCentimes} />
                     </td>
-                    <td>{libelleNature(versement.nature)}</td>
+                    <td>
+                      <span className={`omra-method ${codeCouleurNature(versement.nature)}`}>
+                        {libelleNature(versement.nature)}
+                      </span>
+                    </td>
                     <td>
                       {instrument ? (
                         <button

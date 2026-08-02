@@ -264,19 +264,22 @@
   align-items: center;
   justify-content: center;
   padding: 3px 8px;
+  border: 1px solid transparent;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 780;
 }
 
 .cheque-pastille-mode.cheque {
-  background: #e9efe4;
-  color: #3f5838;
+  background: var(--mode-cheque-fond);
+  color: var(--mode-cheque);
+  border-color: var(--mode-cheque-bord);
 }
 
 .cheque-pastille-mode.transfer {
-  background: #e7eff5;
-  color: #345a72;
+  background: var(--mode-virement-fond);
+  color: var(--mode-virement);
+  border-color: var(--mode-virement-bord);
 }
 
 .cheque-montant {
