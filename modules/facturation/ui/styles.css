@@ -792,7 +792,7 @@ input[type='number'] {
 }
 
 .omra-modal-head h2 {
-  font-size: 15px;
+  font-size: 16.5px;
   font-weight: 750;
   margin: 0;
   flex: 1 1 auto;
@@ -800,6 +800,16 @@ input[type='number'] {
 
 .omra-modal-body {
   padding: 18px;
+}
+
+/* Le fichier grise légèrement la croix de fermeture des fenêtres. */
+.omra .omra-modal-head .omra-icon-btn {
+  background: #efefef;
+  border-color: transparent;
+}
+
+.omra .omra-modal-head .omra-icon-btn:hover {
+  background: var(--accent-soft);
 }
 
 .omra-modal-foot {
@@ -869,8 +879,9 @@ input[type='number'] {
   grid-column: 1 / -1;
 }
 
+/* Taille du fichier de référence : 12,5 px, nettement plus lisible que 11. */
 .omra-field label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 650;
   color: var(--muted);
 }
@@ -1677,16 +1688,17 @@ input[type='number'] {
   margin-top: 4px;
 }
 
+/* Le fichier laisse davantage d'air entre voyageur, programme et paiement. */
 .recu-section {
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 .recu-section > h3 {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--accent);
-  margin: 0 0 10px;
-  padding-bottom: 7px;
+  margin: 0 0 14px;
+  padding-bottom: 9px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1698,10 +1710,15 @@ input[type='number'] {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/*
+ * Encadrés de montants. Celui du prix ferme la partie « programme » ;
+ * celui du payé et du reste ferme la partie « premier paiement ». Chacun
+ * occupe sa propre ligne, sur toute la largeur.
+ */
 .recu-encadre {
-  margin-top: 12px;
+  margin-top: 16px;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 12px 16px;
 }
 
 .recu-encadre.prix {
@@ -1718,7 +1735,7 @@ input[type='number'] {
   justify-content: space-between;
   gap: 12px;
   padding: 4px 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -1730,12 +1747,22 @@ input[type='number'] {
 
 .recu-encadre .ligne.totale {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-  margin-top: 4px;
-  padding-top: 8px;
+  margin-top: 6px;
+  padding-top: 10px;
+  font-size: 15px;
 }
 
 .recu-encadre .ligne.totale b {
   font-size: 17px;
+}
+
+/* Le montant convenu se lit en vert ; le reste à payer en rouge. */
+.recu-encadre.prix .ligne.totale b {
+  color: var(--accent);
+}
+
+.recu-encadre.totaux .ligne.totale b {
+  color: var(--danger);
 }
 
 @media (max-width: 760px) {
@@ -2643,4 +2670,16 @@ input[type='number'] {
   text-align: center;
   color: var(--muted);
   margin: 0;
+}
+
+/*
+ * Pied des deux fenêtres de saisie.
+ *
+ * Le fichier de référence y pose l'action principale à gauche et l'annulation
+ * à sa droite. En lecture de droite à gauche, cela revient à tasser le groupe
+ * vers la fin de la ligne.
+ */
+.recu-coque .omra-modal-foot,
+.versement-coque .omra-modal-foot {
+  justify-content: flex-end;
 }
