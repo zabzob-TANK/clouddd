@@ -27,6 +27,10 @@ interface ProprietesDialogue {
   bandeau?: ReactNode
   /** Classe supplémentaire posée sur la coque, pour les largeurs variables. */
   classeCoque?: string
+  /** Pastille d'icône placée avant le titre, comme l'en-tête du dossier. */
+  icone?: ReactNode
+  /** Ligne secondaire sous le titre — le fichier y place le nom du voyageur. */
+  sousTitre?: ReactNode
 }
 
 export function Dialogue({
@@ -38,6 +42,8 @@ export function Dialogue({
   entete,
   bandeau,
   classeCoque,
+  icone,
+  sousTitre,
 }: ProprietesDialogue) {
   // R-89
   useEffect(() => {
@@ -65,7 +71,19 @@ export function Dialogue({
         aria-label={titre}
       >
         <div className="omra-modal-head">
-          <h2>{titre}</h2>
+          {icone ? (
+            <div className="omra-modal-icone" aria-hidden="true">
+              {icone}
+            </div>
+          ) : null}
+          {sousTitre ? (
+            <div className="omra-modal-titres">
+              <h2>{titre}</h2>
+              <div className="omra-modal-sous-titre">{sousTitre}</div>
+            </div>
+          ) : (
+            <h2>{titre}</h2>
+          )}
           {entete}
           <button className="omra-icon-btn" onClick={onFermer} aria-label="Fermer">
             ✕

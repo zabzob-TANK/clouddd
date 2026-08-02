@@ -748,10 +748,16 @@ export function ApplicationFacturation({
                 recu={recu}
                 saison={etat.saison}
                 portrait={etat.portraitsPasseport[recu.id]}
+                operations={etat.operations}
                 onFermer={fermer}
                 onOuvrirRecu={() => {
                   setEcran({ nom: 'recu', recuId: recu.id })
                   fermer()
+                }}
+                onOuvrirInstrument={(cle) => {
+                  void chargerRegistre(filtresRegistre, cle).then(() =>
+                    setFenetre({ type: 'paiementDetail', cle }),
+                  )
                 }}
               />
             )

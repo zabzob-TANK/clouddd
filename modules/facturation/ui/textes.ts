@@ -536,6 +536,13 @@ export const T = {
     dateAnnulation: 'تاريخ الإلغاء',
     voirRecu: 'عرض الوصل / الطباعة',
     fermer: 'إغلاق',
+    reduction: 'التخفيض',
+    /** Compteur affiché sous le total des versements et en pastille du tableau. */
+    nbVersements: (n: number) => `${n} دفعة`,
+    ouvrirHistorique: 'اضغط للفتح',
+    /** Étiquettes de la vignette « voir / ajouter » de la colonne document. */
+    imageVoir: 'Voir',
+    imageAjouter: '+',
     hotel: 'الفندق',
     chambre: 'الغرفة',
     vol: 'الرحلة',
@@ -546,12 +553,14 @@ export const T = {
       rang: '#',
       date: 'التاريخ',
       montant: 'المبلغ',
+      methode: 'الطريقة',
       document: 'الوثيقة',
       reference: 'المرجع',
       dateInstrument: 'تاريخه',
       banque: 'البنك',
       payeur: 'الدافع',
       montantOperation: 'قيمة العملية',
+      employe: 'الموظف',
     },
   },
 
