@@ -19,23 +19,23 @@ export function ModaleJournal({
   onFermer: () => void
 }) {
   return (
-    <Dialogue titre={T.journal.titre} taille="large" onFermer={onFermer}>
+    <Dialogue titre={T.journal.titre} classeCoque="journal-coque" onFermer={onFermer}>
       {entrees.length === 0 ? (
-        <div className="omra-empty">
-          <strong>{T.journal.vide}</strong>
-        </div>
+        <p className="journal-vide">{T.journal.vide}</p>
       ) : (
-        entrees.map((entree) => (
-          <div className="omra-log-entry" key={entree.id}>
-            <div className="omra-log-head">
-              <span className="omra-log-action">{entree.action}</span>
-              <span className="omra-log-meta">
-                <DateValeur>{entree.horodatage}</DateValeur> · {entree.utilisateur}
+        // Le fichier aligne chaque trace sur une seule ligne à trois colonnes,
+        // dans une zone défilante bornée à 60 % de la hauteur d'écran.
+        <div className="journal-liste">
+          {entrees.map((entree) => (
+            <div className="journal-ligne" key={entree.id}>
+              <span className="journal-heure mono" dir="ltr">
+                <DateValeur>{entree.horodatage}</DateValeur>
               </span>
+              <span className="journal-action">{entree.action}</span>
+              <span className="journal-detail">{entree.detail}</span>
             </div>
-            <div className="omra-log-detail">{entree.detail}</div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </Dialogue>
   )
