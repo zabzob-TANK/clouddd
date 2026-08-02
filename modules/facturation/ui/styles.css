@@ -1711,14 +1711,40 @@ input[type='number'] {
 }
 
 /*
- * Encadrés de montants. Celui du prix ferme la partie « programme » ;
- * celui du payé et du reste ferme la partie « premier paiement ». Chacun
- * occupe sa propre ligne, sur toute la largeur.
+ * Encadrés de montants, côte à côte sur une même rangée : le prix convenu et
+ * ce qui reste à payer se lisent d'un coup d'œil, et la fenêtre économise la
+ * hauteur d'un bloc. Sous 760 px, ils repassent l'un sous l'autre.
  */
-.recu-encadre {
+.recu-encadres-paire {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin-top: 16px;
+  align-items: stretch;
+}
+
+.recu-encadre {
   border-radius: 10px;
   padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Chaque bloc porte un liseré de sa propre teinte, pour qu'on ne les
+   confonde pas d'une rangée à l'autre. */
+.recu-encadre.prix {
+  border: 1px solid #e6d7ae;
+}
+
+.recu-encadre.totaux {
+  border: 1px solid #cddac2;
+}
+
+@media (max-width: 760px) {
+  .recu-encadres-paire {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .recu-encadre.prix {

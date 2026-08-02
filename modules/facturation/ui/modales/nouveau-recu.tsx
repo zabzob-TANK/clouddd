@@ -370,26 +370,47 @@ export function ModaleNouveauRecu({
           </p>
         ) : null}
 
-        {/* Encadré de prix du fichier de référence : toujours présent, les
-            montants encore inconnus s'affichant « — DH ». */}
-        <div className="recu-encadre prix">
-          <div className="ligne">
-            <span>{T.detail.prixOrigine}</span>
-            <b className="mono" dir="ltr">
-              {tarif === null ? sansMontant : centimesEnTexteDevise(tarif)}
-            </b>
+        {/*
+          Les deux encadrés de montants se lisent sur une même rangée : le
+          prix convenu à droite, ce qui reste à payer à sa gauche. La fenêtre
+          y gagne la hauteur d'un bloc entier. Sous 760 px, ils repassent l'un
+          sous l'autre.
+        */}
+        <div className="recu-encadres-paire">
+          <div className="recu-encadre prix">
+            <div className="ligne">
+              <span>{T.detail.prixOrigine}</span>
+              <b className="mono" dir="ltr">
+                {tarif === null ? sansMontant : centimesEnTexteDevise(tarif)}
+              </b>
+            </div>
+            <div className="ligne">
+              <span>{T.registre.colonnes.reduction}</span>
+              <b className="mono" dir="ltr">
+                {centimesEnTexteDevise(reduction)}
+              </b>
+            </div>
+            <div className="ligne totale">
+              <span>{T.registre.colonnes.convenu}</span>
+              <b className="mono" dir="ltr">
+                {convenu === null ? sansMontant : centimesEnTexteDevise(convenu)}
+              </b>
+            </div>
           </div>
-          <div className="ligne">
-            <span>{T.registre.colonnes.reduction}</span>
-            <b className="mono" dir="ltr">
-              {centimesEnTexteDevise(reduction)}
-            </b>
-          </div>
-          <div className="ligne totale">
-            <span>{T.registre.colonnes.convenu}</span>
-            <b className="mono" dir="ltr">
-              {convenu === null ? sansMontant : centimesEnTexteDevise(convenu)}
-            </b>
+
+          <div className="recu-encadre totaux">
+            <div className="ligne">
+              <span>{T.nouveau.totalPaye}</span>
+              <b className="mono" dir="ltr">
+                {centimesEnTexteDevise(paye)}
+              </b>
+            </div>
+            <div className="ligne totale">
+              <span>{T.nouveau.totalReste}</span>
+              <b className="mono" dir="ltr">
+                {reste === null ? sansMontant : centimesEnTexteDevise(reste)}
+              </b>
+            </div>
           </div>
         </div>
 
@@ -437,22 +458,6 @@ export function ModaleNouveauRecu({
           </Champ>
         </div>
       </section>
-
-      {/* Encadré vert du fichier de référence : payé puis reste. */}
-      <div className="recu-encadre totaux">
-        <div className="ligne">
-          <span>{T.nouveau.totalPaye}</span>
-          <b className="mono" dir="ltr">
-            {centimesEnTexteDevise(paye)}
-          </b>
-        </div>
-        <div className="ligne totale">
-          <span>{T.nouveau.totalReste}</span>
-          <b className="mono" dir="ltr">
-            {reste === null ? sansMontant : centimesEnTexteDevise(reste)}
-          </b>
-        </div>
-      </div>
 
       {/* Le fichier de référence place la note en toute fin de formulaire. */}
       <div className="omra-fields" style={{ marginTop: 14 }}>
