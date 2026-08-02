@@ -85,6 +85,7 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
             ]}
             invalide={enErreur(erreurs, 'modeRemboursement')}
             vide={T.annulation.choisir}
+            obligatoire
           />
         </Champ>
         <Champ label={T.annulation.motif} pleine>

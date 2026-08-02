@@ -119,16 +119,34 @@ interface ProprietesSelection {
   options: { valeur: string; libelle: string; arabe?: boolean }[]
   invalide?: boolean
   vide?: string
+  /**
+   * Liste obligatoire : l'invite « اختر... » reste affichée tant que rien
+   * n'est choisi, mais n'est pas sélectionnable. Une fois un choix fait, on
+   * ne peut plus revenir à l'invite.
+   *
+   * La valeur reste vide et les règles de validation sont inchangées : le
+   * noyau métier continue de refuser un champ non renseigné.
+   */
+  obligatoire?: boolean
 }
 
-export function Selection({ valeur, onChange, options, invalide, vide = T.nouveau.choisir }: ProprietesSelection) {
+export function Selection({
+  valeur,
+  onChange,
+  options,
+  invalide,
+  vide = T.nouveau.choisir,
+  obligatoire,
+}: ProprietesSelection) {
   return (
     <select
       className={`omra-input${invalide ? ' invalide' : ''}`}
       value={valeur}
       onChange={(evenement) => onChange(evenement.target.value)}
     >
-      <option value="">{vide}</option>
+      <option value="" disabled={obligatoire}>
+        {vide}
+      </option>
       {options.map((option) => (
         <option key={option.valeur} value={option.valeur}>
           {option.libelle}
