@@ -39,14 +39,27 @@ export function EcranConnexion({ onConnexion, comptesEssai }: Proprietes) {
     <div className="omra-login">
       <div className="omra-login-card">
         <div className="omra-login-brand">
-          <div className="omra-logo" aria-hidden="true">
-            ز
+          <div className="omra-login-logo" aria-hidden="true">
+            <svg
+              fill="none"
+              height="36"
+              stroke="#fff"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.6"
+              viewBox="0 0 24 24"
+              width="36"
+            >
+              <path d="M10 2h4M12 2v3" />
+              <path d="M9 5h6a5 5 0 0 1 5 5v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-7a5 5 0 0 1 5-5z" />
+              <path d="M4.5 14c2 0 2-1.4 4-1.4s2 1.4 4 1.4 2-1.4 4-1.4 2 1.4 3.5 1.4" />
+            </svg>
           </div>
-          <div>
-            <div className="omra-brand-name">{T.marque.nom}</div>
-            <div className="omra-brand-sub">{T.marque.sousTitre}</div>
-          </div>
+          <div className="omra-login-brand-name">{T.marque.nom}</div>
+          <div className="omra-login-brand-sub">{T.marque.sousTitre}</div>
         </div>
+
+        <div className="omra-login-filet" aria-hidden="true" />
 
         {erreur ? (
           <div className="omra-login-erreur" role="alert">
