@@ -244,8 +244,15 @@ export function EcranPaiements({
                       {ligne.clients}
                     </td>
                     <td>
-                      <span className="mono-ltr" title={ligne.recusComplet}>
-                        {ligne.recus}
+                      <span className="cheque-recus" title={ligne.recusComplet}>
+                        {ligne.numerosRecus.map((numero) => (
+                          <span className="omra-numero" key={numero}>
+                            {numero}
+                          </span>
+                        ))}
+                        {ligne.numerosRecus.length < ligne.recusComplet.split(' · ').length ? (
+                          <span className="cheque-recus-suite">…</span>
+                        ) : null}
                       </span>
                     </td>
                     <td>

@@ -256,7 +256,9 @@ export function EcranRegistre({
                       onDoubleClick={() => onOuvrirDetail(recu)}
                     >
                       <td className="centre">
-                        <Reference>{recu.numero}</Reference>
+                        <span className={`omra-numero${annule ? ' annule' : ''}`}>
+                          <Reference>{recu.numero}</Reference>
+                        </span>
                       </td>
                       <td style={{ fontWeight: 600, fontSize: 13.5 }}>
                         <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>

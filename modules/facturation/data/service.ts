@@ -995,6 +995,8 @@ export interface LigneRegistre {
   clientsComplet: string
   recus: string
   recusComplet: string
+  /** Numéros affichés un par un, pour la pastille de référence. */
+  numerosRecus: string[]
   attribue: string
   restant: string
   couleurRestant: string
@@ -1116,6 +1118,7 @@ export async function registreBancaire(
           ? `${operation.recus.slice(0, 3).join(' · ')}…`
           : operation.recus.join(' · '),
       recusComplet: operation.recus.join(' · '),
+      numerosRecus: operation.recus.slice(0, 3).map(String),
       attribue: centimesEnTexteDevise(operation.attribueCentimes),
       restant: restantNul(operation.restantCentimes)
         ? '—'
