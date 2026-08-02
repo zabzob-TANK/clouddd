@@ -368,6 +368,12 @@ export const T = {
 
   instrument: {
     dansLaMemeFenetre: 'داخل نفس النافذة',
+    /** Titre du bloc bancaire, adapté à la nature comme dans la référence. */
+    donneesBloc: 'بيانات الشيك',
+    donneesBlocVirement: 'بيانات التحويل البنكي',
+    /** Libellé du numéro, adapté lui aussi à la nature. */
+    referenceCheque: 'رقم الشيك *',
+    referenceVirement: 'مرجع التحويل *',
     operationUnique: 'عملية فردية',
     operationPartagee: 'عملية مشتركة',
     creerOperation: 'إنشاء عملية جديدة',

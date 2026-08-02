@@ -22,11 +22,31 @@ import { Montant } from './bidi'
 import { T } from './textes'
 
 /** Natures proposées, avec les libellés arabes du fichier de référence. */
-const NATURES = [
+export const NATURES = [
   { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
   { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },
   { valeur: NATURE_VIREMENT, libelle: T.methodes.virement },
 ]
+
+/**
+ * R-23 — changer de nature réinitialise la portée et les champs d'instrument,
+ * comme `changeInstrumentMode()` du fichier de référence. Exporté pour que le
+ * formulaire parent puisse porter la liste déroulante « طريقة الدفع », que le
+ * fichier de référence place à côté du montant et non dans le panneau.
+ */
+export function instrumentPourNature(valeur: string): SaisieInstrument {
+  return {
+    nature: valeur,
+    portee: 'unique',
+    sourceOperation: 'new',
+    operationId: '',
+    reference: '',
+    dateInstrument: '',
+    banque: '',
+    payeur: '',
+    montantOperation: '',
+  }
+}
 
 interface Proprietes {
   saisie: SaisieInstrument
@@ -36,6 +56,11 @@ interface Proprietes {
   recus: Recu[]
   /** Montant saisi dans le formulaire parent, en dirhams. */
   montantSaisi: string
+  /**
+   * Le choix de la nature est porté par le formulaire parent — le fichier de
+   * référence l'affiche à côté du montant, pas dans le panneau d'instrument.
+   */
+  natureExterne?: boolean
 }
 
 export function BlocInstrument({
@@ -45,6 +70,7 @@ export function BlocInstrument({
   operations,
   recus,
   montantSaisi,
+  natureExterne = false,
 }: Proprietes) {
   const nature = natureNormalisee(saisie.nature)
   const bancaire = nature === NATURE_CHEQUE || nature === NATURE_VIREMENT
@@ -53,20 +79,8 @@ export function BlocInstrument({
 
   const modifier = (patch: Partial<SaisieInstrument>) => onChange({ ...saisie, ...patch })
 
-  // R-23 — changer de nature réinitialise la portée et les champs d’instrument,
-  // comme `changeInstrumentMode()` du fichier de référence.
-  const changerNature = (valeur: string) =>
-    onChange({
-      nature: valeur,
-      portee: 'unique',
-      sourceOperation: 'new',
-      operationId: '',
-      reference: '',
-      dateInstrument: '',
-      banque: '',
-      payeur: '',
-      montantOperation: '',
-    })
+  // R-23
+  const changerNature = (valeur: string) => onChange(instrumentPourNature(valeur))
 
   // R-31
   const options = optionsOperations(operations, recus, saisie.nature, saisie.operationId)
@@ -80,25 +94,50 @@ export function BlocInstrument({
   const partCentimes = dirhamsSaisisEnCentimes(montantSaisi)
 
   return (
-    <div className="omra-panel">
-      <h3>{T.nouveau.methode}</h3>
-
-      <div className="omra-choice" role="group" aria-label={T.nouveau.methode}>
-        {NATURES.map((option) => (
-          <button
-            key={option.valeur}
-            type="button"
-            className={nature === option.valeur ? 'active' : ''}
-            onClick={() => changerNature(option.valeur)}
-          >
-            {option.libelle}
-          </button>
-        ))}
-      </div>
+    <div className={natureExterne ? 'instrument-panneau' : 'omra-panel'}>
+      {natureExterne ? (
+        // En-tête du panneau latéral du fichier de référence : intitulé du mode
+        // à droite, mention « dans la même fenêtre » à gauche, puis le titre du
+        // bloc bancaire.
+        <>
+          <div className="instrument-entete">
+            <span className="titre">{T.nouveau.methode.replace(' *', '')}</span>
+            <span className="mention">{T.instrument.dansLaMemeFenetre}</span>
+          </div>
+          {bancaire ? (
+            <div className="instrument-sous-titre">
+              {nature === NATURE_VIREMENT
+                ? T.instrument.donneesBlocVirement
+                : T.instrument.donneesBloc}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <h3>{T.nouveau.methode}</h3>
+          <div className="omra-choice" role="group" aria-label={T.nouveau.methode}>
+            {NATURES.map((option) => (
+              <button
+                key={option.valeur}
+                type="button"
+                className={nature === option.valeur ? 'active' : ''}
+                onClick={() => changerNature(option.valeur)}
+              >
+                {option.libelle}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {bancaire ? (
         <>
-          <div className="omra-choice" style={{ marginTop: 12 }} role="group" aria-label={T.instrument.dansLaMemeFenetre}>
+          <div
+            className="omra-choice"
+            style={{ marginTop: natureExterne ? 0 : 12 }}
+            role="group"
+            aria-label={T.instrument.dansLaMemeFenetre}
+          >
             <button
               type="button"
               className={!partage ? 'active' : ''}
@@ -193,8 +232,21 @@ export function BlocInstrument({
               </Champ>
             </div>
           ) : (
-            <div className="omra-fields" style={{ marginTop: 12 }}>
-              <Champ label={T.instrument.reference}>
+            // Le fichier de référence empile ces champs sur toute la largeur du
+            // panneau latéral ; ils restent en grille dans la fenêtre normale.
+            <div
+              className={natureExterne ? 'omra-fields empile' : 'omra-fields'}
+              style={{ marginTop: 12 }}
+            >
+              <Champ
+                label={
+                  natureExterne
+                    ? nature === NATURE_VIREMENT
+                      ? T.instrument.referenceVirement
+                      : T.instrument.referenceCheque
+                    : T.instrument.reference
+                }
+              >
                 <Saisie
                   valeur={saisie.reference}
                   onChange={(valeur) => modifier({ reference: valeur })}
@@ -279,9 +331,13 @@ export function BlocInstrument({
             </div>
           ) : null}
 
-          <p className="omra-hint" style={{ marginTop: 10 }}>
-            {T.instrument.imageDepuisRegistre}
-          </p>
+          {/* Dans le panneau latéral, le fichier de référence ne répète pas
+              cette phrase : la carte d'image porte déjà son propre libellé. */}
+          {natureExterne ? null : (
+            <p className="omra-hint" style={{ marginTop: 10 }}>
+              {T.instrument.imageDepuisRegistre}
+            </p>
+          )}
         </>
       ) : null}
     </div>

@@ -23,7 +23,14 @@ import type { OperationPartagee, Passeport, Recu, Saison, Tarif } from '../../do
 import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
 import { T } from '../textes'
 import { Dialogue } from '../dialogue'
-import { BlocInstrument, instrumentVierge } from '../instrument-panel'
+import {
+  BlocInstrument,
+  NATURES,
+  instrumentPourNature,
+  instrumentVierge,
+} from '../instrument-panel'
+import { NATURE_CHEQUE, NATURE_VIREMENT } from '../../domain/constants'
+import { natureNormalisee } from '../../domain/payment-method'
 import { CarteImageInstrument } from '../carte-image-instrument'
 import { cibleImageInstrument, useBrouillonImage } from '../image-instrument'
 import { ModalePaiementImage } from './paiement-image'
@@ -115,6 +122,12 @@ export function ModaleNouveauRecu({
   const reste = convenu === null ? null : convenu - paye
   const sansMontant = `${T.nouveau.montantInconnu} DH`
 
+  // Le fichier de référence n'ouvre la colonne d'instrument que pour un chèque
+  // ou un virement, et élargit alors la fenêtre.
+  const natureCourante = natureNormalisee(saisie.instrument.nature)
+  const instrumentOuvert =
+    natureCourante === NATURE_CHEQUE || natureCourante === NATURE_VIREMENT
+
   const soumettre = async (confirme: boolean) => {
     setEnvoi(true)
     const resultat = await onEnregistrer(
@@ -179,7 +192,7 @@ export function ModaleNouveauRecu({
     <Dialogue
       titre={T.nouveau.titre}
       taille="large"
-      classeCoque="recu-coque"
+      classeCoque={`recu-coque${instrumentOuvert ? ' instrument-ouvert' : ''}`}
       onFermer={onFermer}
       bandeau={
         <div className="recu-bandeau">
@@ -201,6 +214,8 @@ export function ModaleNouveauRecu({
         </>
       }
     >
+      <div className="recu-colonnes">
+        <section className="recu-colonne-principale">
       <ListeErreurs erreurs={erreurs} />
 
       <section className="recu-section" style={{ marginTop: 0 }}>
@@ -411,25 +426,17 @@ export function ModaleNouveauRecu({
               inputMode="numeric"
             />
           </Champ>
+          {/* Le fichier de référence pose le mode de paiement en liste
+              déroulante, sur la même rangée que le montant. */}
+          <Champ label={T.nouveau.methode}>
+            <Selection
+              valeur={natureCourante}
+              onChange={(valeur) => modifier({ instrument: instrumentPourNature(valeur) })}
+              options={NATURES.map((n) => ({ valeur: n.valeur, libelle: n.libelle }))}
+            />
+          </Champ>
         </div>
       </section>
-
-      <BlocInstrument
-        saisie={saisie.instrument}
-        onChange={(instrument) => modifier({ instrument })}
-        erreurs={erreurs}
-        operations={operations}
-        recus={recus}
-        montantSaisi={saisie.premierVersement}
-      />
-
-      <CarteImageInstrument
-        saisie={saisie.instrument}
-        contexte="recu"
-        apercuBrouillon={image.brouillon?.apercu ?? ''}
-        apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
-        onAjouter={image.ouvrir}
-      />
 
       {/* Encadré vert du fichier de référence : payé puis reste. */}
       <div className="recu-encadre totaux">
@@ -452,6 +459,31 @@ export function ModaleNouveauRecu({
         <Champ label={T.nouveau.note} pleine>
           <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
         </Champ>
+      </div>
+        </section>
+
+        {/* Colonne latérale du fichier de référence : elle n'existe que pour un
+            chèque ou un virement, et repasse dessous sous 980 px. */}
+        {instrumentOuvert ? (
+          <aside className="recu-colonne-instrument">
+            <BlocInstrument
+              saisie={saisie.instrument}
+              onChange={(instrument) => modifier({ instrument })}
+              erreurs={erreurs}
+              operations={operations}
+              recus={recus}
+              montantSaisi={saisie.premierVersement}
+              natureExterne
+            />
+            <CarteImageInstrument
+              saisie={saisie.instrument}
+              contexte="recu"
+              apercuBrouillon={image.brouillon?.apercu ?? ''}
+              apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
+              onAjouter={image.ouvrir}
+            />
+          </aside>
+        ) : null}
       </div>
 
       {image.ouverte ? (

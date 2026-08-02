@@ -1502,3 +1502,96 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Deux colonnes du formulaire de création — cotes du fichier de référence.
+   La colonne d'instrument se place à gauche, la fenêtre s'élargit, et sous
+   980 px l'ensemble repasse sur une seule colonne, instrument en dessous. */
+
+.recu-colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  direction: ltr;
+  align-items: start;
+}
+
+.recu-colonne-principale,
+.recu-colonne-instrument {
+  direction: rtl;
+  min-width: 0;
+}
+
+.omra-modal.recu-coque.instrument-ouvert {
+  max-width: 1180px;
+}
+
+.omra-modal.recu-coque.instrument-ouvert .recu-colonnes {
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.7fr);
+}
+
+.omra-modal.recu-coque.instrument-ouvert .recu-colonne-principale {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.omra-modal.recu-coque.instrument-ouvert .recu-colonne-instrument {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.instrument-panneau {
+  background: #fffdf7;
+  border: 1px solid #e4c98b;
+  border-radius: 11px;
+  padding: 13px 14px;
+}
+
+.instrument-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.instrument-entete .titre {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.instrument-entete .mention {
+  margin-inline-start: auto;
+  font-size: 10px;
+  color: #9ca28f;
+}
+
+.instrument-sous-titre {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.omra-fields.empile {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 980px) {
+  .omra-modal.recu-coque.instrument-ouvert {
+    max-width: 760px;
+  }
+
+  .omra-modal.recu-coque.instrument-ouvert .recu-colonnes {
+    grid-template-columns: 1fr;
+  }
+
+  .omra-modal.recu-coque.instrument-ouvert .recu-colonne-principale,
+  .omra-modal.recu-coque.instrument-ouvert .recu-colonne-instrument {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .instrument-panneau {
+    box-shadow: inset 0 3px 0 #c9a24a;
+  }
+}
