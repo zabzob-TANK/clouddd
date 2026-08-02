@@ -363,6 +363,8 @@ export const T = {
     montantInconnu: '—',
     /** Gabarit du champ « numéro du reçu » de la fenêtre d'ajout de dépense. */
     gabaritNumeroRecu: 'رقم الوصل',
+    /** Gabarit seul : le champ reste vide tant que rien n'est saisi. */
+    gabaritDate: '02/07/2025',
     annuler: 'إلغاء',
     enregistrer: 'حفظ الوصل',
     choisir: 'اختر…',
@@ -443,6 +445,14 @@ export const T = {
     sectionChoisie: 'القسم المختار',
     retour: '←',
     motif: 'سبب التعديل *',
+    /** Bandeau des valeurs que la modification ne touche jamais (R-54, R-55). */
+    numeroFixe: 'رقم الوصل — ثابت',
+    dateFixe: 'تاريخ التسجيل — ثابت',
+    rabatteurFixe: 'الوسيط — غير قابل للتعديل',
+    premierMontantFixe: 'مبلغ الدفعة الأولى — ثابت',
+    gabaritMotif: 'مثال: تصحيح خطأ في الإدخال',
+    aucunPrix: 'لا يوجد ثمن محدد لهذه التركيبة.',
+    operationCollective: 'عملية جماعية — شخص واحد يدفع عن عدة أشخاص',
     enregistrer: 'حفظ التعديل',
     erreur: 'تعذر حفظ التعديل:',
     sections: {

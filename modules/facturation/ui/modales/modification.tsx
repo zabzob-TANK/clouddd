@@ -14,16 +14,19 @@ import { useState } from 'react'
 
 import { NATURE_CHEQUE, NATURE_ESPECES, NATURE_VIREMENT } from '../../domain/constants'
 import { formaterDate, formaterMontant, formaterTelephone, nettoyerArabe } from '../../domain/format'
-import { centimesEnDirhamsSaisis } from '../../domain/money'
+import { centimesEnDirhamsSaisis, dirhamsSaisisEnCentimes } from '../../domain/money'
 import type { ErreurValidation, Resultat } from '../../domain/rules/errors'
 import {
   LIBELLES_SECTIONS,
   premierVersementModifiable,
   type SaisieModification,
 } from '../../domain/rules/edit-sections'
+import { totalPaye } from '../../domain/rules/receipt'
+import { construireGrille, montantConvenu } from '../../domain/rules/tarif'
 import type { Recu, SectionModifiable, Tarif } from '../../domain/types'
-import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
+import { CaseACocher, Champ, enErreur, ListeErreurs, Saisie, Selection, Zone } from '../champs'
 import { Dialogue } from '../dialogue'
+import { Montant } from '../bidi'
 import { T } from '../textes'
 
 /** Sous-titres des sections, repris du fichier de référence. */
@@ -81,6 +84,14 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
   const modifier = (patch: Partial<SaisieModification>) => setSaisie({ ...saisie, ...patch })
   const section = saisie.section
   const versementPartage = !premierVersementModifiable(recu)
+  const premierVersement = recu.versements[0]
+
+  // Récapitulatif de la section « programme » : le fichier recalcule le prix à
+  // chaque changement et rappelle que le montant déjà payé ne bouge pas.
+  const grille = construireGrille(referentiels.tarifs)
+  const tarif = grille.tarifPour(saisie.hotel, saisie.vol, saisie.chambre)
+  const reductionCentimes = dirhamsSaisisEnCentimes(saisie.reduction)
+  const convenu = tarif === null ? null : montantConvenu(tarif, reductionCentimes)
 
   const soumettre = async () => {
     setEnvoi(true)
@@ -96,73 +107,93 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
   return (
     <Dialogue
       titre={T.modification.titre}
-      taille="large"
       onFermer={onFermer}
+      classeCoque="modif-coque"
+      bandeau={
+        // R-54, R-55 — rappel des valeurs que la modification ne touche jamais.
+        <div className="modif-fixes">
+          <div>
+            <div className="etiquette">{T.modification.numeroFixe}</div>
+            <div className="valeur numero mono">{recu.numero}</div>
+          </div>
+          <div>
+            <div className="etiquette">{T.modification.dateFixe}</div>
+            <div className="valeur mono" dir="ltr">
+              {recu.date}
+            </div>
+          </div>
+          <div>
+            <div className="etiquette">{T.modification.rabatteurFixe}</div>
+            <div className="valeur">{recu.rabatteur || '—'}</div>
+          </div>
+          <div>
+            <div className="etiquette">{T.modification.premierMontantFixe}</div>
+            <div className="valeur mono" dir="ltr">
+              {premierVersement ? <Montant centimes={premierVersement.montantCentimes} /> : '—'}
+            </div>
+          </div>
+        </div>
+      }
       pied={
-        section ? (
-          <>
-            <button
-              className="omra-btn"
-              onClick={() => {
-                setSaisie({ ...saisie, section: '' })
-                setErreurs([])
-              }}
-              disabled={envoi}
-            >
-              {T.modification.retour}
-            </button>
+        // Le fichier ne garde que « annuler » et « enregistrer », poussés au bord.
+        <>
+          <button className="omra-btn" onClick={onFermer} disabled={envoi}>
+            {T.versement.annuler}
+          </button>
+          {section ? (
             <button className="omra-btn primary" onClick={soumettre} disabled={envoi}>
               {T.modification.enregistrer}
             </button>
-          </>
-        ) : (
-          <button className="omra-btn" onClick={onFermer}>
-            {T.detail.fermer}
-          </button>
-        )
+          ) : null}
+        </>
       }
     >
       <ListeErreurs erreurs={erreurs} />
 
       {!section ? (
         <>
-          <p style={{ fontSize: 13, marginTop: 0 }}>
-            {T.modification.consigne}
-          </p>
-          <div style={{ display: 'grid', gap: 9, marginTop: 14 }}>
+          <p className="modif-consigne">{T.modification.consigne}</p>
+          {/* Le fichier présente les six sections sur deux colonnes. */}
+          <div className="modif-sections">
             {(Object.keys(LIBELLES_SECTIONS) as SectionModifiable[]).map((cle) => {
               const bloquee = cle === 'firstPayment' && versementPartage
               return (
                 <button
                   key={cle}
-                  className="omra-btn"
-                  style={{ height: 'auto', padding: '12px 14px', textAlign: 'left' }}
+                  className="modif-section"
                   disabled={bloquee}
                   onClick={() => setSaisie({ ...saisie, section: cle })}
                 >
-                  <span style={{ display: 'block', fontWeight: 750, fontSize: 13 }}>
-                    {LIBELLES_SECTIONS[cle]}
-                  </span>
-                  <span
-                    style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginTop: 2 }}
-                  >
-                    {bloquee
-                      ? T.modification.portePartagee
-                      : DESCRIPTIONS[cle]}
-                  </span>
+                  <span className="titre">{LIBELLES_SECTIONS[cle]}</span>
+                  <small>{bloquee ? T.modification.portePartagee : DESCRIPTIONS[cle]}</small>
                 </button>
               )
             })}
           </div>
-          <p className="omra-hint" style={{ marginTop: 14 }}>
-            {T.modification.fixes}
-          </p>
+          <div className="modif-avertissement">{T.modification.fixes}</div>
         </>
       ) : (
         <>
-          <div className="omra-panel" style={{ marginTop: 0 }}>
-            <h3>{LIBELLES_SECTIONS[section]}</h3>
+          {/* Le fichier place le retour en tête du corps, pas dans le pied. */}
+          <div className="modif-entete">
+            <button
+              className="modif-retour"
+              onClick={() => {
+                setSaisie({ ...saisie, section: '' })
+                setErreurs([])
+              }}
+              disabled={envoi}
+              aria-label={T.modification.sectionChoisie}
+            >
+              {T.modification.retour}
+            </button>
+            <div>
+              <div className="etiquette">{T.modification.sectionChoisie}</div>
+              <div className="valeur">{LIBELLES_SECTIONS[section]}</div>
+            </div>
+          </div>
 
+          <div className="modif-corps">
             {section === 'identity' ? (
               <div className="omra-fields">
                 <Champ label={T.nouveau.prenom}>
@@ -199,41 +230,79 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
             ) : null}
 
             {section === 'program' ? (
-              <div className="omra-fields">
-                <Champ label={T.nouveau.hotel}>
-                  <Selection
-                    valeur={saisie.hotel}
-                    onChange={(v) => modifier({ hotel: v })}
-                    options={referentiels.hotels.map((h) => ({ valeur: h.id, libelle: h.nom }))}
-                    invalide={enErreur(erreurs, 'hotel')}
-                  />
-                </Champ>
-                <Champ label={T.nouveau.vol}>
-                  <Selection
-                    valeur={saisie.vol}
-                    onChange={(v) => modifier({ vol: v })}
-                    options={referentiels.vols.map((v) => ({ valeur: v.id, libelle: v.nom }))}
-                    invalide={enErreur(erreurs, 'vol')}
-                  />
-                </Champ>
-                <Champ label={T.nouveau.chambre}>
-                  <Selection
-                    valeur={saisie.chambre}
-                    onChange={(v) => modifier({ chambre: v })}
-                    options={referentiels.chambres.map((c) => ({ valeur: c.id, libelle: c.code }))}
-                    invalide={enErreur(erreurs, 'chambre')}
-                  />
-                </Champ>
-                <Champ label={T.nouveau.reduction}>
-                  <Saisie
-                    valeur={saisie.reduction}
-                    onChange={(v) => modifier({ reduction: formaterMontant(v) })}
-                    invalide={enErreur(erreurs, 'reduction')}
-                    mono
-                    inputMode="numeric"
-                  />
-                </Champ>
-              </div>
+              <>
+                {/* Le fichier aligne hôtel, vol et chambre sur une seule rangée. */}
+                <div className="omra-fields trio">
+                  <Champ label={T.nouveau.hotel}>
+                    <Selection
+                      valeur={saisie.hotel}
+                      onChange={(v) => modifier({ hotel: v })}
+                      options={referentiels.hotels.map((h) => ({ valeur: h.id, libelle: h.nom }))}
+                      invalide={enErreur(erreurs, 'hotel')}
+                    />
+                  </Champ>
+                  <Champ label={T.nouveau.vol}>
+                    <Selection
+                      valeur={saisie.vol}
+                      onChange={(v) => modifier({ vol: v })}
+                      options={referentiels.vols.map((v) => ({ valeur: v.id, libelle: v.nom }))}
+                      invalide={enErreur(erreurs, 'vol')}
+                    />
+                  </Champ>
+                  <Champ label={T.nouveau.chambre}>
+                    <Selection
+                      valeur={saisie.chambre}
+                      onChange={(v) => modifier({ chambre: v })}
+                      options={referentiels.chambres.map((c) => ({ valeur: c.id, libelle: c.code }))}
+                      invalide={enErreur(erreurs, 'chambre')}
+                    />
+                  </Champ>
+                </div>
+
+                <div className="omra-fields">
+                  <Champ label={T.nouveau.reduction} pleine>
+                    <Saisie
+                      valeur={saisie.reduction}
+                      onChange={(v) => modifier({ reduction: formaterMontant(v) })}
+                      invalide={enErreur(erreurs, 'reduction')}
+                      mono
+                      inputMode="numeric"
+                    />
+                  </Champ>
+                </div>
+
+                {tarif === null ? (
+                  <div className="modif-sans-prix">{T.modification.aucunPrix}</div>
+                ) : null}
+
+                {/* Récapitulatif : nouveau prix, remise, nouveau convenu, déjà payé. */}
+                <div className="modif-recap">
+                  <div className="ligne">
+                    <span>{T.modification.nouveauPrix}</span>
+                    <span className="valeur mono">
+                      {tarif === null ? '—' : <Montant centimes={tarif} />}
+                    </span>
+                  </div>
+                  <div className="ligne">
+                    <span>{T.detail.reduction}</span>
+                    <span className="valeur mono">
+                      <Montant centimes={reductionCentimes} />
+                    </span>
+                  </div>
+                  <div className="ligne total">
+                    <span>{T.modification.nouveauConvenu}</span>
+                    <span className="valeur mono">
+                      {convenu === null ? '—' : <Montant centimes={convenu} />}
+                    </span>
+                  </div>
+                  <div className="ligne appoint">
+                    <span>{T.modification.montantInchange}</span>
+                    <span className="valeur mono">
+                      <Montant centimes={totalPaye(recu)} />
+                    </span>
+                  </div>
+                </div>
+              </>
             ) : null}
 
             {section === 'group' ? (
@@ -260,73 +329,124 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
             {section === 'note' ? (
               <div className="omra-fields">
                 <Champ label={T.nouveau.note} pleine>
-                  <Saisie valeur={saisie.note} onChange={(v) => modifier({ note: v })} />
+                  <Zone
+                    valeur={saisie.note}
+                    onChange={(v) => modifier({ note: v })}
+                    lignes={4}
+                    arabe
+                  />
                 </Champ>
               </div>
             ) : null}
 
             {section === 'firstPayment' ? (
               <>
-                <div className="omra-choice">
-                  {[
-                    { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
-                    { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },
-                    { valeur: NATURE_VIREMENT, libelle: T.methodes.virement },
-                  ].map((option) => (
-                    <button
-                      key={option.valeur}
-                      type="button"
-                      className={saisie.nature === option.valeur ? 'active' : ''}
-                      onClick={() => modifier({ nature: option.valeur })}
-                    >
-                      {option.libelle}
-                    </button>
-                  ))}
+                {/* Le montant de la première dépense reste figé (R-55). */}
+                <div className="modif-montant-fixe">
+                  <span>{T.modification.premiereDfpFixe}</span>
+                  <span className="valeur mono" dir="ltr">
+                    {premierVersement ? (
+                      <Montant centimes={premierVersement.montantCentimes} />
+                    ) : (
+                      '—'
+                    )}
+                  </span>
+                </div>
+
+                {/* Le fichier emploie une liste déroulante, pas des boutons. */}
+                <div className="omra-fields">
+                  <Champ label={T.nouveau.methode} pleine>
+                    <Selection
+                      valeur={saisie.nature}
+                      onChange={(v) => modifier({ nature: v })}
+                      options={[
+                        { valeur: NATURE_ESPECES, libelle: T.methodes.especes },
+                        { valeur: NATURE_CHEQUE, libelle: T.methodes.cheque },
+                        { valeur: NATURE_VIREMENT, libelle: T.methodes.virement },
+                      ]}
+                      invalide={enErreur(erreurs, 'nature')}
+                    />
+                  </Champ>
                 </div>
 
                 {saisie.nature !== NATURE_ESPECES ? (
-                  <div className="omra-fields" style={{ marginTop: 12 }}>
-                    <Champ label={T.instrument.reference}>
-                      <Saisie
-                        valeur={saisie.reference}
-                        onChange={(v) => modifier({ reference: v })}
-                        invalide={enErreur(erreurs, 'reference')}
-                        mono
-                      />
-                    </Champ>
-                    <Champ label={T.instrument.dateOperation}>
-                      <Saisie
-                        valeur={saisie.dateInstrument}
-                        onChange={(v) => modifier({ dateInstrument: formaterDate(v) })}
-                        invalide={enErreur(erreurs, 'dateInstrument')}
-                        mono
-                        inputMode="numeric"
-                      />
-                    </Champ>
-                    <Champ label={T.instrument.banque}>
-                      <Saisie
-                        valeur={saisie.banque}
-                        onChange={(v) => modifier({ banque: v })}
-                        invalide={enErreur(erreurs, 'banque')}
-                        arabe
-                      />
-                    </Champ>
-                  </div>
+                  <>
+                    <div className="omra-fields trio">
+                      <Champ label={T.instrument.reference}>
+                        <Saisie
+                          valeur={saisie.reference}
+                          onChange={(v) => modifier({ reference: v })}
+                          invalide={enErreur(erreurs, 'reference')}
+                          mono
+                        />
+                      </Champ>
+                      <Champ label={T.instrument.dateOperation}>
+                        <Saisie
+                          valeur={saisie.dateInstrument}
+                          onChange={(v) => modifier({ dateInstrument: formaterDate(v) })}
+                          invalide={enErreur(erreurs, 'dateInstrument')}
+                          placeholder={T.nouveau.gabaritDate}
+                          mono
+                          inputMode="numeric"
+                        />
+                      </Champ>
+                      <Champ label={T.instrument.banque}>
+                        <Saisie
+                          valeur={saisie.banque}
+                          onChange={(v) => modifier({ banque: v })}
+                          invalide={enErreur(erreurs, 'banque')}
+                          arabe
+                        />
+                      </Champ>
+                    </div>
+
+                    {/* Opération collective : un payeur pour plusieurs voyageurs. */}
+                    <CaseACocher
+                      coche={saisie.operationPartagee}
+                      onChange={(coche) => modifier({ operationPartagee: coche })}
+                      label={T.modification.operationCollective}
+                    />
+
+                    {saisie.operationPartagee ? (
+                      <div className="modif-collective">
+                        <div className="omra-fields duo">
+                          <Champ label={T.instrument.payeur}>
+                            <Saisie
+                              valeur={saisie.payeur}
+                              onChange={(v) => modifier({ payeur: v })}
+                              invalide={enErreur(erreurs, 'payeur')}
+                              arabe
+                            />
+                          </Champ>
+                          <Champ label={T.instrument.montantOperation}>
+                            <Saisie
+                              valeur={saisie.montantOperation}
+                              onChange={(v) => modifier({ montantOperation: formaterMontant(v) })}
+                              invalide={enErreur(erreurs, 'montantOperation')}
+                              mono
+                              inputMode="numeric"
+                            />
+                          </Champ>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
                 ) : null}
 
-                <p className="omra-hint" style={{ marginTop: 12 }}>
-                  {T.modification.noteFirstPayment}
-                </p>
+                <p className="omra-hint">{T.modification.noteFirstPayment}</p>
               </>
             ) : null}
           </div>
 
-          <div className="omra-fields">
+          {/* R-50 — motif obligatoire, isolé par un filet comme dans le fichier. */}
+          <div className="modif-motif">
             <Champ label={T.modification.motif} pleine>
-              <Saisie
+              <Zone
                 valeur={saisie.motif}
                 onChange={(v) => modifier({ motif: v })}
                 invalide={enErreur(erreurs, 'motif')}
+                placeholder={T.modification.gabaritMotif}
+                lignes={2}
                 arabe
               />
             </Champ>

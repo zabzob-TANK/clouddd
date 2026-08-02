@@ -88,6 +88,31 @@ export function Saisie({
   )
 }
 
+interface ProprietesZone {
+  valeur: string
+  onChange: (valeur: string) => void
+  invalide?: boolean
+  placeholder?: string
+  arabe?: boolean
+  /** Nombre de lignes visibles — le fichier en fixe 2 ou 4 selon le champ. */
+  lignes?: number
+}
+
+/** Zone de texte multiligne : le fichier l'emploie pour la note et le motif. */
+export function Zone({ valeur, onChange, invalide, placeholder, arabe, lignes = 2 }: ProprietesZone) {
+  return (
+    <textarea
+      className={`omra-input omra-zone${invalide ? ' invalide' : ''}`}
+      rows={lignes}
+      dir={arabe ? 'rtl' : 'ltr'}
+      style={arabe ? { unicodeBidi: 'plaintext', textAlign: 'right' } : undefined}
+      value={valeur}
+      placeholder={placeholder}
+      onChange={(evenement) => onChange(evenement.target.value)}
+    />
+  )
+}
+
 interface ProprietesSelection {
   valeur: string
   onChange: (valeur: string) => void
