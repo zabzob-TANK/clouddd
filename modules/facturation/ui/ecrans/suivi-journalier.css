@@ -52,8 +52,8 @@
   gap: 6px;
 }
 
-.daily-mois button,
-.daily-mois input {
+.daily-ecran .daily-mois button,
+.daily-ecran .daily-mois input {
   height: 34px;
   border: 1px solid #dcd8cb;
   background: #fff;
@@ -62,21 +62,27 @@
   color: #394432;
 }
 
-.daily-mois button {
+.daily-ecran .daily-mois button {
   padding: 0 11px;
   font-weight: 700;
 }
 
-.daily-mois button.icone {
+.daily-ecran .daily-mois button.icone {
   width: 34px;
   padding: 0;
   font-size: 17px;
 }
 
-.daily-mois input {
+.daily-ecran .daily-mois input {
   padding: 0 10px;
   font-weight: 700;
   direction: ltr;
+}
+
+.daily-ecran input:focus {
+  outline: none;
+  border-color: #8fa07e;
+  box-shadow: 0 0 0 3px rgb(71 89 60 / 14%);
 }
 
 /* ---------------------------------------------------------------- Synthèse */
@@ -201,7 +207,7 @@
   color: #fff;
 }
 
-.daily-action {
+.daily-ecran .daily-action {
   height: 28px;
   padding: 0 9px;
   border: 1px solid #dcd8cb;
@@ -212,15 +218,15 @@
   font-weight: 700;
 }
 
-.daily-action:hover {
+.daily-ecran .daily-action:hover {
   background: #f5f5ef;
 }
 
-.daily-action.vides {
+.daily-ecran .daily-action.vides {
   margin-left: auto;
 }
 
-.daily-action.vides.actif {
+.daily-ecran .daily-action.vides.actif {
   background: #edf0e5;
   border-color: #c9d0c0;
   color: #394a32;
@@ -251,43 +257,12 @@
   direction: ltr;
 }
 
-/* Largeurs du fichier, dans l'ordre des colonnes. */
-.daily-tableau th:nth-child(1),
-.daily-tableau td:nth-child(1) {
-  width: 38px;
-}
-.daily-tableau th:nth-child(2),
-.daily-tableau td:nth-child(2) {
-  width: 86px;
-}
-.daily-tableau th:nth-child(3),
-.daily-tableau td:nth-child(3) {
-  width: 106px;
-}
-.daily-tableau th:nth-child(4),
-.daily-tableau td:nth-child(4),
-.daily-tableau th:nth-child(5),
-.daily-tableau td:nth-child(5) {
-  width: 125px;
-}
-.daily-tableau th:nth-child(6),
-.daily-tableau td:nth-child(6),
-.daily-tableau th:nth-child(7),
-.daily-tableau td:nth-child(7) {
-  width: 145px;
-}
-.daily-tableau th:nth-child(8),
-.daily-tableau td:nth-child(8) {
-  width: 94px;
-}
-.daily-tableau th:nth-child(9),
-.daily-tableau td:nth-child(9) {
-  width: 145px;
-}
-.daily-tableau th:nth-child(10),
-.daily-tableau td:nth-child(10) {
-  width: 330px;
-}
+/*
+ * Pas de largeurs par colonne : le fichier de référence déclare bien des
+ * règles `col.c-*`, mais son tableau ne contient aucun `<colgroup>`. Les dix
+ * colonnes s'y répartissent donc à parts égales, et c'est ce que l'on
+ * reproduit ici.
+ */
 
 .daily-tableau th {
   position: sticky;
@@ -318,8 +293,8 @@
   border-bottom: 0;
 }
 
-.daily-tableau tr:hover td {
-  background: #fafaf6;
+.daily-tableau tbody tr:hover td {
+  background: #f2f5ea;
 }
 
 .daily-tableau tr.selectionnee td {
@@ -459,7 +434,7 @@
     max-height: none;
   }
 
-  .daily-action.vides {
+  .daily-ecran .daily-action.vides {
     margin-left: 0;
   }
 }

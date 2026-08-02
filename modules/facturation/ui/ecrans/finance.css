@@ -13,14 +13,6 @@
 
   min-height: 100vh;
   background: #f9f7f2;
-
-  /*
-   * Hauteur de ligne héritée du fichier de référence : 1,6 (mesurée à
-   * 17,28 px pour 10,8 px de police dans le tableau, 22,4 px pour 14 px).
-   * Le socle CSS du projet imposait 1,5, ce qui tassait chaque ligne du
-   * tableau d'environ 4 px.
-   */
-  line-height: 1.6;
 }
 
 /* Rayons du fichier : 8 px pour les boutons, 7 px pour les champs, 4 px pour

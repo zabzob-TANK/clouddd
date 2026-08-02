@@ -31,6 +31,15 @@
   background: var(--page);
   color: var(--ink);
   font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', Tahoma, Arial, sans-serif;
+
+  /*
+   * Typographie de base de la racine du fichier de référence : 14 px et une
+   * hauteur de ligne de 1,6. Sans elles, tout ce qui ne déclare pas sa propre
+   * taille héritait des 16 px et du 1,5 du socle CSS, ce qui gonflait les
+   * boutons, les titres et la densité des tableaux.
+   */
+  font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   /* Les écrans de ce lot sont en arabe, de droite à gauche, comme dans le
      fichier de référence. Les écrans français du fichier — suivi journalier et
