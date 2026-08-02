@@ -361,6 +361,8 @@ export const T = {
     totalReste: 'الباقي',
     /** Marque des montants encore inconnus, comme « — DH » du fichier. */
     montantInconnu: '—',
+    /** Gabarit du champ « numéro du reçu » de la fenêtre d'ajout de dépense. */
+    gabaritNumeroRecu: 'رقم الوصل',
     annuler: 'إلغاء',
     enregistrer: 'حفظ الوصل',
     choisir: 'اختر…',

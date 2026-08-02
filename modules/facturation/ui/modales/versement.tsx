@@ -14,6 +14,7 @@
 import { useState } from 'react'
 
 import { MAX_VERSEMENTS } from '../../domain/constants'
+import { dateDuJour } from '../../domain/dates'
 import { formaterMontant } from '../../domain/format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../../domain/money'
 import { natureAbregee, natureNormalisee } from '../../domain/payment-method'
@@ -131,7 +132,22 @@ export function ModaleVersement({
     <Dialogue
       titre={T.versement.titre}
       taille="large"
+      classeCoque="recu-coque"
       onFermer={onFermer}
+      bandeau={
+        // Même bandeau que le formulaire de création : intitulé, numéro visé
+        // puis date du jour. Tant qu'aucun reçu n'est trouvé, le fichier de
+        // référence affiche un simple tiret.
+        <div className="recu-bandeau">
+          <div className="recu-bandeau-label">{T.versement.numeroRecu.replace(' *', '')}</div>
+          <div className="recu-bandeau-numero mono">
+            {recu ? recu.numero : T.nouveau.montantInconnu}
+          </div>
+          <div className="recu-bandeau-date mono" dir="ltr">
+            {dateDuJour()}
+          </div>
+        </div>
+      }
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
@@ -155,6 +171,8 @@ export function ModaleVersement({
             valeur={saisie.numeroRecu}
             onChange={(v) => modifier({ numeroRecu: v.replace(/\D/g, '') })}
             invalide={enErreur(erreurs, 'numeroRecu')}
+            placeholder={T.nouveau.gabaritNumeroRecu}
+            classe="numero-recu"
             mono
             inputMode="numeric"
           />

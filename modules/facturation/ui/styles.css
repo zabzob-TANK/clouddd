@@ -1595,3 +1595,19 @@
     box-shadow: inset 0 3px 0 #c9a24a;
   }
 }
+
+/* Champ « numéro du reçu » mis en avant de la fenêtre d'ajout de dépense —
+   gabarit large et centré, comme dans le fichier de référence. */
+
+.omra-input.numero-recu {
+  height: 52px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.omra-input.numero-recu::placeholder {
+  font-size: 20px;
+  font-weight: 600;
+  color: #c9cdc0;
+}

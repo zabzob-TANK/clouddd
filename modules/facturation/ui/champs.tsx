@@ -59,6 +59,8 @@ interface ProprietesSaisie {
   mono?: boolean
   type?: 'text' | 'password'
   inputMode?: 'text' | 'numeric' | 'tel'
+  /** Classe supplémentaire, pour les champs mis en avant. */
+  classe?: string
 }
 
 export function Saisie({
@@ -70,11 +72,12 @@ export function Saisie({
   mono,
   type = 'text',
   inputMode,
+  classe,
 }: ProprietesSaisie) {
   return (
     <input
       type={type}
-      className={`omra-input${invalide ? ' invalide' : ''}${mono ? ' mono' : ''}`}
+      className={`omra-input${invalide ? ' invalide' : ''}${mono ? ' mono' : ''}${classe ? ` ${classe}` : ''}`}
       dir={arabe ? 'rtl' : 'ltr'}
       style={arabe ? { unicodeBidi: 'plaintext', textAlign: 'right' } : undefined}
       value={valeur}
