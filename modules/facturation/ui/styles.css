@@ -41,6 +41,19 @@
   --mode-virement: #3a4f9c;
   --mode-virement-fond: #e7ecfb;
   --mode-virement-bord: #c4cef0;
+
+  /*
+   * Zones interactives : un fond un peu plus soutenu que celui de la page,
+   * qui s'éclaircit quand le champ prend la main, et une bordure qui se
+   * précise. Ni contraste fort, ni blanc pur : la teinte reste dans la
+   * famille chaude du fond général.
+   */
+  --champ-fond: #f2efe6;
+  --champ-fond-actif: #fdfcf8;
+  --champ-bord: #e2ded1;
+  --champ-bord-survol: #d2ccbb;
+  --champ-bord-actif: #8fa07e;
+  --champ-halo: rgba(71, 89, 60, 0.14);
   --row-pad: 10px;
 
   min-height: 100vh;
@@ -865,15 +878,73 @@ input[type='number'] {
 .omra-input {
   width: 100%;
   padding: 11px 13px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--champ-bord);
   border-radius: 10px;
-  background: var(--page);
+  background: var(--champ-fond);
   font-size: 13px;
 }
 
-.omra-input:focus {
-  outline: 2px solid rgba(71, 89, 60, 0.35);
-  outline-offset: -1px;
+/*
+ * Aspect commun des zones interactives.
+ *
+ * Seules les couleurs sont posées ici : ni hauteur, ni remplissage, ni rayon,
+ * pour ne déplacer aucun écran déjà calé. Au repos le fond est légèrement
+ * plus soutenu que la page ; à la prise de main il s'éclaircit, la bordure
+ * se précise et un halo discret apparaît.
+ */
+.omra-input,
+.omra-search input,
+.omra select,
+.omra textarea,
+.finance-ecran input,
+.finance-ecran select,
+.daily-ecran input:not([type='checkbox']),
+.daily-ecran select,
+.cheque-ecran input,
+.cheque-ecran select {
+  background: var(--champ-fond);
+  border-color: var(--champ-bord);
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.18s ease;
+}
+
+.omra-input:hover:not(:disabled),
+.omra-search input:hover,
+.omra select:hover:not(:disabled),
+.omra textarea:hover:not(:disabled),
+.finance-ecran input:hover,
+.finance-ecran select:hover,
+.daily-ecran input:not([type='checkbox']):hover,
+.daily-ecran select:hover,
+.cheque-ecran input:hover,
+.cheque-ecran select:hover {
+  border-color: var(--champ-bord-survol);
+}
+
+.omra-input:focus,
+.omra-search input:focus,
+.omra select:focus,
+.omra textarea:focus,
+.finance-ecran input:focus,
+.finance-ecran select:focus,
+.daily-ecran input:not([type='checkbox']):focus,
+.daily-ecran select:focus,
+.cheque-ecran input:focus,
+.cheque-ecran select:focus {
+  outline: none;
+  background: var(--champ-fond-actif);
+  border-color: var(--champ-bord-actif);
+  box-shadow: 0 0 0 3px var(--champ-halo);
+}
+
+/* Les cases à cocher gardent leur rendu natif, teinté à l'accent. */
+.omra input[type='checkbox'],
+.omra input[type='radio'] {
+  accent-color: var(--accent);
+  background: none;
+  box-shadow: none;
 }
 
 .omra-input.invalide {
