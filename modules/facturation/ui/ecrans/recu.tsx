@@ -103,10 +103,30 @@ export function EcranRecu({ recu, onRetour, onImpression }: Proprietes) {
       className={classes}
       style={variablesDecalage(decalageX, decalageY) as React.CSSProperties}
     >
-      <div className="recu-outils" aria-label="Outils de test">
+      {/*
+        Le fichier de référence place « رجوع » dans une barre à lui, au-dessus
+        du reçu, et non dans la barre d'outils sombre : celle-ci appartient au
+        document du reçu, que le fichier isole dans un cadre.
+      */}
+      <div className="recu-barre-retour omra-no-print">
         <button onClick={onRetour}>
-          <span aria-hidden="true">←</span> {T.recu.retour}
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="15"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            width="15"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+          {T.recu.retour}
         </button>
+      </div>
+
+      <div className="recu-outils" aria-label="Outils de test">
         <strong>{OUTILS.titre}</strong>
         <button onClick={() => setSansFond(false)}>{OUTILS.apercuComplet}</button>
         <button onClick={() => setSansFond(true)}>{OUTILS.impressionSeule}</button>
