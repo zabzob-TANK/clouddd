@@ -29,10 +29,10 @@ export function EcranConnexion({ onConnexion, comptesEssai }: Proprietes) {
     setEnvoi(true)
     const utilisateur = await onConnexion(identifiant, motDePasse)
     setEnvoi(false)
-    if (!utilisateur) {
-      setErreur(T.connexion.erreur)
-      setMotDePasse('')
-    }
+    // Le mot de passe est effacé dans tous les cas, réussite comprise : il ne
+    // doit jamais subsister dans le champ ni dans l'état après une tentative.
+    setMotDePasse('')
+    if (!utilisateur) setErreur(T.connexion.erreur)
   }
 
   return (
@@ -81,9 +81,14 @@ export function EcranConnexion({ onConnexion, comptesEssai }: Proprietes) {
 
         <label className="omra-login-champ">
           <span>{T.connexion.motDePasse}</span>
+          {/*
+            `new-password` empêche le navigateur de proposer ou de réinjecter un
+            mot de passe enregistré : le champ part toujours vide.
+          */}
           <input
             className="omra-input"
             type="password"
+            autoComplete="new-password"
             value={motDePasse}
             onChange={(evenement) => setMotDePasse(evenement.target.value)}
             onKeyDown={(evenement) => {

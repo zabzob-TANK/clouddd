@@ -61,6 +61,12 @@ interface ProprietesSaisie {
   inputMode?: 'text' | 'numeric' | 'tel'
   /** Classe supplémentaire, pour les champs mis en avant. */
   classe?: string
+  /**
+   * Remplissage automatique du navigateur. Laissé libre, sauf pour un champ de
+   * mot de passe, où `new-password` est imposé par défaut : aucun mot de passe
+   * enregistré ne doit être proposé ni réinjecté dans l'application.
+   */
+  autoComplete?: string
 }
 
 export function Saisie({
@@ -73,6 +79,7 @@ export function Saisie({
   type = 'text',
   inputMode,
   classe,
+  autoComplete,
 }: ProprietesSaisie) {
   return (
     <input
@@ -83,6 +90,7 @@ export function Saisie({
       value={valeur}
       placeholder={placeholder}
       inputMode={inputMode}
+      autoComplete={autoComplete ?? (type === 'password' ? 'new-password' : undefined)}
       onChange={(evenement) => onChange(evenement.target.value)}
     />
   )
@@ -118,16 +126,15 @@ interface ProprietesSelection {
   onChange: (valeur: string) => void
   options: { valeur: string; libelle: string; arabe?: boolean }[]
   invalide?: boolean
-  vide?: string
   /**
-   * Liste obligatoire : l'invite « اختر... » reste affichée tant que rien
-   * n'est choisi, mais n'est pas sélectionnable. Une fois un choix fait, on
-   * ne peut plus revenir à l'invite.
+   * Libellé de l'invite, affiché uniquement quand le champ est fermé et
+   * qu'aucune valeur n'a encore été choisie. L'invite n'apparaît jamais dans
+   * la liste ouverte et n'est jamais sélectionnable.
    *
-   * La valeur reste vide et les règles de validation sont inchangées : le
-   * noyau métier continue de refuser un champ non renseigné.
+   * La valeur reste vide tant que rien n'est choisi : les règles de validation
+   * sont inchangées, le noyau métier continue de refuser un champ non renseigné.
    */
-  obligatoire?: boolean
+  vide?: string
 }
 
 export function Selection({
@@ -136,7 +143,6 @@ export function Selection({
   options,
   invalide,
   vide = T.nouveau.choisir,
-  obligatoire,
 }: ProprietesSelection) {
   return (
     <select
@@ -144,7 +150,12 @@ export function Selection({
       value={valeur}
       onChange={(evenement) => onChange(evenement.target.value)}
     >
-      <option value="" disabled={obligatoire}>
+      {/*
+        L'invite n'existe que pour porter le libellé affiché quand le champ est
+        fermé et qu'aucune valeur n'a été choisie. `hidden` la retire de la liste
+        ouverte, `disabled` interdit de la choisir : elle n'est jamais une valeur.
+      */}
+      <option value="" hidden disabled>
         {vide}
       </option>
       {options.map((option) => (

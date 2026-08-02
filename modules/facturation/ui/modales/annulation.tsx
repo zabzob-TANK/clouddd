@@ -41,6 +41,9 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
     setEnvoi(false)
     if (resultat.statut === 'erreurs') {
       setErreurs(resultat.erreurs)
+      // Le mot de passe est effacé après chaque tentative : il doit être
+      // ressaisi, et ne jamais rester dans le champ ni dans l'état.
+      setSaisie((actuelle) => ({ ...actuelle, motDePasse: '' }))
       return
     }
     onFermer()
@@ -85,7 +88,6 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
             ]}
             invalide={enErreur(erreurs, 'modeRemboursement')}
             vide={T.annulation.choisir}
-            obligatoire
           />
         </Champ>
         <Champ label={T.annulation.motif} pleine>
