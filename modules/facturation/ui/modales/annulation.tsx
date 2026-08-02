@@ -13,9 +13,9 @@ import type { ErreurValidation, Resultat } from '../../domain/rules/errors'
 import type { SaisieAnnulation } from '../../domain/rules/cancellation'
 import { totalPaye } from '../../domain/rules/receipt'
 import type { Recu } from '../../domain/types'
-import { Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
+import { Champ, enErreur, ListeErreurs, Saisie, Selection, Zone } from '../champs'
 import { Dialogue } from '../dialogue'
-import { Montant, Reference, TexteArabe } from '../bidi'
+import { Montant } from '../bidi'
 import { T } from '../textes'
 
 interface Proprietes {
@@ -50,6 +50,7 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
     <Dialogue
       titre={T.annulation.titre}
       onFermer={onFermer}
+      classeCoque="annul-coque"
       pied={
         <>
           <button className="omra-btn" onClick={onFermer} disabled={envoi}>
@@ -63,26 +64,17 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
     >
       <ListeErreurs erreurs={erreurs} />
 
-      <p style={{ fontSize: 13, marginTop: 0 }}>
-        {T.annulation.avertissement}
-      </p>
+      <p className="annul-consigne">{T.annulation.avertissement}</p>
 
-      <div className="omra-summary" style={{ marginTop: 14 }}>
-        <div>
-          <span>{T.registre.colonnes.numero}</span>
-          <Reference>{recu.numero}</Reference>
-        </div>
-        <div>
-          <span>{T.registre.colonnes.nom}</span>
-          <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
-        </div>
-        <div>
-          <span>{T.annulation.montantPaye}</span>
+      {/* Le fichier ne rappelle que le montant déjà encaissé. */}
+      <div className="annul-montant">
+        <span>{T.annulation.montantPaye}</span>
+        <strong>
           <Montant centimes={totalPaye(recu)} />
-        </div>
+        </strong>
       </div>
 
-      <div className="omra-fields" style={{ marginTop: 16 }}>
+      <div className="omra-fields">
         <Champ label={T.annulation.modeRemboursement} pleine>
           <Selection
             valeur={saisie.modeRemboursement}
@@ -95,18 +87,16 @@ export function ModaleAnnulation({ recu, onFermer, onAnnuler }: Proprietes) {
             vide={T.annulation.choisir}
           />
         </Champ>
-        <Champ label="Motif de l'annulation *" pleine>
-          <Saisie
+        <Champ label={T.annulation.motif} pleine>
+          <Zone
             valeur={saisie.motif}
             onChange={(v) => modifier({ motif: v })}
             invalide={enErreur(erreurs, 'motif')}
+            lignes={3}
             arabe
           />
         </Champ>
-        <Champ
-          label={T.annulation.motDePasse}
-          pleine
-        >
+        <Champ label={T.annulation.motDePasse} pleine>
           <Saisie
             valeur={saisie.motDePasse}
             onChange={(v) => modifier({ motDePasse: v })}

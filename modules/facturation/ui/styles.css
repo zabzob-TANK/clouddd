@@ -2319,3 +2319,36 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------------------------- Annulation du reçu */
+
+.omra-modal.annul-coque {
+  width: min(490px, calc(100vw - 36px));
+  max-width: none;
+}
+
+.annul-consigne {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 15px;
+}
+
+/* Rappel du montant déjà encaissé, sur une seule ligne encadrée. */
+.annul-montant {
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.annul-montant strong {
+  color: var(--ink);
+  font-weight: 700;
+}
