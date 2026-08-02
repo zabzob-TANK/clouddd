@@ -17,15 +17,15 @@ import { MAX_VERSEMENTS } from '../../domain/constants'
 import { dateDuJour } from '../../domain/dates'
 import { formaterMontant } from '../../domain/format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../../domain/money'
-import { natureAbregee, natureNormalisee } from '../../domain/payment-method'
+import { codeCouleurNature, natureAbregee, natureNormalisee } from '../../domain/payment-method'
 import type { ErreurValidation, Resultat } from '../../domain/rules/errors'
 import { messageErreur } from '../../domain/rules/errors'
 import { motifRefusVersement, type SaisieVersement } from '../../domain/rules/payment'
 import { restantDu, totalPaye } from '../../domain/rules/receipt'
 import type { OperationPartagee, Recu } from '../../domain/types'
-import { Champ, enErreur, ListeErreurs, Saisie } from '../champs'
+import { Champ, enErreur, ListeErreurs, Saisie, Selection } from '../champs'
 import { Dialogue } from '../dialogue'
-import { BlocInstrument, instrumentVierge } from '../instrument-panel'
+import { BlocInstrument, instrumentPourNature, instrumentVierge, NATURES } from '../instrument-panel'
 import { CarteImageInstrument } from '../carte-image-instrument'
 import { cibleImageInstrument, useBrouillonImage } from '../image-instrument'
 import { ModalePaiementImage } from './paiement-image'
@@ -128,11 +128,16 @@ export function ModaleVersement({
     )
   }
 
+  // Le bloc bancaire passe en colonne latérale dès que le mode n'est plus
+  // les espèces, comme dans le formulaire de création.
+  const natureCourante = natureNormalisee(saisie.instrument.nature)
+  const instrumentOuvert = natureCourante !== 'نقد'
+
   return (
     <Dialogue
       titre={T.versement.titre}
       taille="large"
-      classeCoque="recu-coque"
+      classeCoque={`recu-coque versement-coque${instrumentOuvert ? ' instrument-ouvert' : ''}`}
       onFermer={onFermer}
       bandeau={
         // Même bandeau que le formulaire de création : intitulé, numéro visé
@@ -163,6 +168,8 @@ export function ModaleVersement({
         </>
       }
     >
+      <div className="recu-colonnes">
+        <section className="recu-colonne-principale">
       <ListeErreurs erreurs={erreurs} />
 
       <div className="omra-fields">
@@ -187,32 +194,38 @@ export function ModaleVersement({
 
       {recu && !refus ? (
         <>
-          <div className="omra-summary" style={{ marginTop: 14 }}>
-            <div>
-              <span>{T.registre.colonnes.nom}</span>
+          {/*
+            Résumé du reçu visé : le nom en tête, les trois repères du dossier,
+            puis le reste après cette dfp détaché sous un filet — c'est le
+            chiffre que l'on vient vérifier en saisissant une dfp.
+          */}
+          <div className="versement-resume">
+            <div className="versement-resume-nom">
               <TexteArabe>{`${recu.prenom} ${recu.nom}`}</TexteArabe>
             </div>
-            <div>
+            <div className="versement-resume-ligne">
               <span>{T.registre.colonnes.convenu}</span>
-              <Montant centimes={recu.convenuCentimes} />
+              <b className="mono">
+                <Montant centimes={recu.convenuCentimes} />
+              </b>
             </div>
-            <div>
+            <div className="versement-resume-ligne">
               <span>{T.versement.payeAvant}</span>
-              <Montant centimes={totalPaye(recu)} />
+              <b className="mono">
+                <Montant centimes={totalPaye(recu)} />
+              </b>
             </div>
-            <div>
-              <span>{T.registre.colonnes.restant}</span>
-              <Montant centimes={restant} />
-            </div>
-            <div>
+            <div className="versement-resume-ligne">
               <span>{T.registre.colonnes.nbVersements}</span>
-              <span className="mono">
+              <b className="mono">
                 {recu.versements.length} / {MAX_VERSEMENTS}
-              </span>
+              </b>
             </div>
-            <div>
+            <div className="versement-resume-ligne finale">
               <span>{T.versement.restantApres}</span>
-              <Montant centimes={Math.max(0, restant - montantCentimes)} />
+              <b className="mono">
+                <Montant centimes={Math.max(0, restant - montantCentimes)} />
+              </b>
             </div>
           </div>
 
@@ -222,8 +235,11 @@ export function ModaleVersement({
             </p>
           ) : null}
 
-          <div className="omra-panel">
-            <h3>{T.versement.recap}</h3>
+          <div className="omra-panel versement-recap">
+            <div className="versement-recap-entete">
+              <h3>{T.versement.recap}</h3>
+              <span className="omra-hint">{T.versement.recapAide}</span>
+            </div>
             <table className="omra-mini-table">
               <thead>
                 <tr>
@@ -262,7 +278,11 @@ export function ModaleVersement({
                       <td>
                         <Montant centimes={versement.montantCentimes} />
                       </td>
-                      <td>{libelleNature(versement.nature)}</td>
+                      <td>
+                        <span className={`omra-method ${codeCouleurNature(versement.nature)}`}>
+                          {libelleNature(versement.nature)}
+                        </span>
+                      </td>
                       <td>
                         {details ? <TexteArabe>{details}</TexteArabe> : '—'}
                       </td>
@@ -271,12 +291,10 @@ export function ModaleVersement({
                 })}
               </tbody>
             </table>
-            <p className="omra-hint" style={{ marginTop: 8 }}>
-              {T.versement.recapAide}
-            </p>
           </div>
 
-          <div className="omra-fields" style={{ marginTop: 14 }}>
+          {/* Montant et mode de paiement sur une même rangée. */}
+          <div className="omra-fields duo" style={{ marginTop: 14 }}>
             <Champ label={T.versement.montant}>
               <Saisie
                 valeur={saisie.montant}
@@ -286,25 +304,45 @@ export function ModaleVersement({
                 inputMode="numeric"
               />
             </Champ>
+            <Champ label={T.nouveau.methode}>
+              <Selection
+                valeur={natureCourante}
+                onChange={(valeur) => modifier({ instrument: instrumentPourNature(valeur) })}
+                options={NATURES.map((n) => ({ valeur: n.valeur, libelle: n.libelle }))}
+              />
+            </Champ>
           </div>
 
-          <BlocInstrument
-            saisie={saisie.instrument}
-            onChange={(instrument) => modifier({ instrument })}
-            erreurs={erreurs}
-            operations={operations}
-            recus={recus}
-            montantSaisi={saisie.montant}
-          />
+        </>
+      ) : null}
+        </section>
 
-          <CarteImageInstrument
-            saisie={saisie.instrument}
-            contexte="versement"
-            apercuBrouillon={image.brouillon?.apercu ?? ''}
-            apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
-            onAjouter={image.ouvrir}
-          />
+        {/* Colonne latérale : chèque ou virement, comme dans le formulaire de
+            création. Elle repasse dessous sous 980 px. */}
+        {recu && !refus && instrumentOuvert ? (
+          <aside className="recu-colonne-instrument">
+            <BlocInstrument
+              saisie={saisie.instrument}
+              onChange={(instrument) => modifier({ instrument })}
+              erreurs={erreurs}
+              operations={operations}
+              recus={recus}
+              montantSaisi={saisie.montant}
+              natureExterne
+            />
+            <CarteImageInstrument
+              saisie={saisie.instrument}
+              contexte="versement"
+              apercuBrouillon={image.brouillon?.apercu ?? ''}
+              apercuOperation={imagesOperations[saisie.instrument.operationId] ?? ''}
+              onAjouter={image.ouvrir}
+            />
+          </aside>
+        ) : null}
+      </div>
 
+      {recu && !refus ? (
+        <>
           {image.ouverte ? (
             <ModalePaiementImage
               cible={cibleImageInstrument(saisie.instrument, saisie.montant)}
