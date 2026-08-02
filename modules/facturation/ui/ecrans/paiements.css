@@ -96,8 +96,8 @@
   color: #7a7f75;
 }
 
-.cheque-champ input,
-.cheque-champ select {
+.cheque-ecran .cheque-champ input,
+.cheque-ecran .cheque-champ select {
   height: 36px;
   border: 1px solid #d9d5c8;
   border-radius: 8px;
@@ -107,19 +107,19 @@
   color: #20251b;
 }
 
-.cheque-champ.recherche input {
+.cheque-ecran .cheque-champ.recherche input {
   width: 260px;
 }
 
-.cheque-champ.date input {
+.cheque-ecran .cheque-champ.date input {
   width: 148px;
 }
 
-.cheque-champ select {
+.cheque-ecran .cheque-champ select {
   min-width: 140px;
 }
 
-.cheque-bouton {
+.cheque-ecran .cheque-bouton {
   height: 36px;
   padding: 0 12px;
   border: 1px solid #d9d5c8;
@@ -132,7 +132,7 @@
   white-space: nowrap;
 }
 
-.cheque-bouton.actif {
+.cheque-ecran .cheque-bouton.actif {
   background: #47593c;
   border-color: #47593c;
   color: #fff;
@@ -164,60 +164,11 @@
 }
 
 /* Largeurs du fichier, dans l'ordre des colonnes. */
-.cheque-tableau th:nth-child(1),
-.cheque-tableau td:nth-child(1) {
-  width: 72px;
-}
-.cheque-tableau th:nth-child(2),
-.cheque-tableau td:nth-child(2) {
-  width: 118px;
-}
-.cheque-tableau th:nth-child(3),
-.cheque-tableau td:nth-child(3) {
-  width: 112px;
-}
-.cheque-tableau th:nth-child(4),
-.cheque-tableau td:nth-child(4) {
-  width: 92px;
-}
-.cheque-tableau th:nth-child(5),
-.cheque-tableau td:nth-child(5) {
-  width: 105px;
-}
-.cheque-tableau th:nth-child(6),
-.cheque-tableau td:nth-child(6) {
-  width: 135px;
-}
-.cheque-tableau th:nth-child(7),
-.cheque-tableau td:nth-child(7) {
-  width: 112px;
-}
-.cheque-tableau th:nth-child(8),
-.cheque-tableau td:nth-child(8) {
-  width: 86px;
-}
-.cheque-tableau th:nth-child(9),
-.cheque-tableau td:nth-child(9) {
-  width: 150px;
-}
-.cheque-tableau th:nth-child(10),
-.cheque-tableau td:nth-child(10) {
-  width: 170px;
-}
-.cheque-tableau th:nth-child(11),
-.cheque-tableau td:nth-child(11) {
-  width: 145px;
-}
-.cheque-tableau th:nth-child(12),
-.cheque-tableau td:nth-child(12),
-.cheque-tableau th:nth-child(13),
-.cheque-tableau td:nth-child(13) {
-  width: 112px;
-}
-.cheque-tableau th:nth-child(14),
-.cheque-tableau td:nth-child(14) {
-  width: 130px;
-}
+/*
+ * Pas de largeurs par colonne : le fichier de référence déclare bien des
+ * règles `.cheque-table .c-*`, mais aucune de ses cellules ne porte ces
+ * classes. Ses quatorze colonnes se répartissent donc à parts égales.
+ */
 
 .cheque-tableau th {
   position: sticky;
@@ -253,10 +204,10 @@
 }
 
 .cheque-tableau tbody tr:hover td {
-  background: #f8faf4;
+  background: #f2f5ea;
 }
 
-.cheque-vignette {
+.cheque-ecran .cheque-vignette {
   width: 52px;
   height: 34px;
   border: 1px solid #d5d0c2;
@@ -275,7 +226,7 @@
   display: block;
 }
 
-.cheque-plus {
+.cheque-ecran .cheque-plus {
   width: 29px;
   height: 29px;
   border: 1px dashed #8b987f;
@@ -338,6 +289,12 @@
 .cheque-numero {
   font-weight: 780;
   color: #a3801f;
+}
+
+.cheque-ecran input:focus {
+  outline: none;
+  border-color: #8fa07e;
+  box-shadow: 0 0 0 3px rgb(71 89 60 / 14%);
 }
 
 .cheque-rtl {
@@ -411,7 +368,7 @@
   margin-top: 2px;
 }
 
-.cheque-fenetre-fermer {
+.cheque-fenetre .cheque-fenetre-fermer {
   margin-left: auto;
   width: 32px;
   height: 32px;
@@ -468,7 +425,7 @@
   flex-wrap: wrap;
 }
 
-.cheque-action {
+.cheque-fenetre .cheque-action {
   height: 36px;
   padding: 0 13px;
   border: 1px solid #d9d5c8;
@@ -480,20 +437,20 @@
   cursor: pointer;
 }
 
-.cheque-action.principale {
+.cheque-fenetre .cheque-action.principale {
   background: #47593c;
   border-color: #47593c;
   color: #fff;
 }
 
-.cheque-action.danger {
+.cheque-fenetre .cheque-action.danger {
   margin-left: auto;
   background: #fff;
   border-color: #d9a9a4;
   color: #9c3b32;
 }
 
-.cheque-action[disabled] {
+.cheque-fenetre .cheque-action[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
 }
