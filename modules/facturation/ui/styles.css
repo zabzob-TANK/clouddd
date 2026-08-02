@@ -57,8 +57,17 @@
   box-sizing: border-box;
 }
 
+/*
+ * Les commandes héritent de la police du texte, mais pas de sa hauteur de
+ * ligne : le raccourci `font: inherit` leur imposait le 1,6 de l'application
+ * là où le fichier de référence laisse le `normal` du navigateur. Les champs
+ * de la connexion mesuraient 46,4 px au lieu de 40.
+ */
 .omra button {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: normal;
   cursor: pointer;
   border: 0;
   background: none;
@@ -68,7 +77,10 @@
 .omra input,
 .omra select,
 .omra textarea {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: normal;
   color: inherit;
 }
 
@@ -1087,11 +1099,11 @@ input[type='number'] {
   box-shadow: inset 0 -2px 7px rgba(0, 0, 0, 0.18);
 }
 
+/* Le fichier ne fixe pas de hauteur de ligne ici : le titre hérite du 1,6. */
 .omra-login-brand-name {
   font-size: 21px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1.2;
 }
 
 .omra-login-brand-sub {
@@ -1113,6 +1125,11 @@ input[type='number'] {
   margin-bottom: 14px;
 }
 
+/* Le fichier resserre le second champ : 6 px au lieu de 14. */
+.omra-login-champ + .omra-login-champ {
+  margin-bottom: 6px;
+}
+
 .omra-login-champ span {
   display: block;
   font-size: 12.5px;
@@ -1121,18 +1138,29 @@ input[type='number'] {
   margin-bottom: 6px;
 }
 
-.omra-login-bouton {
+/*
+ * Cotes du bouton d'entrée dans le fichier : pas de hauteur fixe, un
+ * remplissage de 12 px tout autour, une graisse plus marquée — et aucune
+ * déclaration de bordure, si bien que le bouton garde le liseré en relief que
+ * le navigateur applique par défaut. C'est ce liseré qui lui donne ses 44 px.
+ */
+.omra .omra-login-bouton {
   width: 100%;
+  height: auto;
+  padding: 12px;
   margin-top: 16px;
+  border: 2px outset buttonborder;
+  font-size: 14.5px;
+  font-weight: 600;
 }
 
 .omra-login-erreur {
   background: var(--danger-soft);
-  border: 1px solid #e3c4bf;
   color: var(--danger);
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 12px;
+  border-radius: 9px;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  font-weight: 500;
   text-align: right;
   margin-bottom: 14px;
 }
@@ -1140,7 +1168,7 @@ input[type='number'] {
 .omra-login-aide {
   margin: 16px 0 0;
   font-size: 11.5px;
-  color: var(--muted-2);
+  color: var(--muted);
   text-align: center;
   line-height: 1.7;
 }
