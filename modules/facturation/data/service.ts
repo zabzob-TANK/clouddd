@@ -247,9 +247,6 @@ export async function creerRecu(
   const source = sourceDonnees()
   const base = await contexteCommun(source)
 
-  // R-11 — le numéro est réservé sur la séquence avant validation, comme dans
-  // le fichier de référence où `prochainNumero` est lu puis incrémenté.
-  const numero = await source.recus.reserverNumero()
   const clientId = source.identifiants.nouvelId('client')
 
   const contexte: ContexteCreation = {
@@ -260,7 +257,10 @@ export async function creerRecu(
     employe: base.employe,
     tarifs: base.tarifs,
     reductionMaxCentimes: base.saison.reductionMaxCentimes,
-    numero,
+    // P08 — le numéro n'étant utilisé qu'en fin de validation (voir
+    // `preparerCreationRecu`), un espace réservé suffit ici : la réservation
+    // réelle n'a lieu qu'après validation, ci-dessous.
+    numero: 0,
     clientId,
     idVersement: source.identifiants.nouvelId('versement'),
     date: base.date,
@@ -271,7 +271,12 @@ export async function creerRecu(
   const resultat = preparerCreationRecu(saisie, contexte)
   if (resultat.statut !== 'ok') return resultat
 
-  const { donnees, nouvelleOperation } = resultat.valeur as ResultatCreation
+  // R-11, P08 — le numéro est réservé sur la séquence après validation, jamais
+  // avant : un abandon ne doit consommer aucun numéro.
+  const numero = await source.recus.reserverNumero()
+
+  const { donnees: donneesValidees, nouvelleOperation } = resultat.valeur as ResultatCreation
+  const donnees = { ...donneesValidees, numero }
   if (nouvelleOperation) await source.operationsPartagees.creer(nouvelleOperation)
 
   // R-13 — le client est créé et rattaché au reçu.

@@ -75,6 +75,24 @@ describe('création d’un reçu de bout en bout', () => {
     expect(apres.recus).toHaveLength(avant.recus.length)
   })
 
+  it('P08 — un abandon ne consomme pas de numéro de la séquence', async () => {
+    const echoue = await creerRecu(nouveauRecu({ prenom: '', nom: '' }), false)
+    expect(echoue.statut).toBe('erreurs')
+
+    const apresAbandon = await creerRecu(nouveauRecu(), false)
+    expect(apresAbandon.statut).toBe('ok')
+    if (apresAbandon.statut !== 'ok') return
+
+    reinitialiserSourceDonnees()
+    const temoin = await creerRecu(nouveauRecu(), false)
+    expect(temoin.statut).toBe('ok')
+    if (temoin.statut !== 'ok') return
+
+    // Sans l'abandon préalable, le même reçu obtient le même numéro : la
+    // tentative avortée n'a donc consommé aucun numéro de la séquence.
+    expect(apresAbandon.valeur.numero).toBe(temoin.valeur.numero)
+  })
+
   it('R-13 — rattache le passeport saisi au reçu', async () => {
     const passeport = { ...passeportVierge(), prenom: 'نورة', nom: 'السوسي', numero: 'MA4827391' }
     const resultat = await creerRecu(nouveauRecu({ passeport }), false)
