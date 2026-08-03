@@ -358,6 +358,20 @@ Conséquence technique : un restant `≤ 0` vaut « soldé ». Toute comparaison
 `=== 0` sur un restant est un défaut — le domaine et l'interface utilisent
 `<= 0`.
 
+**Articulation avec l'annulation.** Les deux règles ne se contredisent pas,
+mais leur rencontre mérite d'être dite explicitement.
+
+« Jamais remboursé automatiquement » gouverne la **vie courante** du reçu :
+tant qu'il vit, un trop-perçu reste en caisse et ne déclenche rien de lui-même.
+
+L'annulation est un **acte explicite et distinct**. Elle rembourse le total
+réellement payé (§5.10) — trop-perçu compris. Un reçu convenu à 20 000 DH sur
+lequel 22 000 DH ont été encaissés rembourse donc 22 000 DH, ou 0 DH, jamais
+une valeur intermédiaire.
+
+> Lecture retenue en l'absence de contre-indication. À faire confirmer par le
+> commanditaire avant d'être implémentée dans un backend réel.
+
 ### 5.12 Impressions
 
 Chaque clic sur « Imprimer » incrémente le compteur **immédiatement, avant**
@@ -416,6 +430,28 @@ Facturation de fonctionner.
 
 ## 7. État des corrections
 
+### Sur la numérotation `P-xx`
+
+Ces identifiants viennent d'un **audit initial du prototype**, mené avant la
+reconstruction, qui recensait une trentaine de constats de `P01` à `P31`.
+
+Cet audit a été livré oralement et **n'a jamais été archivé dans un fichier**.
+Il n'existe donc nulle part ailleurs — ni dans `inventaire.md`, qui porte les
+identifiants `R-xx`, `U-xx` et `C-xx`, ni dans aucun autre document. Ne pas
+le chercher.
+
+Conséquences pratiques :
+
+- les numéros absents (`P02` à `P04`, `P07`, `P09` à `P12`, `P14` à `P17`…)
+  correspondent à des constats traités pendant la reconstruction ou jugés non
+  bloquants ; il n'en subsiste pas de trace exploitable ;
+- les identifiants conservés ci-dessous le sont pour la **traçabilité avec les
+  messages de commit**, qui les citent ;
+- un tiret `—` signale une correction née après l'audit, donc sans numéro.
+
+Toute correction future se décrit par son objet, pas par un nouveau numéro
+`P-xx` : cette série est close.
+
 ### Corrections appliquées
 
 | ID | Objet | Fichiers |
@@ -425,11 +461,15 @@ Facturation de fonctionner.
 | — | Trop-perçu : `restant ≤ 0` vaut « soldé » partout | `rules/receipt.ts`, `rules/payment.ts`, `ui/`, `demo/dataset*.ts` |
 | — | `FACTURATION_SOURCE=demo` interdit en `NODE_ENV=production` | `data/index.ts` |
 
-### Corrections restantes — lot 1
+### Corrections en attente — domaine pur
+
+> Les messages de commit antérieurs appellent cet ensemble « lot 1 ». Le terme
+> est abandonné ici : il entrait en collision avec les lots de livraison
+> `L0` à `L6` de `inventaire.md`, qui désignent tout autre chose.
 
 Ces corrections tiennent entièrement dans le domaine et l'orchestration.
-Aucune ne nécessite de base de données. **Écrire le test qui échoue avant la
-correction.**
+Aucune ne nécessite de base de données ni d'authentification réelle.
+**Écrire le test qui échoue avant la correction.**
 
 **P01 — La correction du premier versement ne s'applique pas.**
 Dans `rules/edit-sections.ts`, la branche `firstPayment` remplit bien
@@ -443,10 +483,15 @@ mutation de versement ne s'y exprime pas. Il faut une méthode de port dédiée 
 et applique la distinction employé / administrateur sur le montant (§5.9).
 
 **P13 — Modification commerciale et trop-perçu.**
-La garde actuelle refuse un nouveau montant convenu inférieur au total déjà
-payé (`convenu-inferieur-au-paye`). Or le trop-perçu est autorisé : cette
-situation doit devenir possible et produire une **anomalie non bloquante**,
-pas un refus.
+La garde se trouve dans `rules/edit-sections.ts`, section `program` : elle
+produit `convenu-inferieur-au-paye` dès que le nouveau montant convenu passe
+sous le total déjà payé. Or le trop-perçu est autorisé (§5.11) : cette
+situation doit devenir **possible**, et produire une **anomalie non bloquante**
+au lieu d'un refus.
+
+Le code d'erreur `convenu-inferieur-au-paye` et son message restent utiles
+ailleurs — ne pas les supprimer de `rules/errors.ts` sans vérifier leurs
+autres usages.
 
 **P08 — Réservation prématurée du numéro de reçu.**
 `reserverNumero()` est appelé avant la validation du formulaire. Un abandon
@@ -461,7 +506,17 @@ pour que le compteur soit certainement écrit (§5.12).
 **Suppression d'image — logique, pas physique.**
 Marquer `supprimee = true` et conserver la référence, au lieu d'effacer.
 
-**Session unique par compte** (§5.2) — non implémentée.
+### Corrections en attente — dépendantes du backend
+
+Celles-ci ne peuvent pas être traitées dans le prototype : elles supposent une
+authentification et une persistance réelles. Elles appartiennent aux étapes 4
+et 5 du portage (§9), pas aux corrections de domaine ci-dessus.
+
+**Session unique par compte** (§5.2) — non implémentée. Exige un backend
+d'authentification capable d'invalider la session précédente d'un compte
+lorsqu'il se connecte ailleurs. L'adaptateur de démonstration n'a pas de
+notion de session persistante : il n'y a rien à corriger ici, seulement à
+construire au moment du portage.
 
 ---
 
@@ -517,7 +572,7 @@ c'est une **réconciliation** entre ce prototype et le projet officiel.
 
 | Étape | Contenu | Pré-requis |
 | --- | --- | --- |
-| 1 | Corrections du lot 1 (§7) — domaine pur | aucun |
+| 1 | Corrections en attente du domaine pur (§7) | aucun |
 | 2 | Audit du dépôt officiel : schéma, fonctions, conventions existantes | accès au dépôt officiel |
 | 3 | Relevé des écarts entre ce prototype et l'existant, décision au cas par cas | étape 2 |
 | 4 | Adaptateur réel implémentant `ports.ts` | étapes 2 et 3 |
