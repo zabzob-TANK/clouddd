@@ -213,6 +213,34 @@ fonctions. C'est le principal travail neuf de la fusion.
 
 ---
 
+## 5 bis. Question ouverte — l'accès à l'Administration
+
+`reprise.md` §6 décrit l'Administration comme un module séparé, avec **son
+propre identifiant et son propre mot de passe**, sans rapport avec les comptes
+de la Facturation.
+
+Le code d'`omra` semble raconter autre chose : `app/facturation/page.tsx`
+appelle `requireActiveAccount()` et déduit le rôle de `slot_number === 1`,
+c'est-à-dire le même mécanisme d'emplacements que la Facturation.
+
+Deux lectures possibles :
+
+- **(a)** un seul compte : l'emplacement 1 ouvre l'Administration *et* la
+  Facturation avec les mêmes identifiants ;
+- **(b)** deux accès distincts : l'Administration a ses propres identifiants,
+  hors des six emplacements, et c'est elle qui définit ces six emplacements.
+
+Les propos du commanditaire penchent vers **(b)** — « c'est un autre endroit,
+avec mon propre mot de passe, ils n'ont rien à voir avec la Facturation ».
+
+**À trancher avant l'étape 10.** La session unique par compte n'a pas la même
+forme selon la réponse : si l'Administration vit hors des six emplacements,
+elle a son propre cycle de session, indépendant.
+
+Sans conséquence sur les étapes 1 à 9.
+
+---
+
 ## 6. Plan d'exécution
 
 L'ordre compte : chaque étape doit laisser le projet en état de marche.
@@ -220,19 +248,44 @@ L'ordre compte : chaque étape doit laisser le projet en état de marche.
 | # | Étape | Vérification |
 | --- | --- | --- |
 | 1 | Sauvegarder l'état local `omra` — le committer et le pousser | rien n'existe qu'en un seul exemplaire |
-| 2 | Confirmer la décision §2 avec le commanditaire | sans elle, le reste est prématuré |
-| 3 | Copier `modules/facturation/domain/` et ses tests dans `omra`, tels quels | 427 tests au vert dans `omra` |
+| 2 | Confirmer la décision §2 avec le commanditaire | sans elle, les étapes 6 et suivantes sont prématurées |
+| 3 | Copier `modules/facturation/domain/` et ses tests dans `omra`, tels quels | 429 tests au vert dans `omra` |
 | 4 | Copier `data/ports.ts` et l'interface `ui/` | l'application compile |
 | 5 | Écrire l'adaptateur Supabase implémentant `ports.ts` sur les RPC existantes | les écrans lisent de vraies données |
-| 6 | Nouvelle migration corrigeant §4.1 | test transactionnel avec `ROLLBACK` |
-| 7 | Reprendre `202608020004` selon §4.2, puis déployer | idem |
-| 8 | Remplacer la garde de démonstration §4.3 | build de production refuse la démo |
-| 9 | Tables et fonctions manquantes §5 | journal financier fonctionnel |
+| 6 | Basculer la route sur la nouvelle interface, retirer `BillingDashboard` et `demo-data.ts` | plus aucune référence à l'ancienne interface |
+| 7 | Nouvelle migration corrigeant §4.1 | test transactionnel avec `ROLLBACK` |
+| 8 | Reprendre `202608020004` selon §4.2, puis déployer | idem |
+| 9 | Remplacer la garde de démonstration §4.3 | build de production refuse la démo |
 | 10 | Session unique par compte | connexion sur deux appareils |
-| 11 | Retirer `BillingDashboard` et `demo-data.ts` | plus aucune référence |
+| 11 | Tables et fonctions manquantes §5 — **lot séparé** | journal financier fonctionnel |
 
 Les étapes 3 et 4 sont mécaniques et sans risque : du code pur, sans effet de
 bord, qui ne touche à rien d'existant. L'étape 5 est le cœur du travail.
+
+### Pourquoi le retrait de l'ancienne interface passe avant les migrations
+
+L'étape 7 change la signature de `cancel_billing_receipt` : le montant de la
+sortie de caisse n'est plus un paramètre libre. Or `BillingDashboard` appelle
+la signature actuelle.
+
+Si la migration passait avant le retrait, l'écran d'annulation de l'ancienne
+interface casserait entre les deux étapes. En retirant l'ancienne interface
+d'abord, plus aucun appelant ne dépend de la signature au moment où elle
+change.
+
+Même raisonnement pour toute migration ultérieure touchant une signature déjà
+consommée : **retirer les appelants obsolètes avant de changer le contrat**.
+
+### Pourquoi l'étape 11 est un lot séparé
+
+Le journal financier, le suivi journalier et l'acquittement d'anomalie
+demandent des tables **et** des fonctions entièrement nouvelles, chacune avec
+son cycle sauvegarde → `dry-run` → test transactionnel → déploiement.
+
+C'est le plus gros volume de travail neuf du portage, et le seul qui ne
+consiste pas à raccorder de l'existant. Le traiter dans le même effort que les
+étapes 1 à 10 mènerait à sous-estimer les deux. Les étapes 1 à 10 doivent être
+stabilisées et déployées avant qu'il commence.
 
 ---
 
