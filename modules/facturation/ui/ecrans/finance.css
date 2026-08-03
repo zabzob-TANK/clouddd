@@ -633,6 +633,22 @@
     display: none !important;
   }
 
+  /*
+   * Le papier est blanc, et rien d'autre que le rapport n'occupe la page.
+   *
+   * `.omra` porte le fond beige de l'application et un `min-height: 100vh`
+   * destiné à l'écran. Ni l'un ni l'autre n'avait de raison de survivre ici :
+   * le fond teintait toute la feuille derrière un rapport pourtant blanc, et la
+   * hauteur imposée poussait une seconde page vide.
+   */
+  body.finance-impression,
+  body.finance-impression .omra {
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
   body.finance-impression .finance-ecran,
   body.finance-impression .finance-rapport {
     width: auto !important;
@@ -878,7 +894,18 @@
     background: #fff !important;
   }
 
-  body.finance-impression * {
+  /*
+   * Le rapport a besoin que ses encadrés noirs, son bandeau gris et ses
+   * marques sortent tels quels : `exact` demande au navigateur de ne pas les
+   * alléger, même quand « graphiques d'arrière-plan » est décoché.
+   *
+   * La règle visait `body.finance-impression *`, donc aussi le conteneur de
+   * l'application : son fond beige était forcé à l'impression, et l'utilisateur
+   * ne pouvait même pas s'en débarrasser en décochant l'option. Elle est
+   * désormais limitée au rapport lui-même.
+   */
+  body.finance-impression .finance-rapport,
+  body.finance-impression .finance-rapport * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
