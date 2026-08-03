@@ -24,6 +24,7 @@ import {
   impressionBloquee,
   MESSAGE_IMPRESSION_BLOQUEE,
   preparerRecuImprimable,
+  sequenceImpression,
   variablesDecalage,
 } from '../recu/donnees'
 import { RecuImprimable } from '../recu/recu-imprimable'
@@ -57,8 +58,8 @@ interface Proprietes {
    */
   original: boolean
   onRetour: () => void
-  /** R-84 — comptabilise une impression. */
-  onImpression: () => void
+  /** R-84 — comptabilise une impression. Doit être attendu avant l'impression (P18). */
+  onImpression: () => Promise<void>
 }
 
 export function EcranRecu({ recu, onRetour, onImpression }: Proprietes) {
@@ -84,7 +85,7 @@ export function EcranRecu({ recu, onRetour, onImpression }: Proprietes) {
     }
   }, [])
 
-  const imprimer = () => {
+  const imprimer = async () => {
     // R-81 — au-delà de six paiements, le fichier de référence bloque
     // l'impression au lieu de produire un document incomplet.
     if (impressionBloquee(donnees)) {
@@ -92,8 +93,8 @@ export function EcranRecu({ recu, onRetour, onImpression }: Proprietes) {
       return
     }
     setMessage('')
-    onImpression()
-    window.print()
+    // P18 — le compteur doit être écrit avant l'ouverture de la boîte système.
+    await sequenceImpression(onImpression, () => window.print())
   }
 
   const classes = classesAtelier({ sansFond, reperes })

@@ -325,8 +325,9 @@ export function ApplicationFacturation({
             recu={recuAffiche}
             original={recuOriginal === recuAffiche.id}
             onRetour={() => setEcran({ nom: 'registre' })}
-            onImpression={() => {
-              void actions.enregistrerImpression(recuAffiche.id).then(rafraichir)
+            onImpression={async () => {
+              await actions.enregistrerImpression(recuAffiche.id)
+              void rafraichir()
             }}
           />
         </div>
