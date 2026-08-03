@@ -289,6 +289,18 @@ export function creerSourceDemonstration(
       recu.modifiePar = modification.employe
       return copier(recu)
     },
+    async corrigerPremierVersement(recuId, versement, nouvelleOperation, modification) {
+      const recu = recus.find((r) => r.id === recuId)
+      if (!recu) throw new Error(`Reçu introuvable : ${recuId}`)
+      const premier = recu.versements[0]
+      if (!premier) throw new Error(`Premier versement introuvable : ${recuId}`)
+      if (nouvelleOperation) operations.push(nouvelleOperation)
+      Object.assign(premier, versement)
+      recu.modifications.unshift(modification)
+      recu.derniereModification = modification.dateHeure
+      recu.modifiePar = modification.employe
+      return copier(recu)
+    },
     async annuler(
       recuId: string,
       donnees: {

@@ -728,6 +728,7 @@ export function ApplicationFacturation({
                   chambres: etat.chambres,
                   tarifs: etat.tarifs,
                 }}
+                estAdministrateur={estAdministrateur}
                 onFermer={fermer}
                 onEnregistrer={async (saisie) => {
                   const resultat = await actions.modifierRecu(recu.id, saisie)

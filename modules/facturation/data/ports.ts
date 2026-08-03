@@ -21,6 +21,7 @@
 
 import type { CleJour } from '../domain/dates'
 import type { DonneesCreationRecu } from '../domain/rules/create-receipt'
+import type { CorrectionPremierVersement } from '../domain/rules/edit-sections'
 import type {
   AcquittementAnomalie,
   Chambre,
@@ -141,6 +142,18 @@ export interface RecusPort {
   appliquerModification(
     recuId: string,
     champsModifies: Partial<Recu>,
+    modification: Modification,
+  ): Promise<Recu>
+  /**
+   * P01, §5.9 — Corrige le premier versement (nature, instrument, passage
+   * unique ↔ partagé, et montant pour un administrateur) et empile sa trace.
+   * Le premier versement ne s'exprimant pas comme un `Partial<Recu>`, cette
+   * méthode existe à part de `appliquerModification`.
+   */
+  corrigerPremierVersement(
+    recuId: string,
+    versement: CorrectionPremierVersement,
+    nouvelleOperation: OperationPartagee | null,
     modification: Modification,
   ): Promise<Recu>
   /** R-45 à R-47 — Annule sans jamais supprimer. */

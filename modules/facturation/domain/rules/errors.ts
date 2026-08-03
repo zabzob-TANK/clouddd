@@ -61,6 +61,7 @@ export type CodeErreur =
   | 'motif-modification-obligatoire'
   | 'section-obligatoire'
   | 'operation-partagee-non-modifiable-ici'
+  | 'montant-premier-versement-reserve-administrateur'
   // Journal financier
   | 'impression-hors-periode-autorisee'
   | 'acquittement-reserve-administrateur'
@@ -175,6 +176,8 @@ export const MESSAGES: Record<CodeErreur, (p?: Record<string, string | number>) 
   'section-obligatoire': () => 'اختر قسمًا واحدًا.',
   'operation-partagee-non-modifiable-ici': () =>
     'بيانات العملية المشتركة تعدّل من سجل المدفوعات والتحويلات، وليس من الوصل.',
+  'montant-premier-versement-reserve-administrateur': () =>
+    'تعديل مبلغ الدفعة الأولى متاح للمدير فقط.',
 
   'impression-hors-periode-autorisee': () => 'يمكن للموظف طباعة اليوم أو أمس فقط.',
   'acquittement-reserve-administrateur': () => 'تأكيد مراجعة التنبيه متاح للمدير فقط.',

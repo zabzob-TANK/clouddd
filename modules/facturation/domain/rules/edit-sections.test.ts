@@ -14,7 +14,14 @@ import {
 import { TARIFS_TEST, unRecu, unVersement } from './fixtures'
 import type { ChangementChamp } from '../types'
 
-const CONTEXTE = { tarifs: TARIFS_TEST, reductionMaxCentimes: 300000 }
+const CONTEXTE = {
+  tarifs: TARIFS_TEST,
+  reductionMaxCentimes: 300000,
+  estAdministrateur: false,
+  nouvelIdOperation: () => 'SOP-test',
+  horodatage: '03/08/2026 10:00',
+  employe: 'موظف',
+}
 
 const recu = unRecu({
   convenuCentimes: 2600000,
@@ -42,6 +49,7 @@ function saisie(partiel: Partial<SaisieModification> = {}): SaisieModification {
     operationPartagee: false,
     payeur: '',
     montantOperation: '',
+    montant: '',
     ...partiel,
   }
 }
@@ -178,7 +186,7 @@ describe('R-52 — section programme', () => {
 })
 
 describe('R-53 — section premier versement', () => {
-  it('ne modifie jamais le montant du versement', () => {
+  it('ne touche pas au montant sans nouvelle valeur saisie', () => {
     const resultat = preparerModification(
       saisie({ section: 'firstPayment', nature: 'نقد' }),
       recu,
@@ -187,8 +195,78 @@ describe('R-53 — section premier versement', () => {
     expect(resultat.statut).toBe('ok')
     if (resultat.statut !== 'ok') return
     const champs = resultat.valeur.changements.map((c) => c.champ)
-    expect(champs).not.toContain('Montant')
+    expect(champs).not.toContain('مبلغ الدفعة الأولى')
     expect(resultat.valeur.champsModifies).not.toHaveProperty('versements')
+    expect(resultat.valeur.premierVersementCorrige?.versement.montantCentimes).toBe(
+      recu.versements[0].montantCentimes,
+    )
+  })
+
+  it('P01 — applique effectivement la correction d’instrument au versement', () => {
+    const resultat = preparerModification(
+      saisie({
+        section: 'firstPayment',
+        nature: 'شيك',
+        reference: '998877',
+        dateInstrument: '02/07/2026',
+        banque: 'بنك الشعبي',
+      }),
+      recu,
+      CONTEXTE,
+    )
+    expect(resultat.statut).toBe('ok')
+    if (resultat.statut !== 'ok') return
+    // Avant la correction, champsModifies ne pouvait exprimer aucun de ces
+    // changements : c'est exactement le bogue P01. Ils vivent désormais dans
+    // un champ dédié, porté ensuite par `corrigerPremierVersement`.
+    expect(resultat.valeur.premierVersementCorrige?.versement).toMatchObject({
+      nature: 'شيك',
+      referenceInstrument: '998877',
+      dateInstrument: '02/07/2026',
+      banque: 'بنك الشعبي',
+      portee: 'unique',
+    })
+  })
+
+  it('P01, §5.9 — le montant du premier versement est réservé à l’administrateur', () => {
+    expect(
+      codes(saisie({ section: 'firstPayment', nature: 'نقد', montant: '500' })),
+    ).toContain('montant-premier-versement-reserve-administrateur')
+  })
+
+  it('P01, §5.9 — l’administrateur peut corriger le montant', () => {
+    const resultat = preparerModification(
+      saisie({ section: 'firstPayment', nature: 'نقد', montant: '500' }),
+      recu,
+      { ...CONTEXTE, estAdministrateur: true },
+    )
+    expect(resultat.statut).toBe('ok')
+    if (resultat.statut !== 'ok') return
+    expect(resultat.valeur.premierVersementCorrige?.versement.montantCentimes).toBe(50000)
+  })
+
+  it('P01 — le passage unique vers partagé crée une nouvelle opération', () => {
+    const resultat = preparerModification(
+      saisie({
+        section: 'firstPayment',
+        nature: 'شيك',
+        reference: '112233',
+        dateInstrument: '02/07/2026',
+        banque: 'بنك الشعبي',
+        operationPartagee: true,
+        payeur: 'محمد',
+        montantOperation: '5000',
+      }),
+      recu,
+      CONTEXTE,
+    )
+    expect(resultat.statut).toBe('ok')
+    if (resultat.statut !== 'ok') return
+    const { versement, nouvelleOperation } = resultat.valeur.premierVersementCorrige!
+    expect(versement.portee).toBe('shared')
+    expect(nouvelleOperation).not.toBeNull()
+    expect(versement.operationPartageeId).toBe(nouvelleOperation?.id)
+    expect(nouvelleOperation?.montantTotalCentimes).toBe(500000)
   })
 
   it('exige les champs de l’instrument pour un chèque', () => {

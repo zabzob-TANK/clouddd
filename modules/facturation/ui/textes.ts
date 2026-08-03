@@ -472,6 +472,8 @@ export const T = {
       },
     },
     premiereDfpFixe: 'مبلغ الدفعة الأولى — لا يتغير',
+    /** §5.9 — correction du montant, réservée à l'administrateur. */
+    montantAdministrateur: 'تصحيح مبلغ الدفعة الأولى (المدير فقط)',
     nouveauPrix: 'الثمن الجديد',
     nouveauConvenu: 'المبلغ المتفق عليه الجديد',
     montantInchange: 'المبلغ المدفوع يبقى كما هو',

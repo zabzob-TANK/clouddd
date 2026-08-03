@@ -398,13 +398,22 @@ export async function modifierRecu(
   const recu = await source.recus.parId(recuId)
   if (!recu) return { statut: 'erreurs', erreurs: [{ champ: 'section', code: 'numero-recu-introuvable' }] }
 
+  const estAdministrateur = base.utilisateur
+    ? source.session.estAdministrateur(base.utilisateur)
+    : false
+
   const resultat = preparerModification(saisie, recu, {
     tarifs: base.tarifs,
     reductionMaxCentimes: base.saison.reductionMaxCentimes,
+    estAdministrateur,
+    nouvelIdOperation: () => source.identifiants.nouvelId('SOP'),
+    horodatage: base.horodatage,
+    employe: base.employe,
   })
   if (resultat.statut !== 'ok') return resultat
 
-  const { section, sectionLibelle, motif, changements, champsModifies } = resultat.valeur
+  const { section, sectionLibelle, motif, changements, champsModifies, premierVersementCorrige } =
+    resultat.valeur
 
   const modification: Modification = {
     id: source.identifiants.nouvelId('modification'),
@@ -416,7 +425,18 @@ export async function modifierRecu(
     dateHeure: base.horodatage,
   }
 
-  await source.recus.appliquerModification(recuId, champsModifies, modification)
+  // P01 — le premier versement se corrige par sa propre méthode de port,
+  // `champsModifies` ne pouvant pas exprimer une mutation de versement.
+  if (premierVersementCorrige) {
+    await source.recus.corrigerPremierVersement(
+      recuId,
+      premierVersementCorrige.versement,
+      premierVersementCorrige.nouvelleOperation,
+      modification,
+    )
+  } else {
+    await source.recus.appliquerModification(recuId, champsModifies, modification)
+  }
 
   const resume = changements
     .map((c) => `${c.champ} : ${c.ancienne || '—'} → ${c.nouvelle || '—'}`)

@@ -13,7 +13,14 @@ import { dateFrValide } from '../dates'
 import { chiffresTelephone } from '../format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../money'
 import { natureNormalisee } from '../payment-method'
-import type { ChangementChamp, Recu, SectionModifiable, Tarif } from '../types'
+import type {
+  ChangementChamp,
+  OperationPartagee,
+  PorteeVersement,
+  Recu,
+  SectionModifiable,
+  Tarif,
+} from '../types'
 import {
   erreur,
   erreurs,
@@ -75,6 +82,7 @@ const CHAMPS = {
   banque: 'البنك',
   payeur: 'الدافع',
   montantOperation: 'قيمة العملية',
+  montant: 'مبلغ الدفعة الأولى',
 } as const
 
 export interface SaisieModification {
@@ -96,7 +104,7 @@ export interface SaisieModification {
   groupe: string
   // Note
   note: string
-  // Premier versement — méthode et instrument uniquement, jamais le montant
+  // Premier versement — méthode et instrument
   nature: string
   reference: string
   dateInstrument: string
@@ -105,6 +113,24 @@ export interface SaisieModification {
   payeur: string
   /** Montant total de l'opération, saisi en dirhams. */
   montantOperation: string
+  /**
+   * §5.9 — Nouveau montant du premier versement, saisi en dirhams.
+   * Vide : aucune correction demandée. Réservé à l'administrateur.
+   */
+  montant: string
+}
+
+/** P01, §5.9 — Nouvelles valeurs du premier versement après correction. */
+export interface CorrectionPremierVersement {
+  montantCentimes: number
+  nature: string
+  referenceInstrument: string
+  dateInstrument: string
+  banque: string
+  portee: PorteeVersement
+  operationPartageeId: string
+  payeur: string
+  montantOperationCentimes: number
 }
 
 export interface ResultatModification {
@@ -112,13 +138,31 @@ export interface ResultatModification {
   sectionLibelle: string
   motif: string
   changements: ChangementChamp[]
-  /** Champs du reçu à mettre à jour. */
+  /** Champs du reçu à mettre à jour. Vide pour la section `firstPayment`. */
   champsModifies: Partial<Recu>
+  /**
+   * P01 — Présent uniquement pour la section `firstPayment` : le premier
+   * versement ne s'exprime pas comme un `Partial<Recu>`, il porte donc sa
+   * propre méthode de port dédiée (`RecusPort.corrigerPremierVersement`).
+   */
+  premierVersementCorrige?: {
+    versement: CorrectionPremierVersement
+    /** Opération créée par un passage unique → partagé, sinon `null`. */
+    nouvelleOperation: OperationPartagee | null
+  }
 }
 
 export interface ContexteModification {
   tarifs: readonly Tarif[]
   reductionMaxCentimes: number
+  /** §5.9 — seul un administrateur peut corriger le montant du 1er versement. */
+  estAdministrateur: boolean
+  /** Identifiant à donner à une nouvelle opération partagée. */
+  nouvelIdOperation: () => string
+  /** Horodatage de la correction, pour une nouvelle opération éventuelle. */
+  horodatage: string
+  /** Employé à l'origine de la correction. */
+  employe: string
 }
 
 /**
@@ -281,6 +325,8 @@ export function preparerModification(
     champsModifies.note = saisie.note || ''
   }
 
+  let premierVersementCorrige: ResultatModification['premierVersementCorrige']
+
   if (section === 'firstPayment') {
     const premier = recu.versements[0]
     if (!premier) {
@@ -306,15 +352,82 @@ export function preparerModification(
       }
     }
 
-    if (premier) {
-      // R-53 — seuls la méthode et les données d'instrument changent.
-      // Le montant du versement n'est jamais touché.
+    // P01, §5.9 — le montant est réservé à l'administrateur.
+    let montantCentimes = premier?.montantCentimes ?? 0
+    const montantSaisi = saisie.montant.trim()
+    if (montantSaisi) {
+      const nouveauMontant = dirhamsSaisisEnCentimes(montantSaisi)
+      if (nouveauMontant !== montantCentimes) {
+        if (!contexte.estAdministrateur) {
+          liste.push({ champ: 'montant', code: 'montant-premier-versement-reserve-administrateur' })
+        } else if (nouveauMontant <= 0) {
+          liste.push({ champ: 'montant', code: 'montant-doit-etre-positif' })
+        } else {
+          montantCentimes = nouveauMontant
+        }
+      }
+    }
+
+    if (premier && liste.length === 0) {
+      // R-53 — seuls la méthode, l'instrument et (pour un administrateur) le
+      // montant changent : le rattachement à une opération déjà utilisée ne
+      // se recrée pas silencieusement.
       const reference = espece ? '' : saisie.reference.trim()
       const dateInstrument = espece ? '' : saisie.dateInstrument.trim()
       const banque = espece ? '' : saisie.banque.trim()
-      const payeur = espece || !saisie.operationPartagee ? '' : saisie.payeur.trim()
-      const montantOperation =
-        espece || !saisie.operationPartagee ? 0 : dirhamsSaisisEnCentimes(saisie.montantOperation)
+      const dejaPartage = premier.portee === 'shared'
+      const resteParage = !espece && saisie.operationPartagee
+
+      let operationPartageeId = ''
+      let payeur = ''
+      let montantOperationCentimes = 0
+      let nouvelleOperation: OperationPartagee | null = null
+
+      if (resteParage) {
+        if (dejaPartage) {
+          // §5.8 — une opération déjà utilisée garde son montant, son payeur
+          // et son rattachement verrouillés.
+          operationPartageeId = premier.operationPartageeId
+          payeur = premier.payeur
+          montantOperationCentimes = premier.montantOperationCentimes
+        } else {
+          // Passage unique → partagé : une nouvelle opération est créée,
+          // comme à la création d'un reçu (cf. `preparerInstrument`, R-28).
+          operationPartageeId = contexte.nouvelIdOperation()
+          payeur = saisie.payeur.trim()
+          montantOperationCentimes = dirhamsSaisisEnCentimes(saisie.montantOperation)
+          nouvelleOperation = {
+            id: operationPartageeId,
+            nature: saisie.nature,
+            reference,
+            dateInstrument,
+            banque,
+            payeur,
+            montantTotalCentimes: montantOperationCentimes,
+            creeeLe: contexte.horodatage,
+            creeePar: contexte.employe,
+            statut: 'active',
+            image: null,
+          }
+        }
+      }
+
+      const portee: PorteeVersement = resteParage ? 'shared' : 'unique'
+
+      premierVersementCorrige = {
+        versement: {
+          montantCentimes,
+          nature: saisie.nature,
+          referenceInstrument: reference,
+          dateInstrument,
+          banque,
+          portee,
+          operationPartageeId,
+          payeur,
+          montantOperationCentimes,
+        },
+        nouvelleOperation,
+      }
 
       consignerChangement(changements, CHAMPS.nature, premier.nature, saisie.nature)
       consignerChangement(changements, CHAMPS.reference, premier.referenceInstrument, reference)
@@ -330,7 +443,13 @@ export function preparerModification(
         changements,
         CHAMPS.montantOperation,
         centimesEnTexteDevise(premier.montantOperationCentimes),
-        centimesEnTexteDevise(montantOperation),
+        centimesEnTexteDevise(montantOperationCentimes),
+      )
+      consignerChangement(
+        changements,
+        CHAMPS.montant,
+        centimesEnTexteDevise(premier.montantCentimes),
+        centimesEnTexteDevise(montantCentimes),
       )
     }
   }
@@ -343,6 +462,7 @@ export function preparerModification(
     motif: saisie.motif.trim(),
     changements,
     champsModifies,
+    premierVersementCorrige,
   })
 }
 

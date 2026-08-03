@@ -47,6 +47,8 @@ interface Proprietes {
     chambres: { id: string; code: string }[]
     tarifs: Tarif[]
   }
+  /** §5.9 — seul un administrateur peut corriger le montant du 1er versement. */
+  estAdministrateur: boolean
   onFermer: () => void
   onEnregistrer: (saisie: SaisieModification) => Promise<Resultat<null>>
 }
@@ -73,10 +75,18 @@ function saisieInitiale(recu: Recu): SaisieModification {
     operationPartagee: premier?.portee === 'shared',
     payeur: premier?.payeur ?? '',
     montantOperation: premier ? centimesEnDirhamsSaisis(premier.montantOperationCentimes) : '',
+    // §5.9 — vide : aucune correction du montant demandée.
+    montant: '',
   }
 }
 
-export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer }: Proprietes) {
+export function ModaleModification({
+  recu,
+  referentiels,
+  estAdministrateur,
+  onFermer,
+  onEnregistrer,
+}: Proprietes) {
   const [saisie, setSaisie] = useState<SaisieModification>(saisieInitiale(recu))
   const [erreurs, setErreurs] = useState<ErreurValidation[]>([])
   const [envoi, setEnvoi] = useState(false)
@@ -341,17 +351,36 @@ export function ModaleModification({ recu, referentiels, onFermer, onEnregistrer
 
             {section === 'firstPayment' ? (
               <>
-                {/* Le montant de la première dépense reste figé (R-55). */}
-                <div className="modif-montant-fixe">
-                  <span>{T.modification.premiereDfpFixe}</span>
-                  <span className="valeur mono" dir="ltr">
-                    {premierVersement ? (
-                      <Montant centimes={premierVersement.montantCentimes} />
-                    ) : (
-                      '—'
-                    )}
-                  </span>
-                </div>
+                {/* R-55 : figé pour un employé. §5.9 : éditable pour un administrateur. */}
+                {estAdministrateur ? (
+                  <div className="omra-fields">
+                    <Champ label={T.modification.montantAdministrateur} pleine>
+                      <Saisie
+                        valeur={saisie.montant}
+                        onChange={(v) => modifier({ montant: formaterMontant(v) })}
+                        invalide={enErreur(erreurs, 'montant')}
+                        placeholder={
+                          premierVersement
+                            ? centimesEnDirhamsSaisis(premierVersement.montantCentimes)
+                            : ''
+                        }
+                        mono
+                        inputMode="numeric"
+                      />
+                    </Champ>
+                  </div>
+                ) : (
+                  <div className="modif-montant-fixe">
+                    <span>{T.modification.premiereDfpFixe}</span>
+                    <span className="valeur mono" dir="ltr">
+                      {premierVersement ? (
+                        <Montant centimes={premierVersement.montantCentimes} />
+                      ) : (
+                        '—'
+                      )}
+                    </span>
+                  </div>
+                )}
 
                 {/* Le fichier emploie une liste déroulante, pas des boutons. */}
                 <div className="omra-fields">

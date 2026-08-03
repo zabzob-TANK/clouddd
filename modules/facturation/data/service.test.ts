@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { passeportVierge } from '../ui/modales/passeport'
 import { instrumentVierge } from '../ui/instrument-panel'
 import type { SaisieNouveauRecu } from '../domain/rules/create-receipt'
+import type { SaisieModification } from '../domain/rules/edit-sections'
 import { reinitialiserSourceDonnees } from './index'
 import {
   acquitterAnomalies,
   ajouterVersement,
   annulerRecu,
   chargerEtat,
+  connecter,
   creerRecu,
   enregistrerImpressionFinance,
   journalFinancier,
@@ -193,10 +195,92 @@ describe('R-86 — journal d’audit', () => {
       operationPartagee: false,
       payeur: '',
       montantOperation: '',
+      montant: '',
     })
     const etat = await chargerEtat()
     expect(etat.audit[0].action).toBe('تعديل')
     expect(etat.audit[0].detail).toContain('précision demandée')
+  })
+})
+
+function saisieFirstPayment(partiel: Partial<SaisieModification> = {}): SaisieModification {
+  return {
+    section: 'firstPayment',
+    motif: 'correction du premier versement',
+    prenom: 'نورة',
+    nom: 'السوسي',
+    telephone: '0611-22.33.44',
+    hotel: 'منار الشروق',
+    vol: 'الخطوط السعودية',
+    chambre: '4',
+    reduction: '0',
+    groupeCoche: false,
+    groupe: '',
+    note: '',
+    nature: 'نقد',
+    reference: '',
+    dateInstrument: '',
+    banque: '',
+    operationPartagee: false,
+    payeur: '',
+    montantOperation: '',
+    montant: '',
+    ...partiel,
+  }
+}
+
+describe('P01 — correction du premier versement', () => {
+  it('§5.9 — refuse la correction du montant à un employé', async () => {
+    const cree = await creerRecu(nouveauRecu({ premierVersement: '12000' }), false)
+    if (cree.statut !== 'ok') throw new Error('création refusée')
+
+    // Le compte de démonstration par défaut est un employé (« صندوق »).
+    const resultat = await modifierRecu(
+      cree.valeur.recuId,
+      saisieFirstPayment({ montant: '9000' }),
+    )
+    expect(resultat.statut).toBe('erreurs')
+
+    const etat = await chargerEtat()
+    const recu = etat.recus.find((r) => r.id === cree.valeur.recuId)
+    expect(recu?.versements[0].montantCentimes).toBe(1200000)
+  })
+
+  it('applique effectivement le nouveau montant (administrateur, §5.9)', async () => {
+    const cree = await creerRecu(nouveauRecu({ premierVersement: '12000' }), false)
+    if (cree.statut !== 'ok') throw new Error('création refusée')
+
+    await connecter('3', '3')
+    const resultat = await modifierRecu(
+      cree.valeur.recuId,
+      saisieFirstPayment({ montant: '9000' }),
+    )
+    expect(resultat.statut).toBe('ok')
+
+    const etat = await chargerEtat()
+    const recu = etat.recus.find((r) => r.id === cree.valeur.recuId)
+    expect(recu?.versements[0].montantCentimes).toBe(900000)
+  })
+
+  it('applique effectivement une correction d’instrument (tout employé)', async () => {
+    const cree = await creerRecu(nouveauRecu(), false)
+    if (cree.statut !== 'ok') throw new Error('création refusée')
+
+    const resultat = await modifierRecu(
+      cree.valeur.recuId,
+      saisieFirstPayment({
+        nature: 'شيك',
+        reference: '556677',
+        dateInstrument: '02/07/2026',
+        banque: 'بنك الشعبي',
+      }),
+    )
+    expect(resultat.statut).toBe('ok')
+
+    const etat = await chargerEtat()
+    const recu = etat.recus.find((r) => r.id === cree.valeur.recuId)
+    expect(recu?.versements[0].referenceInstrument).toBe('556677')
+    expect(recu?.versements[0].banque).toBe('بنك الشعبي')
   })
 })
 
