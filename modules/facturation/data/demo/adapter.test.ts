@@ -52,8 +52,19 @@ describe('adaptateur de démonstration — reçus', () => {
 
   it('recherche par nom et par numéro', async () => {
     const s = source()
-    expect(await s.recus.lister({ nom: 'شقير' })).toHaveLength(1)
-    expect(await s.recus.lister({ numero: '263' })).toHaveLength(1)
+    expect(await s.recus.lister({ nom: 'مرزوق' })).toHaveLength(1)
+    expect(await s.recus.lister({ numero: '253' })).toHaveLength(1)
+  })
+
+  it('deux voyageuses homonymes restent deux dossiers distincts', async () => {
+    const s = source()
+    // L'un des deux dossiers est annulé : il reste consultable (R-45).
+    const homonymes = await s.recus.lister({ nom: 'زينب بوعزة', inclureAnnules: true })
+    expect(homonymes).toHaveLength(2)
+    // Même nom, mais ni le même reçu, ni le même client, ni le même téléphone.
+    expect(new Set(homonymes.map((r) => r.id)).size).toBe(2)
+    expect(new Set(homonymes.map((r) => r.clientId)).size).toBe(2)
+    expect(new Set(homonymes.map((r) => r.telephone)).size).toBe(2)
   })
 
   it('R-11 — délivre des numéros successifs et jamais réutilisés', async () => {
@@ -97,13 +108,22 @@ describe('adaptateur de démonstration — opérations partagées et images', ()
   it('R-34 — une opération partagée est reliée à plusieurs reçus sans être dupliquée', async () => {
     const s = source()
     const operations = await s.operationsPartagees.lister()
-    expect(operations).toHaveLength(1)
+    // Un chèque de famille, un virement réutilisé, un chèque en dépassement.
+    expect(operations).toHaveLength(3)
 
     const tous = await s.recus.lister({ inclureAnnules: true })
-    const rattaches = tous.filter((r) =>
-      r.versements.some((v) => v.operationPartageeId === operations[0].id),
-    )
-    expect(rattaches).toHaveLength(2)
+    const rattachesA = (id: string) =>
+      tous.filter((r) => r.versements.some((v) => v.operationPartageeId === id))
+
+    // Le chèque de famille règle trois reçus sans être dupliqué.
+    const famille = operations.find((o) => o.reference === '7742015')!
+    expect(rattachesA(famille.id)).toHaveLength(3)
+
+    // Le virement est réutilisé deux jours de suite, sur deux reçus.
+    const virement = operations.find((o) => o.reference === 'VIR-2026-0455')!
+    const attributions = rattachesA(virement.id)
+    expect(attributions).toHaveLength(2)
+    expect(new Set(attributions.flatMap((r) => r.versements.map((v) => v.date))).size).toBe(2)
   })
 
   it('R-38 — l’image appartient à l’opération, pas aux versements rattachés', async () => {
@@ -150,9 +170,24 @@ describe('adaptateur de démonstration — caisse, impressions et audit', () => 
 
   it('R-62 — une impression conserve la liste des mouvements imprimés', async () => {
     const s = source()
+    // La veille de la date de référence a été imprimée deux fois.
     const impressions = await s.impressionsFinance.listerParJour('2026-07-31')
-    expect(impressions).toHaveLength(1)
-    expect(impressions[0].mouvementIds.length).toBe(impressions[0].nombreLignes)
+    expect(impressions).toHaveLength(2)
+    expect(impressions.map((i) => i.numeroImpression).sort()).toEqual([1, 2])
+    for (const impression of impressions) {
+      expect(impression.mouvementIds.length).toBe(impression.nombreLignes)
+    }
+  })
+
+  it('R-63 — un versement enregistré après l’impression n’y figure pas', async () => {
+    const s = source()
+    const impressions = await s.impressionsFinance.listerParJour('2026-07-31')
+    const photographie = new Set(impressions.flatMap((i) => i.mouvementIds))
+
+    // Le reçu 264 est saisi à 19:25, après les deux impressions de la journée.
+    const tardif = (await s.recus.parNumero(264))!
+    expect(tardif.versements[0].date).toBe('31/07/2026')
+    expect(photographie.has(tardif.versements[0].id)).toBe(false)
   })
 
   it('R-65 — les acquittements d’anomalie se cumulent sur une même journée', async () => {

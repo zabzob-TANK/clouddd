@@ -373,10 +373,27 @@ describe('lot L5 — suivi journalier et registre des paiements', () => {
   it('R-73, R-77 — le registre regroupe par opération et calcule le restant', async () => {
     const registre = await registreBancaire({})
     expect(registre.lignes.length).toBeGreaterThan(0)
-    const partagee = registre.lignes.find((ligne) => ligne.classeType === 'shared')
-    expect(partagee).toBeDefined()
-    // Les deux reçus du partage figurent sur une seule ligne.
-    expect(partagee!.recus.split(' · ')).toHaveLength(2)
+
+    // Le chèque de famille : trois reçus, une seule ligne, entièrement réparti.
+    const famille = registre.lignes.find((ligne) => ligne.numero === '7742015')
+    expect(famille).toBeDefined()
+    expect(famille!.classeType).toBe('shared')
+    expect(famille!.recusComplet.split(' · ')).toHaveLength(3)
+    expect(famille!.restant).toBe('—')
+
+    // Le virement réutilisé : deux attributions, un restant encore disponible.
+    const virement = registre.lignes.find((ligne) => ligne.numero === 'VIR-2026-0455')
+    expect(virement).toBeDefined()
+    expect(virement!.recusComplet.split(' · ')).toHaveLength(2)
+  })
+
+  it('R-32 — une attribution en dépassement laisse un restant négatif', async () => {
+    const registre = await registreBancaire({})
+    const depasse = registre.lignes.find((ligne) => ligne.numero === '8890734')
+    expect(depasse).toBeDefined()
+    // 15 000 DH attribués sur une opération de 10 000 DH.
+    expect(depasse!.restant).toContain('-')
+    expect(depasse!.couleurRestant).toBe('var(--danger)')
   })
 
   it('R-74 — les filtres du registre s’appliquent', async () => {
