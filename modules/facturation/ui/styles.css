@@ -655,19 +655,69 @@ input[type='number'] {
   font-weight: 600;
 }
 
+/*
+ * États d'un reçu : forme plutôt que couleur.
+ *
+ * La couleur est le langage des modes de paiement — vert espèces, jaune
+ * chèque, bleu virement — et elle ne doit servir qu'à cela. Les états
+ * portaient eux aussi du vert et du bleu, dans des colonnes voisines : dans
+ * une même ligne, « مسدد » vert jouxtait « نقد » vert, et « غير مكتمل » bleu
+ * jouxtait « تحويل » bleu. Deux informations sans rapport, deux fois la même
+ * teinte.
+ *
+ * Les états routiniers se distinguent donc désormais par la forme : pastille
+ * pleine pour ce qui est terminé, contour seul pour ce qui est en cours, avec
+ * un point plein ou creux qui redit la même chose à petite taille. Seule
+ * l'annulation garde une couleur, parce qu'elle n'est pas un état de routine
+ * mais une exception, et qu'elle doit se voir immédiatement.
+ */
+.omra-pill.solde,
+.omra-pill.incomplet,
+.omra-pill.annule {
+  border: 1px solid transparent;
+}
+
+.omra-pill.solde::before,
+.omra-pill.incomplet::before,
+.omra-pill.annule::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pilule);
+  margin-inline-end: 6px;
+  vertical-align: 1px;
+}
+
+/* Terminé : pastille pleine, point plein, encre affirmée. */
 .omra-pill.solde {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
+  background: #eeece2;
+  color: var(--ink);
 }
 
+.omra-pill.solde::before {
+  background: currentColor;
+}
+
+/* En cours : contour seul, point creux, encre estompée. */
 .omra-pill.incomplet {
-  background: var(--info-soft);
-  color: var(--info);
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--muted);
 }
 
+.omra-pill.incomplet::before {
+  border: 1.5px solid currentColor;
+}
+
+/* Exception : la seule qui garde une couleur. */
 .omra-pill.annule {
   background: var(--danger-soft);
   color: var(--danger);
+}
+
+.omra-pill.annule::before {
+  background: currentColor;
 }
 
 .omra-method {

@@ -215,14 +215,16 @@
   color: #d59389;
 }
 
+/* États : la forme porte le sens, la couleur reste aux modes de paiement. */
 .omra.sombre .omra-pill.solde {
-  background: var(--accent-soft);
-  color: #b6d199;
+  background: #2c3128;
+  color: var(--ink);
 }
 
 .omra.sombre .omra-pill.incomplet {
-  background: var(--info-soft);
-  color: var(--info);
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--muted);
 }
 
 .omra.sombre .omra-pill.annule {
