@@ -11,7 +11,7 @@
 import { STATUT_ANNULE } from '../constants'
 import type { CleJour, DateFr } from '../dates'
 import type { ModeRemboursement, MouvementCaisse, Recu } from '../types'
-import { erreurs, ok, type ErreurValidation, type Resultat } from './errors'
+import { erreur, erreurs, ok, type ErreurValidation, type Resultat } from './errors'
 import { totalPaye } from './receipt'
 
 export interface SaisieAnnulation {
@@ -69,6 +69,9 @@ export function preparerAnnulation(
   recu: Recu,
   contexte: ContexteAnnulation,
 ): Resultat<ResultatAnnulation> {
+  // P05 — un reçu déjà annulé ne peut pas être annulé une seconde fois.
+  if (recu.statut === STATUT_ANNULE) return erreur('recu', 'recu-annule')
+
   // R-43 — les trois champs sont obligatoires, erreurs cumulées.
   const liste: ErreurValidation[] = []
   if (!saisie.motif.trim()) liste.push({ champ: 'motif', code: 'motif-annulation-obligatoire' })

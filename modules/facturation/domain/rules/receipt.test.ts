@@ -49,6 +49,14 @@ describe('U-06 — statut affiché', () => {
     expect(statutAffiche(recu)).toBe('مسدد')
   })
 
+  it('affiche « soldé » en cas de trop-perçu (restant négatif)', () => {
+    const recu = unRecu({
+      convenuCentimes: 1000000,
+      versements: [unVersement({ montantCentimes: 1200000 })],
+    })
+    expect(statutAffiche(recu)).toBe('مسدد')
+  })
+
   it('affiche « incomplet » quand il reste à payer', () => {
     expect(statutAffiche(unRecu())).toBe('غير مكتمل')
   })
@@ -78,5 +86,9 @@ describe('dernier versement et symbole de situation', () => {
   it('marque un solde par ✓ et un reste par •', () => {
     expect(symboleSituation(0)).toBe('✓')
     expect(symboleSituation(1)).toBe('•')
+  })
+
+  it('marque ✓ en cas de trop-perçu (restant négatif)', () => {
+    expect(symboleSituation(-200000)).toBe('✓')
   })
 })

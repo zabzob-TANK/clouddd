@@ -8,13 +8,14 @@
  * montants des versements ne sont jamais modifiables.
  */
 
-import { NATURE_ESPECES } from '../constants'
+import { NATURE_ESPECES, STATUT_ANNULE } from '../constants'
 import { dateFrValide } from '../dates'
 import { chiffresTelephone } from '../format'
 import { centimesEnTexteDevise, dirhamsSaisisEnCentimes } from '../money'
 import { natureNormalisee } from '../payment-method'
 import type { ChangementChamp, Recu, SectionModifiable, Tarif } from '../types'
 import {
+  erreur,
   erreurs,
   montantPourMessage,
   ok,
@@ -171,6 +172,9 @@ export function preparerModification(
   recu: Recu,
   contexte: ContexteModification,
 ): Resultat<ResultatModification> {
+  // P06 — un reçu annulé est verrouillé.
+  if (recu.statut === STATUT_ANNULE) return erreur('recu', 'recu-annule')
+
   // R-49
   if (!saisie.section) return erreurs([{ champ: 'section', code: 'section-obligatoire' }])
   const section = saisie.section

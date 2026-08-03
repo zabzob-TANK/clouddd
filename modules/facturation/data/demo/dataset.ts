@@ -254,7 +254,7 @@ export function construireJeuDemonstration(
           convenuCentimes,
           rabatteur: d.rabatteur,
           restantApresCentimes: restantApres,
-          statutApres: restantApres === 0 ? '✓' : '•',
+          statutApres: restantApres <= 0 ? '✓' : '•',
         },
       })
     })

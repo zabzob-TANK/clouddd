@@ -68,7 +68,7 @@ export function motifRefusVersement(recu: Recu | null): ErreurValidation | null 
   // R-16
   if (recu.statut === STATUT_ANNULE) return { champ: 'numeroRecu', code: 'recu-annule' }
   // R-17
-  if (restantDu(recu) === 0) return { champ: 'numeroRecu', code: 'recu-deja-solde' }
+  if (restantDu(recu) <= 0) return { champ: 'numeroRecu', code: 'recu-deja-solde' }
   // R-18
   if (recu.versements.length >= MAX_VERSEMENTS) {
     return {

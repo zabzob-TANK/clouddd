@@ -51,6 +51,13 @@ function codes(s: SaisieModification, cible = recu) {
   return resultat.statut === 'erreurs' ? resultat.erreurs.map((e) => e.code) : []
 }
 
+describe('P06 — un reçu annulé ne peut pas être modifié', () => {
+  it('refuse la modification si le reçu est annulé', () => {
+    const recuAnnule = unRecu({ statut: 'ملغى' })
+    expect(codes(saisie(), recuAnnule)).toEqual(['recu-annule'])
+  })
+})
+
 describe('R-49 — une seule section à la fois', () => {
   it('recense exactement six sections', () => {
     expect(SECTIONS_MODIFIABLES).toHaveLength(6)

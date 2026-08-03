@@ -189,7 +189,7 @@ export function ModaleDetail({
               </div>
               <div className="appoint">{T.detail.nbVersements(recu.versements.length)}</div>
             </div>
-            <div className={`detail-finance-cellule restant${restant === 0 ? ' solde' : ''}`}>
+            <div className={`detail-finance-cellule restant${restant <= 0 ? ' solde' : ''}`}>
               <div className="etiquette">{T.detail.restant}</div>
               <div className="valeur grande">
                 <Montant centimes={restant} />

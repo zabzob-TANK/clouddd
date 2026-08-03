@@ -66,6 +66,14 @@ describe('R-16, R-17, R-18 — état du reçu', () => {
     expect(codes(saisie(), solde)).toEqual(['recu-deja-solde'])
   })
 
+  it('refuse un reçu en trop-perçu (restant négatif)', () => {
+    const tropPercu = unRecu({
+      convenuCentimes: 1000000,
+      versements: [unVersement({ montantCentimes: 1200000 })],
+    })
+    expect(codes(saisie(), tropPercu)).toEqual(['recu-deja-solde'])
+  })
+
   it('refuse un septième versement', () => {
     expect(codes(saisie(), recuAvec(MAX_VERSEMENTS))).toEqual([
       'nombre-maximal-de-versements-atteint',

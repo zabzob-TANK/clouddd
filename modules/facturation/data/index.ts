@@ -38,6 +38,13 @@ let instance: SourceDonnees | null = null
 export function sourceDonnees(): SourceDonnees {
   if (instance) return instance
 
+  if (sourceConfiguree() === 'demo' && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FACTURATION_SOURCE=demo est interdit en production. ' +
+        'Configurez FACTURATION_SOURCE=supabase avec un projet Supabase valide.',
+    )
+  }
+
   if (sourceConfiguree() === 'supabase') {
     // L'adaptateur Supabase sera ajouté lorsque la persistance réelle deviendra
     // nécessaire. Il implémentera `SourceDonnees` sans modifier ni le domaine

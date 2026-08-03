@@ -35,6 +35,21 @@ function codes(s: SaisieAnnulation, contexte = CONTEXTE) {
   return resultat.statut === 'erreurs' ? resultat.erreurs.map((e) => e.code) : []
 }
 
+describe('P05 — un reçu déjà annulé ne peut pas être annulé une seconde fois', () => {
+  it('refuse si le reçu est déjà annulé', () => {
+    const recuAnnule = unRecu({
+      statut: 'ملغى',
+      convenuCentimes: 2600000,
+      versements: [unVersement({ montantCentimes: 800000 })],
+    })
+    const resultat = preparerAnnulation(saisie(), recuAnnule, CONTEXTE)
+    expect(resultat.statut).toBe('erreurs')
+    if (resultat.statut === 'erreurs') {
+      expect(resultat.erreurs[0].code).toBe('recu-annule')
+    }
+  })
+})
+
 describe('R-43 — champs obligatoires', () => {
   it('exige le motif, le mode de remboursement et le mot de passe', () => {
     expect(codes(saisie({ motif: '', modeRemboursement: '', motDePasse: '' }))).toEqual([

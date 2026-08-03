@@ -37,7 +37,7 @@ export function restantDu(recu: Pick<Recu, 'convenuCentimes' | 'versements'>): n
  */
 export function statutAffiche(recu: Pick<Recu, 'statut' | 'convenuCentimes' | 'versements'>): StatutAffiche {
   if (recu.statut === STATUT_ANNULE) return STATUT_ANNULE
-  return restantDu(recu) === 0 ? STATUT_SOLDE : STATUT_INCOMPLET
+  return restantDu(recu) <= 0 ? STATUT_SOLDE : STATUT_INCOMPLET
 }
 
 /** Dernier versement enregistré, ou `null`. */
@@ -50,5 +50,5 @@ export function dernierVersement(recu: Pick<Recu, 'versements'>): Versement | nu
  * Reproduit `statusAfter` : '✓' si le reçu est soldé après ce versement, sinon '•'.
  */
 export function symboleSituation(restantApresCentimes: number): '✓' | '•' {
-  return restantApresCentimes === 0 ? '✓' : '•'
+  return restantApresCentimes <= 0 ? '✓' : '•'
 }

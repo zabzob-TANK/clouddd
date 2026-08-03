@@ -90,7 +90,7 @@ export function construireJourneeVolumineuse(
         convenuCentimes,
         rabatteur,
         restantApresCentimes,
-        statutApres: restantApresCentimes === 0 ? '✓' : '•',
+        statutApres: restantApresCentimes <= 0 ? '✓' : '•',
       },
     }
 
