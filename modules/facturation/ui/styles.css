@@ -66,6 +66,43 @@
   --champ-halo: rgba(71, 89, 60, 0.14);
   --row-pad: 10px;
 
+  /*
+   * Échelles de forme.
+   *
+   * Le fichier de référence écrit ses valeurs écran par écran : la
+   * reconstruction en avait hérité quinze rayons différents et treize graisses
+   * de police. Les voici ramenés à deux échelles courtes, seules employées
+   * désormais. Aucune valeur intermédiaire ne doit être réintroduite.
+   *
+   * Les graisses correspondent exactement à celles que la police embarque —
+   * IBM Plex Sans Arabic 400/500/600/700. Au-delà, le navigateur retombait de
+   * toute façon sur 700 : 650, 720, 740, 750, 760, 780 et 800 rendaient tous
+   * le même trait, et donnaient l'illusion d'une hiérarchie inexistante.
+   */
+  --r-xs: 4px;
+  --r-s: 8px;
+  --r-m: 12px;
+  --r-l: 16px;
+  --r-pilule: 999px;
+
+  --gras-normal: 400;
+  --gras-doux: 500;
+  --gras-moyen: 600;
+  --gras-fort: 700;
+
+  /* Durée unique des retours visuels : survol, prise de main, sélection. */
+  --transition: 0.16s ease;
+
+  /*
+   * Élévation. Trois niveaux, et trois seulement : ce qui repose sur la page,
+   * ce qui flotte au-dessus d'elle, ce qui la recouvre. Les fenêtres portaient
+   * trois ombres voisines mais distinctes selon le fichier où elles étaient
+   * écrites — elles se ressemblaient sans se répondre.
+   */
+  --ombre-carte: 0 1px 2px rgba(28, 33, 23, 0.035);
+  --ombre-flottante: 0 8px 30px -24px rgba(28, 33, 23, 0.35);
+  --ombre-fenetre: 0 28px 70px -22px rgba(28, 33, 23, 0.5);
+
   min-height: 100vh;
   background: var(--page);
   color: var(--ink);
@@ -156,10 +193,66 @@
 .daily-carte-tableau td,
 .cheque-tableau td,
 .cheque-carte-tableau td,
+/*
+ * Les écrans arabes empilent eux aussi des montants en colonne — convenu,
+ * payé, restant — et n'étaient pas couverts : leurs chiffres dansaient d'une
+ * ligne à l'autre. La règle vaut maintenant pour tous les tableaux et pour
+ * tous les blocs qui alignent des sommes.
+ */
+.omra-table td,
+.omra-mini-table td,
+.detail-finance-cellule .valeur,
+.recu-encadre .ligne b,
+.versement-resume-ligne b,
+.omra-stat-valeur,
 input[inputmode='numeric'],
 input[type='number'] {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
+}
+
+/* ------------------------------------------------------- Retours visuels */
+
+/*
+ * Une seule durée pour tous les retours visuels de l'application. Le fichier
+ * de référence n'en pose que sur trois éléments : partout ailleurs, le survol
+ * et la prise de main basculaient d'un coup sec. Seules les propriétés de
+ * couleur sont animées — jamais la géométrie, qui doit rester stable.
+ */
+.omra-btn,
+.omra-action,
+.omra-icon-btn,
+.omra-row-btn,
+.omra-nav-item,
+.omra-sous-nav button,
+.omra-choice button,
+.omra-lien,
+.omra-table tbody tr,
+.omra-pill,
+.omra-method {
+  transition:
+    background-color var(--transition),
+    border-color var(--transition),
+    color var(--transition);
+}
+
+/*
+ * Prise de main au clavier : un seul anneau, sur tout ce qui est actionnable.
+ * Les champs de saisie gardent le leur, déjà défini plus bas et plus précis.
+ */
+.omra :focus-visible {
+  outline: 2px solid var(--champ-bord-actif);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .omra *,
+  .omra *::before,
+  .omra *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* ---------------------------------------------------------------- En-tête */
@@ -175,7 +268,7 @@ input[type='number'] {
   padding: 10px 18px;
   background: rgba(255, 255, 255, 0.98);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(28, 33, 23, 0.035);
+  box-shadow: var(--ombre-carte);
   backdrop-filter: saturate(1.5) blur(10px);
 }
 
@@ -202,7 +295,7 @@ input[type='number'] {
 
 .omra-brand-name {
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.005em;
 }
@@ -241,11 +334,11 @@ input[type='number'] {
   gap: 6px;
   padding: 0 13px;
   border: 1px solid #e2ded1;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   color: #35422f;
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: 0.01em;
   white-space: nowrap;
   user-select: none;
@@ -277,7 +370,7 @@ input[type='number'] {
   background: var(--accent-soft);
   color: #394432;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -297,7 +390,7 @@ input[type='number'] {
   display: grid;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   color: var(--muted);
   flex: 0 0 auto;
@@ -341,7 +434,7 @@ input[type='number'] {
   display: grid;
   place-items: center;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   box-shadow:
     inset 0 -2px 6px rgba(0, 0, 0, 0.18),
     0 0 0 1px rgba(28, 33, 23, 0.06);
@@ -385,12 +478,12 @@ input[type='number'] {
 .omra-action {
   height: 39px;
   padding: 0 15px;
-  border-radius: 9px;
+  border-radius: 8px;
   border: 1px solid var(--border-strong);
   background: #fff;
   color: var(--accent-deep);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -427,14 +520,14 @@ input[type='number'] {
 .omra-search label {
   font-size: 10.5px;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .omra-search input {
   height: 39px;
   padding: 0 11px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   font-size: 12px;
 }
@@ -472,7 +565,7 @@ input[type='number'] {
   gap: 6px;
   font-size: 11.5px;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 700;
   height: 39px;
 }
 
@@ -481,7 +574,7 @@ input[type='number'] {
 .omra-card {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   box-shadow:
     0 1px 2px rgba(28, 33, 23, 0.06),
@@ -581,9 +674,9 @@ input[type='number'] {
   display: inline-block;
   padding: 3px 9px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: 8px;
   font-size: 10.5px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .omra-method.cash {
@@ -625,7 +718,7 @@ input[type='number'] {
   width: 28px;
   height: 28px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #efefef;
   display: grid;
   place-items: center;
@@ -683,10 +776,10 @@ input[type='number'] {
   height: 36px;
   padding: 0 13px;
   border: 1px solid #e2ded1;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   color: #35422f;
   display: inline-flex;
   align-items: center;
@@ -714,7 +807,7 @@ input[type='number'] {
 .omra-stat-label {
   font-size: 10.5px;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 700;
   margin-bottom: 6px;
 }
 
@@ -733,7 +826,7 @@ input[type='number'] {
 
 .omra-section h2 {
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--accent-deep);
   margin: 0 0 12px;
 }
@@ -747,7 +840,7 @@ input[type='number'] {
 .omra-def-label {
   font-size: 10.5px;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 700;
   margin-bottom: 3px;
 }
 
@@ -774,7 +867,7 @@ input[type='number'] {
   max-width: 620px;
   background: var(--page);
   border-radius: 16px;
-  box-shadow: 0 28px 70px -22px rgba(28, 33, 23, 0.5);
+  box-shadow: var(--ombre-fenetre);
   overflow: hidden;
 }
 
@@ -803,7 +896,7 @@ input[type='number'] {
 
 .omra-modal-head h2 {
   font-size: 16.5px;
-  font-weight: 750;
+  font-weight: 700;
   margin: 0;
   flex: 1 1 auto;
 }
@@ -834,7 +927,7 @@ input[type='number'] {
 .omra-btn {
   height: 40px;
   padding: 0 17px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--border-strong);
   background: #fff;
   font-size: 13px;
@@ -892,7 +985,7 @@ input[type='number'] {
 /* Taille du fichier de référence : 12,5 px, nettement plus lisible que 11. */
 .omra-field label {
   font-size: 12.5px;
-  font-weight: 650;
+  font-weight: 700;
   color: var(--muted);
 }
 
@@ -900,7 +993,7 @@ input[type='number'] {
   width: 100%;
   padding: 11px 13px;
   border: 1px solid var(--champ-bord);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--champ-fond);
   font-size: 13px;
 }
@@ -983,7 +1076,7 @@ input[type='number'] {
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .omra-hint {
@@ -994,7 +1087,7 @@ input[type='number'] {
 .omra-errors {
   background: var(--danger-soft);
   border: 1px solid #e3c4bf;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 11px 13px;
   margin-bottom: 14px;
 }
@@ -1019,14 +1112,14 @@ input[type='number'] {
 .omra-panel {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 14px;
   margin-top: 13px;
 }
 
 .omra-panel h3 {
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   margin: 0 0 10px;
   color: var(--accent-deep);
 }
@@ -1041,7 +1134,7 @@ input[type='number'] {
   height: 36px;
   padding: 0 13px;
   border: 1px solid #e2ded1;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -1060,7 +1153,7 @@ input[type='number'] {
   flex-wrap: wrap;
   padding: 11px 13px;
   background: var(--accent-soft);
-  border-radius: 10px;
+  border-radius: 12px;
   margin-top: 12px;
   font-size: 12px;
 }
@@ -1069,7 +1162,7 @@ input[type='number'] {
   display: block;
   font-size: 10.5px;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 700;
   margin-bottom: 2px;
 }
 
@@ -1084,7 +1177,7 @@ input[type='number'] {
   background: var(--accent-soft);
   color: var(--accent-deep);
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 700;
   padding: 7px 8px;
   text-align: start;
   white-space: nowrap;
@@ -1113,7 +1206,7 @@ input[type='number'] {
 .omra-log-entry {
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
   margin-bottom: 8px;
 }
@@ -1127,7 +1220,7 @@ input[type='number'] {
 
 .omra-log-action {
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--accent-deep);
 }
 
@@ -1151,7 +1244,7 @@ input[type='number'] {
   transform: translateX(-50%);
   z-index: 300;
   padding: 11px 18px;
-  border-radius: 11px;
+  border-radius: 12px;
   font-size: 13.5px;
   font-weight: 500;
   color: #fff;
@@ -1189,7 +1282,7 @@ input[type='number'] {
   max-width: 400px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 16px;
   padding: 44px 36px 34px;
   /* Pile verticale centrée : logo, titre, sous-titre, filet, champs. */
   text-align: center;
@@ -1272,7 +1365,7 @@ input[type='number'] {
 .omra-login-erreur {
   background: var(--danger-soft);
   color: var(--danger);
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 10px 13px;
   font-size: 12.5px;
   font-weight: 500;
@@ -1310,7 +1403,7 @@ input[type='number'] {
   width: 100%;
   height: calc(100vh - 82px);
   min-height: 790px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #eef1f4;
   display: grid;
   place-items: center;
@@ -1337,7 +1430,7 @@ input[type='number'] {
 .carte-image-instrument {
   margin: 10px 0 13px;
   border: 1px solid #d9d5c8;
-  border-radius: 11px;
+  border-radius: 12px;
   background: #fdfcf9;
   padding: 11px 12px;
 }
@@ -1370,7 +1463,7 @@ input[type='number'] {
   width: 112px;
   height: 48px;
   border: 1px solid #d8d4c7;
-  border-radius: 7px;
+  border-radius: 8px;
   object-fit: cover;
   background: #f3f3ee;
 }
@@ -1470,7 +1563,7 @@ input[type='number'] {
   align-items: center;
   border: 1px solid #c8d0bd;
   background: #f5f7f1;
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 10px 12px;
   margin: 0 0 14px;
 }
@@ -1478,7 +1571,7 @@ input[type='number'] {
 .passeport-portrait {
   width: 88px;
   height: 108px;
-  border-radius: 11px;
+  border-radius: 12px;
   object-fit: cover;
   border: 1px solid #d8d4c7;
   background: #fff;
@@ -1490,7 +1583,7 @@ input[type='number'] {
 
 .passeport-bande .nom {
   font-size: 12.5px;
-  font-weight: 800;
+  font-weight: 700;
   color: #2e3b27;
 }
 
@@ -1509,7 +1602,7 @@ input[type='number'] {
 .passeport-detacher {
   padding: 7px 9px;
   border: 1px solid #d9d5c8;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #fff;
   color: #9c3b32;
   font-size: 11px;
@@ -1541,7 +1634,7 @@ input[type='number'] {
 .detail-photo img {
   width: 68px;
   height: 82px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   object-fit: cover;
   display: block;
@@ -1550,7 +1643,7 @@ input[type='number'] {
 .detail-photo .vide {
   width: 68px;
   height: 82px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 2px dashed rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.06);
   display: grid;
@@ -1568,7 +1661,7 @@ input[type='number'] {
 
 .detail-identite .nom {
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 700;
   color: #fff;
   line-height: 1.15;
 }
@@ -1687,7 +1780,7 @@ input[type='number'] {
 }
 
 .recu-encadre {
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
@@ -1807,7 +1900,7 @@ input[type='number'] {
 .instrument-panneau {
   background: #fffdf7;
   border: 1px solid #e4c98b;
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 13px 14px;
 }
 
@@ -1889,7 +1982,7 @@ input[type='number'] {
 .omra-modal-icone {
   width: 38px;
   height: 38px;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--accent-soft);
   color: var(--accent);
   display: grid;
@@ -1966,7 +2059,7 @@ input[type='number'] {
 
 .detail-finance-cellule .valeur.grande {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -2022,7 +2115,7 @@ input[type='number'] {
 .detail-carte {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 16px 18px;
 }
 
@@ -2143,7 +2236,7 @@ input[type='number'] {
 .detail-doc {
   border: 1px solid var(--border);
   background: var(--page);
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 700;
@@ -2159,7 +2252,7 @@ input[type='number'] {
 .detail-repli {
   margin-top: 14px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #fff;
   overflow: hidden;
 }
@@ -2185,7 +2278,7 @@ input[type='number'] {
 .detail-repli-icone {
   width: 24px;
   height: 24px;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #f6eeda;
   color: #a3801f;
   display: grid;
@@ -2221,7 +2314,7 @@ input[type='number'] {
 
 .detail-modif {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 14px;
   background: #fdfcf9;
 }
@@ -2258,7 +2351,7 @@ input[type='number'] {
 /* Changement : ancienne valeur en rouge, nouvelle en vert. */
 .detail-changement {
   font-size: 11px;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #fff;
   padding: 6px 10px;
   border: 1px solid #eeeae0;
@@ -2372,7 +2465,7 @@ input[type='number'] {
 .modif-section {
   padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: 12px;
   background: #fff;
   text-align: start;
   font-size: 13.5px;
@@ -2404,7 +2497,7 @@ input[type='number'] {
 
 .modif-avertissement {
   background: var(--warn-soft);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 13px;
   margin-top: 14px;
   font-size: 12px;
@@ -2450,7 +2543,7 @@ input[type='number'] {
 /* Récapitulatif de prix de la section « programme ». */
 .modif-recap {
   background: var(--warn-soft);
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 13px 16px;
   margin-bottom: 14px;
 }
@@ -2490,7 +2583,7 @@ input[type='number'] {
 .modif-sans-prix {
   background: var(--danger-soft);
   color: var(--danger);
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 10px 13px;
   font-size: 12px;
   font-weight: 500;
@@ -2500,7 +2593,7 @@ input[type='number'] {
 /* Montant figé de la première dépense. */
 .modif-montant-fixe {
   background: var(--accent-soft);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 11px 14px;
   margin-bottom: 14px;
   display: flex;
@@ -2519,7 +2612,7 @@ input[type='number'] {
 
 .modif-collective {
   background: var(--warn-soft);
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 13px 16px;
   margin: 10px 0 14px;
 }
@@ -2566,7 +2659,7 @@ input[type='number'] {
 .annul-montant {
   background: var(--page);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 10px 12px;
   margin-bottom: 13px;
   display: flex;
@@ -2694,12 +2787,12 @@ input[type='number'] {
   margin-top: 14px;
   padding: 12px 16px;
   background: var(--accent-soft);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .versement-resume-nom {
   font-size: 15px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--ink);
   margin-bottom: 8px;
 }
@@ -2794,7 +2887,7 @@ input[type='number'] {
   min-width: 36px;
   height: 23px;
   padding: 0 7px;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #f1f3ea;
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 12.5px;

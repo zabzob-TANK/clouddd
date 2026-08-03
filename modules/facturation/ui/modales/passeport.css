@@ -19,7 +19,7 @@
   border-radius: 16px;
   width: 100%;
   max-width: 900px;
-  box-shadow: 0 22px 65px -15px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--ombre-fenetre);
   margin: auto;
   overflow: hidden;
 }
@@ -35,7 +35,7 @@
 .passeport-icone {
   width: 36px;
   height: 36px;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #edf0e5;
   color: #47593c;
   display: grid;
@@ -76,7 +76,7 @@
 .passeport-note {
   background: #fff7e8;
   border: 1px solid #e4c98b;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 11.5px;
   color: #7a5a18;
@@ -102,7 +102,7 @@
 .passeport-image img {
   width: 100%;
   height: 170px;
-  border-radius: 9px;
+  border-radius: 8px;
   object-fit: cover;
   background: #fff;
   border: 1px solid #e7e3d6;
@@ -112,7 +112,7 @@
 .passeport-image-vide {
   height: 170px;
   border: 1px dashed #cfcbbe;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   display: grid;
   place-items: center;

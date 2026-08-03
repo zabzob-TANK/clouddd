@@ -22,7 +22,7 @@
 }
 
 .finance-ecran input {
-  border-radius: 7px;
+  border-radius: 8px;
 }
 
 .finance-ecran section {
@@ -57,7 +57,7 @@
   place-items: center;
   border: 1px solid #e7e3d6;
   background: #fff;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   color: #7a7f75;
 }
@@ -66,7 +66,7 @@
   height: 34px;
   padding: 0 12px;
   border: 1px solid #e7e3d6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   color: #47593c;
   font-size: 12px;
@@ -110,7 +110,7 @@
   min-width: 178px;
   padding: 0 11px;
   border: 2px solid #e7e3d6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
 }
 
@@ -145,7 +145,7 @@
   height: 34px;
   padding: 0 12px;
   border: 1px solid #e7e3d6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   color: #47593c;
   font-size: 12px;
@@ -198,7 +198,7 @@
 
 .finance-bloc {
   border: 1px solid #e7e3d6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   padding: 7px 8px;
   display: flex;
@@ -237,7 +237,7 @@
 .finance-bloc.etat .tick {
   font-size: 54px;
   line-height: 0.88;
-  font-weight: 800;
+  font-weight: 700;
   margin-top: 2px;
   text-align: center;
 }
@@ -415,7 +415,7 @@
 
 .finance-bloc.meta .periode {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--finance-ink);
   direction: ltr;
   unicode-bidi: isolate;
@@ -424,7 +424,7 @@
 
 .finance-bloc.meta .grand {
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.15;
   padding: 2px 8px 6px;
   color: var(--finance-ink);
@@ -445,7 +445,7 @@
 .finance-annulations {
   margin-top: 10px;
   border: 1px solid #e3c2be;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .finance-defilement {
@@ -544,11 +544,11 @@
   width: 12px;
   height: 12px;
   border: 1px solid #b46d12;
-  border-radius: 3px;
+  border-radius: 4px;
   background: #fff7e8;
   color: #9a5908;
   font-size: 8px;
-  font-weight: 800;
+  font-weight: 700;
   margin-inline-start: 4px;
   vertical-align: middle;
 }
@@ -563,7 +563,7 @@
   min-width: 19px;
   height: 18px;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 4px;
   background: transparent;
   color: #2e3b27;
   font-weight: 700;
@@ -670,7 +670,7 @@
 
   body.finance-impression .finance-bandeau-impression .veille {
     font-size: 7.2pt;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   body.finance-impression .finance-bandeau-impression .pages {

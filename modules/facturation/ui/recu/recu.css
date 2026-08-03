@@ -55,7 +55,7 @@
 .recu-atelier .recu-barre-retour button {
   padding: 10px 16px;
   border: 1px solid #e7e3d6;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   color: inherit;
   font-size: 13px;
@@ -144,7 +144,7 @@
 
 .recu-outils .alerte-depassement {
   padding: 5px 10px;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #9c3b32;
   color: #fff;
   font-size: 11px;
