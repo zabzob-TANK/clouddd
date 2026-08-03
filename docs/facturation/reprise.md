@@ -337,9 +337,11 @@ effacer l'historique, ni s'appliquer à un reçu annulé.
 - Un reçu annulé conserve son numéro, ses versements, ses allocations et son
   historique. Il reste consultable et imprimable.
 - Il ne peut plus être modifié ni recevoir de versement.
-- Le montant remboursé vaut le **total réellement payé**, pas le montant convenu.
-- La sortie de caisse vaut exactement **soit la totalité payée, soit 0 DH**.
-  Une sortie partielle est interdite.
+- Le montant remboursé vaut le total réellement payé, **plafonné au montant
+  convenu** : `min(total payé, convenu)`. Un trop-perçu n'est **jamais**
+  restitué, même à l'annulation — il reste en caisse (§5.11).
+- La sortie de caisse vaut exactement **soit ce montant, soit 0 DH**. Une
+  sortie d'une valeur intermédiaire est interdite.
 - Seul un remboursement en espèces produit un mouvement de caisse. Un chèque
   ou un virement annulé n'implique pas automatiquement une sortie de caisse.
 - Après annulation, une nouvelle vente au même voyageur passe par une nouvelle
@@ -358,19 +360,18 @@ Conséquence technique : un restant `≤ 0` vaut « soldé ». Toute comparaison
 `=== 0` sur un restant est un défaut — le domaine et l'interface utilisent
 `<= 0`.
 
-**Articulation avec l'annulation.** Les deux règles ne se contredisent pas,
-mais leur rencontre mérite d'être dite explicitement.
+**Articulation avec l'annulation — règle confirmée.** Le trop-perçu n'est pas
+restitué à l'annulation. Le client ne récupère que ce que porte le reçu.
 
-« Jamais remboursé automatiquement » gouverne la **vie courante** du reçu :
-tant qu'il vit, un trop-perçu reste en caisse et ne déclenche rien de lui-même.
+Exemple de référence : un reçu convenu à 20 000 DH sur lequel 22 000 DH ont
+été encaissés, puis annulé, rembourse **20 000 DH**. Les 2 000 DH excédentaires
+restent en caisse et continuent d'exister comme anomalie.
 
-L'annulation est un **acte explicite et distinct**. Elle rembourse le total
-réellement payé (§5.10) — trop-perçu compris. Un reçu convenu à 20 000 DH sur
-lequel 22 000 DH ont été encaissés rembourse donc 22 000 DH, ou 0 DH, jamais
-une valeur intermédiaire.
+Formule : `montant remboursé = min(total payé, convenu)`.
 
-> Lecture retenue en l'absence de contre-indication. À faire confirmer par le
-> commanditaire avant d'être implémentée dans un backend réel.
+Autrement dit, le trop-perçu ne sort de la caisse par aucun chemin
+automatique — ni en cours de vie du reçu, ni à son annulation. Sa résolution
+est un acte administratif distinct.
 
 ### 5.12 Impressions
 
@@ -492,6 +493,17 @@ au lieu d'un refus.
 Le code d'erreur `convenu-inferieur-au-paye` et son message restent utiles
 ailleurs — ne pas les supprimer de `rules/errors.ts` sans vérifier leurs
 autres usages.
+
+**Remboursement non plafonné à l'annulation.**
+`rules/cancellation.ts` calcule `montantRembourseCentimes = totalPaye(recu)`,
+sans plafond. Or le trop-perçu n'est jamais restitué (§5.10, §5.11) : la
+valeur correcte est `min(totalPaye(recu), recu.convenuCentimes)`.
+
+Le mouvement de caisse dérive de ce montant et se corrige donc en même temps.
+
+> Attention : le test existant `R-46 — vaut le total payé` encode l'ancienne
+> formule. Il doit être **mis à jour**, pas contourné. Ajouter en parallèle un
+> cas de trop-perçu, aujourd'hui absent de ce fichier de test.
 
 **P08 — Réservation prématurée du numéro de reçu.**
 `reserverNumero()` est appelé avant la validation du formulaire. Un abandon
