@@ -22,7 +22,6 @@ import {
   type ErreurValidation,
   type Resultat,
 } from './errors'
-import { totalPaye } from './receipt'
 import {
   construireGrille,
   montantConvenu,
@@ -233,15 +232,9 @@ export function preparerModification(
       }
       nouveauConvenu = montantConvenu(nouveauTarif, nouvelleReduction)
 
-      // Le nouveau convenu ne peut pas passer sous le montant déjà encaissé.
-      const paye = totalPaye(recu)
-      if (nouveauConvenu < paye) {
-        liste.push({
-          champ: 'reduction',
-          code: 'convenu-inferieur-au-paye',
-          parametres: { paye: montantPourMessage(paye) },
-        })
-      }
+      // P13 — un nouveau convenu sous le montant déjà encaissé est autorisé :
+      // le trop-perçu qui en résulte n'est jamais un refus (§5.11), seulement
+      // une anomalie visible une fois le restant devenu négatif.
 
       champsModifies.tarifCentimes = nouveauTarif
       champsModifies.reductionCentimes = nouvelleReduction

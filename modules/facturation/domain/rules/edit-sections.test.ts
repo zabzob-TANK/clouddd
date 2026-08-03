@@ -156,17 +156,24 @@ describe('R-52 — section programme', () => {
     )
   })
 
-  it('refuse un nouveau convenu inférieur au montant déjà payé', () => {
-    // Reçu payé à hauteur de 10 000 DH ; passer à un convenu plus bas est refusé.
+  it('P13 — autorise un nouveau convenu inférieur au montant déjà payé (trop-perçu)', () => {
+    // Reçu payé à hauteur de 30 000 DH ; passer à un convenu plus bas est
+    // désormais autorisé (§5.11 : le trop-perçu n'est jamais un refus).
     const paye = unRecu({
       convenuCentimes: 3480000,
       chambre: '2',
       tarifCentimes: 3480000,
       versements: [unVersement({ montantCentimes: 3000000 })],
     })
-    expect(codes(saisie({ section: 'program', chambre: '4' }), paye)).toContain(
-      'convenu-inferieur-au-paye',
+    const resultat = preparerModification(
+      saisie({ section: 'program', chambre: '4' }),
+      paye,
+      CONTEXTE,
     )
+    expect(resultat.statut).toBe('ok')
+    if (resultat.statut !== 'ok') return
+    // Le nouveau convenu (chambre 4 : 26 000 DH) descend sous le payé (30 000 DH).
+    expect(resultat.valeur.champsModifies.convenuCentimes).toBe(2600000)
   })
 })
 
