@@ -89,8 +89,8 @@ describe('R-45 — aucune suppression', () => {
   })
 })
 
-describe('R-46 — montant remboursé', () => {
-  it('vaut le total payé, tous modes de paiement confondus', () => {
+describe('R-46 — montant remboursé, plafonné au convenu (§5.10, §5.11)', () => {
+  it('vaut le total payé, tous modes de paiement confondus, quand il ne dépasse pas le convenu', () => {
     const resultat = preparerAnnulation(saisie(), recu, CONTEXTE)
     expect(resultat.statut === 'ok' && resultat.valeur.donnees.montantRembourseCentimes).toBe(
       1000000,
@@ -101,6 +101,22 @@ describe('R-46 — montant remboursé', () => {
     const vide = unRecu({ versements: [] })
     const resultat = preparerAnnulation(saisie(), vide, CONTEXTE)
     expect(resultat.statut === 'ok' && resultat.valeur.donnees.montantRembourseCentimes).toBe(0)
+  })
+
+  it('plafonne au convenu en cas de trop-perçu : le surplus reste en caisse', () => {
+    // Reprend l'exemple de référence du document de reprise : convenu à
+    // 20 000 DH, 22 000 DH encaissés — remboursement de 20 000 DH, jamais 22 000.
+    const tropPercu = unRecu({
+      convenuCentimes: 2000000,
+      versements: [
+        unVersement({ id: 'a', montantCentimes: 1200000 }),
+        unVersement({ id: 'b', rang: 2, montantCentimes: 1000000, nature: 'شيك' }),
+      ],
+    })
+    const resultat = preparerAnnulation(saisie(), tropPercu, CONTEXTE)
+    expect(resultat.statut === 'ok' && resultat.valeur.donnees.montantRembourseCentimes).toBe(
+      2000000,
+    )
   })
 })
 
@@ -128,6 +144,17 @@ describe('R-47 — mouvement de caisse', () => {
     const resultat = preparerAnnulation(saisie({ modeRemboursement: 'cash' }), recu, CONTEXTE)
     expect(resultat.statut === 'ok' && resultat.valeur.mouvementCaisse!.montantCentimes).toBe(
       1000000,
+    )
+  })
+
+  it('la sortie de caisse est plafonnée au convenu, pas au total payé, en cas de trop-perçu', () => {
+    const tropPercu = unRecu({
+      convenuCentimes: 2000000,
+      versements: [unVersement({ montantCentimes: 2200000 })],
+    })
+    const resultat = preparerAnnulation(saisie({ modeRemboursement: 'cash' }), tropPercu, CONTEXTE)
+    expect(resultat.statut === 'ok' && resultat.valeur.mouvementCaisse!.montantCentimes).toBe(
+      2000000,
     )
   })
 })

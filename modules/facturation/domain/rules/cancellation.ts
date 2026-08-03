@@ -25,7 +25,7 @@ export interface DonneesAnnulation {
   annulePar: string
   annuleLe: string
   modeRemboursement: ModeRemboursement
-  /** R-46 — Montant remboursé = total payé. */
+  /** R-46 — Montant remboursé = total payé, plafonné au convenu (§5.10, §5.11). */
   montantRembourseCentimes: number
 }
 
@@ -88,8 +88,10 @@ export function preparerAnnulation(
     return erreurs([{ champ: 'motDePasse', code: 'mot-de-passe-incorrect' }])
   }
 
-  // R-46 — le montant remboursé est le total réellement payé, tous modes confondus.
-  const montantRembourseCentimes = totalPaye(recu)
+  // R-46 — le montant remboursé est le total réellement payé, tous modes
+  // confondus, mais jamais plus que le convenu : le trop-perçu n'est jamais
+  // restitué, même à l'annulation (§5.10, §5.11).
+  const montantRembourseCentimes = Math.min(totalPaye(recu), recu.convenuCentimes)
   const modeRemboursement = saisie.modeRemboursement as ModeRemboursement
 
   const donnees: DonneesAnnulation = {
